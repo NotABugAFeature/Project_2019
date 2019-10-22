@@ -16,3 +16,33 @@ Project Ανάπτυξη Λογισμικού Για Πληροφοριακά Σ
 		στοιχείων (ίσως κάποια δομή για αποφυγή αντιγραφών) 
 4) Δημιουργία Λίστας (Με Δείκτη στην Ουρά) που περιέχει Bucket 1MB, δείκτη στο επόμενο Bucket +index για είσοδο δεδομένων στο Bucket
 5) Σάρωση Παράλληλα των δύο πινάκων για την Join και τοποθέτηση αποτελεσμάτων στην λίστα
+
+
+Ψευδοκώδικας:
+--------------
+
+from: unsorted array
+to: result
+byte starts from 0
+size starts from the size of initial array
+
+radix_sort(byte, from, to, size) {
+	if(size < 64KB) {
+		//Starting from byte=0, when byte%2=0 1st array, when byte%2=1 2nd. Result has to be on 2nd array
+		if(byte % 2 == 0) {
+			quicksort(from, size, to)
+		}
+		else {
+			quicksort(from, size, from)
+		}
+		
+	}
+	else {
+		...make hist and psum...
+		split(psum, from, to)
+		for part in to {
+			radix_sort(byte+1, part, part_of_from, part_size)
+		}
+	}
+		
+}

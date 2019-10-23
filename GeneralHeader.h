@@ -85,3 +85,13 @@ int create_histogram_from_relation(relation r,uint64_t start_index,uint64_t end_
 int transform_histogram_to_cumulative_histogram(histogram *h);
 
 //Or one function that calls the 2 above and returns the cumulative
+
+/**
+ * Implements radix sort (uses quicksort, copy_array, create_histogram_from_relation, transform_histogram_to_cumulative_histogram, split_and_fill_array)
+ * @param unsigned short byte Which byte is used to create the histogram
+ * @param relation *initial The initial array with the data
+ * @param relation *result The array to write the results
+ * @param uint64_t start_index The starting index of the relation
+ * @param uint64_t end_index The ending index of the relation
+ */
+void radix_sort(unsigned short byte, relation *initial, relation *result, uint64_t start_index, uint64_t end_index);

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*  Application         :    Project_2019                                     */
-/*  File                :    result_list.h                                     */
+/*  File                :    result_list.h                                    */
 /*  Author              :    Georgakopoulos Panagiotis 1115201600028          */
 /*  Team Member         :    Karamhna Maria            1115201600059          */
 /*  Team Member         :    Koursiounis Georgios      1115201600077          */

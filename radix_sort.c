@@ -2,6 +2,14 @@
 #include <stdlib.h>
 #include "GeneralHeader.h"
 
+void copy_array(relation *initial, relation *result, uint64_t start_index, uint64_t end_index)
+{
+	for(int i=start_index; i<end_index; i++)
+	{
+		result.tuples[i] = inital.tuples[i];
+	}
+}
+
 
 void radix_sort(unsigned short byte, relation *initial, relation *result, uint64_t start_index, uint64_t end_index)
 {

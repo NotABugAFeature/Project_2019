@@ -14,73 +14,48 @@
 
 #include <stdint.h>
 
-//#define LISTBUCKETSIZE 1048576/(2*sizeof(uint64_t))
-#define LISTBUCKETSIZE 16/(2*sizeof(short))
+#define RESULT_LIST_BUCKET_SIZE 1048576/(2*sizeof(uint64_t))
 #define ROWID_R_INDEX 0
 #define ROWID_S_INDEX 1
-struct ResultList
-{
-    struct ResultListNode* Head; //The First Node Of The List
-    struct ResultListNode* Tail; //The Last Node Of The List
-    int NumberOfNodes; //Counter Of The Buckets;
-};
-struct RowIDArray
-{
-    short RowIDs[LISTBUCKETSIZE][2];
-    unsigned int index;
-};
-struct ResultListNode
-{
-    struct RowIDArray Result;
-    struct ResultListNode* Next;
-};
-/**
- * Creates An Empty ResultList And Returns A Pointer To That List
- * @return ResultList* The New List
- */
-struct ResultList* CreateResultList();
-/**
- * Deletes All The Nodes Of The List Given
- * @param ResultList* The List To Delete
- */
-void DeleteResultList(struct ResultList*);
+
+typedef struct result_list_bucket result_list_bucket;
+typedef struct result_list_node result_list_node;
+typedef struct result_list result_list;
 
 /**
- * Adds A Pair Of Row Ids In The Last Bucket Of The List And Creates A New
- * Bucket If Needed.
- * @param ResultList* The List To Add The Row Ids
- * @param short RowIdR
- * @param short RowIdS
+ * Creates an empty result list and returns a pointer to that list
+ * @return result_list* The new list
+ */
+result_list* create_result_list();
+/**
+ * Deletes all the nodes of the list given
+ * @param result_list* the list to delete
+ */
+void delete_result_list(result_list*);
+/**
+ * Adds a pair of row ids in the last bucket of the list and creates a new
+ * bucket if needed.
+ * @param result_list* The list to add the row ids
+ * @param uint64_t r_row_id
+ * @param uint64_t s_row_id
  * @return int 0 If Successful
  */
-int AppendToList(struct ResultList* list, short r_rowId, short s_rowId);
+int append_to_list(result_list*, uint64_t r_row_id, uint64_t s_row_id);
 /**
  * Prints All The Nodes And Buckets Of The List From First To Last.
+ * @param result_list The result list to print
  */
-void PrintResultList(struct ResultList* list);
+void print_result_list(result_list*);
 /**
- * Returns If The List Is Empty.
- * @return int 0 If Empty Else 1
+ * Returns if the list is empty.
+ * @param result_list The res
+ * @return int 1 if empty else 0
  */
-inline int IsEmpty(struct ResultList* list)
-{
-    //    if(list->Head==NULL)
-    //    {
-    //        return 0;
-    //    }
-    //    return 1;
-    if(list->NumberOfNodes==0)
-    {
-        return 0;
-    }
-    return 1;
-}
+int is_result_list_empty(result_list list);
 /**
- * Counts The Number Of Nodes In The List.
- * @return int The Number Of Nodes
+ * Returns the number of nodes in the result list.
+ * @param
+ * @return int The number of nodes
  */
-inline int GetNumberOfBuckets(struct ResultList* list)
-{
-    return list->NumberOfNodes;
-}
+int result_list_get_number_of_buckets(result_list);
 #endif /*CLIENTLIST_H*/

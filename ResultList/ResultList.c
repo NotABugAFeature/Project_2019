@@ -13,150 +13,213 @@
 #include "ResultList.h"
 
 /**
- * Checks If The Bucket Given Is Full
- * @param RowIDArray The Bucket To Check
- * @return int 0 If The Bucket Is Full
+ * The Bucket inside a node of the result list.
+ * Contains a 2d array of row ids (uint64_t) and an index (unsigned int)
+ * to the next empty space in the array.
  */
-int IsResultBucketFull(struct RowIDArray rowids)
+typedef struct result_list_bucket
 {
-    if(rowids.index==LISTBUCKETSIZE)
-    {
-        return 0;
-    }
-    return 1;
-}
+    uint64_t row_ids[RESULT_LIST_BUCKET_SIZE][2];
+    unsigned int index_to_add_next;
+} result_list_bucket;
 
-int AppendToBucket(struct RowIDArray* rowids, short r_rowId, short s_rowId)
+/**
+ * The node of the result list.
+ * Contains a bucket with the row ids and a pointer to the next node.
+ */
+typedef struct result_list_node
 {
-    if(IsResultBucketFull(*rowids)!=0)
-    {
-        rowids->RowIDs[rowids->index][ROWIDRINDEX]=r_rowId;
-        rowids->RowIDs[rowids->index][ROWID_S_INDEX]=s_rowId;
-        rowids->index++;
-        return 0;
-    }
-    return 1;
-}
+    result_list_bucket bucket;
+    result_list_node* next;
+} result_list_node;
 
-struct ResultList* CreateResultList()
+/**
+ * The result list.
+ * Contains pointers to the head and tail nodes (for O(1) append)
+ * and a node counter.
+ */
+typedef struct result_list
 {
-    //Create The List
-    struct ResultList* newList;
-    newList=malloc(sizeof(struct ResultList));
-    if(newList==NULL)
+    result_list_node* head; //The first node of the list
+    result_list_node* tail; //The last node of the list
+    int number_of_nodes; //Counter of the buckets;
+} result_list;
+
+/**
+ * Creates and initializes a new empty result list node (with the bucket)
+ * @return result_list_node* The new node
+ */
+struct result_list_node* create_result_list_node()
+{
+    //Create the node
+    result_list_node* new_node;
+    new_node=malloc(sizeof(result_list_node));
+    if(new_node==NULL)
     {
-        printf("Error In Malloc\n");
+        perror("result_list_node: error in malloc");
         return NULL;
     }
-    //Initialize Empty
-    newList->Head=NULL;
-    newList->Tail=NULL;
-    newList->NumberOfNodes=0;
-    return newList;
+    //Initialize empty
+    new_node->next=NULL;
+    new_node->bucket.index_to_add_next=0;
+    return new_node;
 }
 
 /**
- * Creates And Initializes A New Empty Node (Bucket)
- * @return ResultListNode* The New Node
+ * Checks if the bucket given is full
+ * @param result_list_bucket The bucket to check
+ * @return int 1 if the bucket is full else 0
  */
-struct ResultListNode* CreateResultListNode()
+int is_result_list_bucket_full(result_list_bucket bucket)
 {
-    //Create The Node/Bucket
-    struct ResultListNode* newNode;
-    newNode=malloc(sizeof(struct ResultListNode));
-    //Initialize Empty
-    if(newNode==NULL)
-    {
-        printf("Error In Malloc\n");
-        return NULL;
-    }
-    newNode->Next=NULL;
-    newNode->Result.index=0;
-    return newNode;
+    return bucket.index_to_add_next==RESULT_LIST_BUCKET_SIZE ? 0 : 1;
 }
 
-void DeleteResultList(struct ResultList* list)
+/**
+ * Appends the rowids given to the bucket.
+ * @param result_list_bucket* the bucket
+ * @param uint64_t r_row_id
+ * @param uint64_t s_row_id
+ * @return 0 if successful 1 else
+ */
+int append_to_bucket(result_list_bucket* bucket, uint64_t r_row_id, uint64_t s_row_id)
+{
+    if(is_result_list_bucket_full(*bucket))
+    {
+        bucket->row_ids[bucket->index_to_add_next][ROWID_R_INDEX]=r_row_id;
+        bucket->row_ids[bucket->index_to_add_next][ROWID_S_INDEX]=s_row_id;
+        bucket->index_to_add_next++;
+        return 0;
+    }
+    return 1;
+}
+/**
+ * Prints the contents of the bucket (index and array)
+ * @param result_list_bucket the bucket to print
+ */
+void print_bucket(result_list_bucket bucket)
+{
+    //Print the array inside the bucket
+    printf("Index to add next: %u\n", bucket.index_to_add_next);
+    for(int i=0; i<bucket.index_to_add_next; i++)
+    {
+        printf("RowIdR: %d RowIdS: %d\n", bucket.row_ids[i][ROWID_R_INDEX], bucket.row_ids[i][ROWID_S_INDEX]);
+    }
+}
+
+result_list* create_result_list()
+{
+    //Create the list
+    result_list* new_list;
+    new_list=malloc(sizeof(result_list));
+    if(new_list==NULL)
+    {
+
+        perror("create_result_list(): error in malloc");
+        return NULL;
+    }
+    //Initialize the list to be empty
+    new_list->head=NULL;
+    new_list->tail=NULL;
+    new_list->number_of_nodes=0;
+    return new_list;
+}
+
+void delete_result_list(result_list* list)
 {
     if(list==NULL)
     {
-        printf("DeleteResultList NULL POINTER\n");
+        printf("delete_result_list: NULL list pointer\n");
         return;
     }
-    struct ResultListNode* temp=list->Head;
-    //Delete All The Nodes(Buckets)
-    while(list->Head!=NULL)
+    result_list_node* temp=list->head;
+    //Delete all the nodes
+    while(list->head!=NULL)
     {
-        printf("Nodes: %d\n", list->NumberOfNodes);
-        list->Head=temp->Next;
+        printf("Nodes: %d\n", list->number_of_nodes);
+        list->head=temp->next;
         free(temp);
-        temp=list->Head;
-        list->NumberOfNodes--;
+        temp=list->head;
+        list->number_of_nodes--;
         printf("Node Deleted\n");
     }
     free(list);
     printf("List Deleted\n");
 }
 
-void PrintResultList(struct ResultList* list)
+void print_result_list(result_list* list)
 {
+    printf("%d\n", sizeof(result_list));
+    printf("%d\n", sizeof(result_list_node));
+    printf("%d\n", sizeof(result_list_bucket));
     if(list==NULL)
     {
-        printf("List Pointer Is NULL");
+        printf("print_result_list: NULL list pointer\n");
         return;
     }
     int index=0;
-    struct ResultListNode *temp=list->Head;
-    printf("Number Of Buckets: %d\n", list->NumberOfNodes);
-    while(temp!=NULL)//Visit All The Nodes(Buckets) And Print Them
+    result_list_node*temp=list->head;
+    printf("Number Of Buckets: %d\n", list->number_of_nodes);
+    while(temp!=NULL)//Visit all the nodes and print them
     {
         printf("Bucket Index: %d\n", index);
-        //Print The Array Inside The Bucket
-        printf("Index To Add: %u\n", temp->Result.index);
-        for(int i=0; i<temp->Result.index; i++)
-        {
-            printf("RowIdR: %d RowIdS: %d\n", temp->Result.RowIDs[i][ROWIDRINDEX], temp->Result.RowIDs[i][ROWID_S_INDEX]);
-        }
+        print_bucket(temp->bucket);
         index++;
-        temp=temp->Next;
+        temp=temp->next;
     }
 }
 
-int AppendToList(struct ResultList* list, short r_rowId, short s_rowId)
+int append_to_list(result_list* list, uint64_t r_row_id, uint64_t s_row_id)
 {
-    if(list->Head==NULL)//Append As First Node
+    if(list->head==NULL)//Create the first node
     {
-        list->Head=CreateResultListNode();
-        //No Need To Check
-        if(AppendToBucket(&list->Head->Result,r_rowId,s_rowId))
+        list->head=create_result_list_node();
+        if(list->head==NULL)
         {
-            printf("AppendToList Error Cannot Add To Empty Bucket");
             return 1;
         }
-        list->Tail=list->Head;
-        list->NumberOfNodes++;
-    }
-    else//Add To The Tail
-    {
-        if(list->Tail==NULL||list->Tail->Next!=NULL)
+        //No need to check
+        if(append_to_bucket(&list->head->bucket, r_row_id, s_row_id))
         {
-            printf("AppendToList: Error Of The List\n");
+            printf("append_to_list: Error cannot add to empty bucket\n");
             return 2;
+        }
+        list->tail=list->head;
+        list->number_of_nodes++;
+    }
+    else//Add to the tail
+    {
+        if(list->tail==NULL||list->tail->next!=NULL)
+        {
+            printf("append_to_list: error of the list\n");
+            return 3;
         }
         else
         {
-            if(AppendToBucket(&list->Tail->Result,r_rowId,s_rowId))
+            if(append_to_bucket(&list->tail->bucket, r_row_id, s_row_id))
             {//Full Bucket
-                list->Tail->Next=CreateResultListNode();
+                list->tail->next=create_result_list_node();
                 //No Need To Check
-                list->Tail=list->Tail->Next;
-                if(AppendToBucket(&list->Tail->Result,r_rowId,s_rowId))
+                list->tail=list->tail->next;
+                if(append_to_bucket(&list->tail->bucket, r_row_id, s_row_id))
                 {
-                    printf("AppendToList Error Cannot Add To Empty Bucket");
-                    return 3;
+                    printf("append_to_list: Error cannot add to empty bucket\n");
+                    return 4;
                 }
-                list->NumberOfNodes++;
+                list->number_of_nodes++;
             }
         }
     }
     return 0;
+}
+
+int is_result_list_empty(result_list list)
+{
+    //return list->Head==NULL ? 1 : 0;
+    return list.number_of_nodes==0 ? 1 : 0;
+}
+
+int result_list_get_number_of_buckets(result_list list)
+{
+    return list.number_of_nodes;
 }

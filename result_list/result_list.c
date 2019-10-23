@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*  Application         :    Project_2019                                     */
-/*  File                :    ResultList.c                                     */
+/*  File                :    result_list.c                                    */
 /*  Author              :    Georgakopoulos Panagiotis 1115201600028          */
 /*  Team Member         :    Karamhna Maria            1115201600059          */
 /*  Team Member         :    Koursiounis Georgios      1115201600077          */
@@ -10,7 +10,7 @@
 /*  This File Contains The Implementation Of The Results List                 */
 #include <stdio.h>
 #include <stdlib.h>
-#include "ResultList.h"
+#include "result_list.h"
 
 /**
  * The Bucket inside a node of the result list.

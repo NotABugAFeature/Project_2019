@@ -59,12 +59,12 @@ void radix_sort(unsigned short byte, relation *source, relation *result, uint64_
 		//Choose whether to place result in source or result array
 		if(byte % 2 == 0)
 		{
-			quicksort(source, start_index, end_index);
-			copy_relation(source, result, start_index, end_index);
+			quicksort(source->tuples, start_index, end_index, result->tuples);
+			//copy_relation(source, result, start_index, end_index);
 		}
 		else
 		{
-			quicksort(source, end_index);
+			quicksort(source->tuples, start_index, end_index, NULL);
 		}
 	}
 	else

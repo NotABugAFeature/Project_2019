@@ -18,8 +18,39 @@ void create_histogram(relation r, uint64_t start_index, uint64_t end_index, uint
     for(uint64_t i = start_index; i < end_index; i++)
     {
         uint64_t key = r.tuples[i].key;
-        int position = (key >> (8*(8-byte_number))) & 0xff;
+        int position = (key >> ((8-byte_number) << 3)) & 0xff;
         hist[position]++;
     }
 }
 
+/**
+ * Psum creation of a relation r based on its histogram
+ *
+ * @param hist - histogram
+ */
+void transform_to_psum(uint64_t *hist)
+{
+    int first = 1;
+    uint64_t offset = 0;
+
+    for(int i = 0; i < HIST_SIZE; i++)
+    {
+        if(hist[i] != 0)
+        {
+            if(first)
+            {
+                offset = hist[i];
+                hist[i] = 0;
+                first = 0;
+            }
+            else
+            {
+                uint64_t temp = offset + hist[i];
+                hist[i] = offset;
+                offset = temp;
+            }
+        }
+        else
+            hist[i] = offset;
+    }
+}

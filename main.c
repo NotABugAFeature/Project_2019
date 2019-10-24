@@ -7,7 +7,7 @@ int main(void)
     /*int64_t number = 123456789123456789;
     int i = 0;
     for(i=1; i<=8; i++){
-        printf("%lld\n", (number >> (8*(8-i))) & 0xff);
+        printf("%lld\n", (number >> ((8-i) << 3)) & 0xff);
     }*/
 
     relation r;
@@ -38,6 +38,14 @@ int main(void)
         {
             printf("row: %d  key: %llu\n", k, hist[k]);
         }
+    }
+
+    transform_to_psum(hist);
+
+    printf("\n\n");
+    for(int k=0; k<256; k++)
+    {
+        printf("row: %d  key: %llu\n", k, hist[k]);
     }
 
     free(r.tuples);

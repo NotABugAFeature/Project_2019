@@ -75,12 +75,12 @@ result_list* SortMergeJoin(relation *relR,relation *relS);
  * @return 0 if successful
  */
 
-void create_histogram(relation r,uint64_t start_index,uint64_t end_index, uint64_t *h,unsigned short byte);
+void create_histogram(relation, uint64_t ,uint64_t , uint64_t *,unsigned short);
 /**
  * Transforms the histogram in to a cumulative histogram
  * @param histogram * The histogram to transform
  * @return 0 if successful
  */
-int transform_histogram_to_cumulative_histogram(histogram *h);
+int transform_to_psum(uint64_t *);
 
 //Or one function that calls the 2 above and returns the cumulative

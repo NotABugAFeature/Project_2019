@@ -48,4 +48,10 @@ int create_relation_from_table(int64_t* ,uint64_t , relation*);
  * @param rel* The relation to print
  */
 void print_relation(relation*);
-
+/**
+ * Prints the rowid and keys stored in the tuples
+ *
+ * @param tuple* Pointer to the array of tuples
+ * @param uint64_t The number of items to print (0 - items-1)
+ */
+void print_tuples(tuple* t,uint64_t items)

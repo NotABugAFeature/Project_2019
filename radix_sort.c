@@ -127,5 +127,6 @@ void radix_sort(unsigned short byte, relation *source, relation *result, uint64_
 			radix_sort(byte+1, result, source, start, hist[i]);
 			start = hist[i];
 		}
+		free(hist);
 	}
 }

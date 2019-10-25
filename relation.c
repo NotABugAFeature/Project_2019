@@ -124,3 +124,24 @@ void print_relation(relation* rel)
         printf("%ld\t%ld\n",rel->tuples[i].row_id,rel->tuples[i].key);
     }
 }
+/**
+ * Prints the rowid and keys stored in the tuples
+ *
+ * @param tuple* Pointer to the array of tuples
+ * @param uint64_t The number of items to print (0 - items-1)
+ */
+void print_tuples(tuple* t,uint64_t items)
+{
+    //Check parameters //can be removed
+    if(t==NULL)
+    {
+        fprintf(stderr, "%s", "print_tuple: NULL parameter\n");
+        return;
+    }
+    printf("Number of items:%ld \n",items);
+    printf("RowID\tKey\n");
+    for(uint64_t i=0;i<items;i++)
+    {
+        printf("%ld\t%ld\n",t[i].row_id,t[i].key);
+    }
+}

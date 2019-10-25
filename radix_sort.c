@@ -2,14 +2,6 @@
 #include <stdlib.h>
 #include "GeneralHeader.h"
 
-void copy_relation(relation *source, relation *result, uint64_t start_index, uint64_t end_index)
-{
-	for(int i=start_index; i<end_index; i++)
-	{
-		result->tuples[i] = inital->tuples[i];
-	}
-}
-
 /**
  * Copies a part of the source relation to the target relation with the use of 
  * the cumulative histogram (psum)
@@ -69,17 +61,17 @@ void radix_sort(unsigned short byte, relation *source, relation *result, uint64_
 	}
 	else
 	{
-		histogram *hist = malloc(sizeof(histogram));
-		create_histogram_from_relation(source, start_index, end_index, byte);
-		transform_histogram_to_cumulative_histogram(hist);
+		uint64_t *hist = malloc(HIST_SIZE*sizeof(uint64_t));
+		create_histogram(source, start_index, end_index, hist, byte);
+		transform_to_psum(hist);
 		copy_relation_with_psum(source, result, start_index, end_index, hist, byte);
 		
 		//Recursively sort every part of the array
 		uint64_t start = start_index;
-		for(int i=0; i<HIST_SIZE; i++)
+		for(uint64_t i=0; i<HIST_SIZE; i++)
 		{
-			radix_sort(byte+1, result, source, start, hist->array[i]);
-			start = hist->array[i];
+			radix_sort(byte+1, result, source, start, hist[i]);
+			start = hist[i];
 		}
 	}
 }

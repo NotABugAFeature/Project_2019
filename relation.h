@@ -54,4 +54,4 @@ void print_relation(relation*);
  * @param tuple* Pointer to the array of tuples
  * @param uint64_t The number of items to print (0 - items-1)
  */
-void print_tuples(tuple* t,uint64_t items)
+void print_tuples(tuple* t,uint64_t items);

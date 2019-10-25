@@ -1,7 +1,61 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "GeneralHeader.h"
+#include "radix_sort.h"
+#include "quicksort.h"
+//----Histogram----
+/**
+ * Histogram creation of a relation r
+ * We consider the indexes as valid and we perform no check
+ *
+ * @param relation r - the table for which we create the histogram
+ * @param start_index - the starting index of the relation
+ * @param end_index - the ending index is the ending_index - 1
+ * @param hist - array already allocated and initialized with 0s
+ * @param byte_number - ranges from 1 (most significant left-most byte) to 8 (less significant right-most byte)
+ */
+void create_histogram(relation r, uint64_t start_index, uint64_t end_index, uint64_t *hist, unsigned short byte_number)
+{
 
+    for(uint64_t i=start_index; i<end_index; i++)
+    {
+        uint64_t key=r.tuples[i].key;
+        int position=(key>>((8-byte_number)<<3)) & 0xff;
+        hist[position]++;
+    }
+}
+
+/**
+ * Psum creation of a relation r based on its histogram
+ *
+ * @param hist - histogram
+ */
+void transform_to_psum(uint64_t *hist)
+{
+    int first=1;
+    uint64_t offset=0;
+
+    for(int i=0; i<HIST_SIZE; i++)
+    {
+        if(hist[i]!=0)
+        {
+            if(first)
+            {
+                offset=hist[i];
+                hist[i]=0;
+                first=0;
+            }
+            else
+            {
+                uint64_t temp=offset+hist[i];
+                hist[i]=offset;
+                offset=temp;
+            }
+        }
+        else
+            hist[i]=offset;
+    }
+}
+//----Radix Sort----
 /**
  * Copies a part of the source relation to the target relation with the use of 
  * the cumulative histogram (psum)
@@ -11,7 +65,7 @@
  * @param uint64_t The ending index of the relation (it is not included in 
  *                 the transfer)
  * @param uint64_t* The cumulative histogram (psum)
- * @param unsigned Which byte is used to search in the cumulative histogram
+ * @param unsigned short Which byte is used to search in the cumulative histogram
  * @return 
  */
 int copy_relation_with_psum(relation* source, relation* target,uint64_t index_start,uint64_t index_end,uint64_t* psum,unsigned short nbyte)
@@ -30,7 +84,7 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
     for(uint64_t i=index_start;i<index_end;i++)
     {
         //Find in which place the next tuple will be copied to from the psum
-        histogram_index = ((source->tuples[i].key) >> ((8-nbyte) << 7)) & 0xff;
+        histogram_index = ((source->tuples[i].key) >> ((8-nbyte) << 3)) & 0xff;
         printf("i: %ld histogram %hd\n",i,histogram_index);
         target_index=psum[histogram_index]+index_start;
         printf("%ld\n",target_index); //will be removed 

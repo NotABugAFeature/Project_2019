@@ -47,9 +47,11 @@ int main(int argc, char** argv)
         r_c.tuples[i].key=0;
     }
     //Sort
-    radix_sort(1,&r,&r_c,0,r.num_tuples-1);
+    radix_sort(0,&r,&r_c,0,r.num_tuples);
     printf("RESULT\n\n\n");
+    printf("\nR:\n");
     print_relation(&r);
+    printf("\nRC:\n");
     print_relation(&r_c);
     int correct=1;
     for(int64_t i=0;i<r_c.num_tuples-1;i++)

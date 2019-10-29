@@ -62,7 +62,7 @@ int partition(tuple *source, int64_t low, int64_t high, tuple *target)
 void quicksort(tuple *source, int64_t low, int64_t high, tuple *target)
 {
 	//printf("QUICK: %" PRId64 " to %" PRId64 "\n", low, high);
-	if(low < high)
+	if(low <= high)
 	{
 		//pi is partitioning index, source[p] is now at right place
 		int64_t pi = partition(source, low, high, target);

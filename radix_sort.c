@@ -20,7 +20,7 @@ void create_histogram(relation r, uint64_t start_index, uint64_t end_index, uint
     for(uint64_t i=start_index; i<end_index; i++)
     {
         uint64_t key=r.tuples[i].key;
-        int position=(key>>((8-byte_number)<<3)) & 0xff;
+        int position=(key>>((7-byte_number)<<3)) & 0xff;
         hist[position]++;
         //printf("key: %" PRIu64 ", position: %d\n", key, position);
     }
@@ -86,7 +86,7 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
     for(uint64_t i=index_start;i<index_end;i++)
     {
         //Find in which place the next tuple will be copied to from the psum
-        histogram_index = ((source->tuples[i].key) >> ((8-nbyte) << 3)) & 0xff;
+        histogram_index = ((source->tuples[i].key) >> ((7-nbyte) << 3)) & 0xff;
        // printf("i: %" PRIu64 " histogram %hd\n",i,histogram_index);
         //printf("psum[histogram_index]: %" PRIu64 "\n", psum[histogram_index]);
         target_index=psum[histogram_index]+index_start;
@@ -102,11 +102,11 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
 
 void radix_sort(unsigned short byte, relation *source, relation *result, uint64_t start_index, uint64_t end_index)
 {
-	//printf("RADIX: %" PRIu64 " to %" PRIu64 "\n", start_index, end_index);
+	printf("RADIX: %" PRIu64 " to %" PRIu64 "\n", start_index, end_index);
 	//Check if bucket is small enough
-	if((end_index - start_index)*sizeof(tuple) < 50||byte>8)
+	if((end_index - start_index) < 10 || byte > 7)
 	{
-		//printf("RADIX TO QUICK: %" PRIu64 " to %" PRIu64 "\n", start_index, end_index-1);
+		printf("RADIX TO QUICK: %" PRIu64 " to %" PRIu64 "\n", start_index, end_index-1);
 		//Choose whether to place result in source or result array
 		if(byte % 2 == 0)
 		{
@@ -134,24 +134,29 @@ void radix_sort(unsigned short byte, relation *source, relation *result, uint64_
 		}*/
 		transform_to_psum(hist);
 		printf("psum ok\n");
-	/*	printf("PSUM:\n");
+		/*printf("PSUM:\n");
 		for(uint64_t i=0; i<HIST_SIZE; i++)
 		{
 			printf("i: %" PRIu64 " - %" PRIu64 "\n", i, hist[i]);
 		}*/
 		copy_relation_with_psum(source, result, start_index, end_index, hist, byte);
 		printf("relation ok\n");
-	/*	printf("PSUM THEN:\n");
+		/*printf("PSUM THEN:\n");
 		for(uint64_t i=0; i<HIST_SIZE; i++)
 		{
 			printf("i: %" PRIu64 " - %" PRIu64 "\n", i, hist[i]);
 		}*/
+		//printf("And result: \n");
+		//print_relation(result);
 		
 		//Recursively sort every part of the array
 		uint64_t start = start_index;
 		for(uint64_t i=0; i<HIST_SIZE; i++)
 		{
-			radix_sort(byte+1, result, source, start, hist[i]);
+			if(start < hist[i])
+			{
+				radix_sort(byte+1, result, source, start, hist[i]);
+			}
 			start = hist[i];
 		}
 		free(hist);

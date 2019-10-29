@@ -51,10 +51,23 @@ int main(int argc, char **argv)
 
 	printf("\nR:\n");
 	print_relation(r);
+
+	relation *rr = malloc(sizeof(relation));
+	rr->num_tuples = r->num_tuples;
+	rr->tuples = malloc(r->num_tuples*sizeof(tuple));
+
+	radix_sort(0, r, rr, 0, r->num_tuples);
+
+	printf("\nSorted R:\n");
+	print_relation(rr);
+
 	//printf("\nS:\n");
 	//print_relation(s);
 	free(r->tuples);
 	free(r);
+	free(rr->tuples);
+	free(rr);
+
 	//free(s->tuples);
 	//free(s);
 	for(int64_t i=0; i<rt->rows; i++)

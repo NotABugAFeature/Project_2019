@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include "./result_list/result_list.h"
 #include "radix_sort.h"
 
@@ -55,7 +56,7 @@ int main(int argc, char** argv)
     {
         if(r_c.tuples[i].key>r_c.tuples[i+1].key)
         {
-            printf("Error i: %ld\t%ld\t%ld\n",i,r_c.tuples[i].key,r_c.tuples[i+1].key);
+            printf("Error i: %" PRId64 "\t%" PRId64 "\t%" PRId64 "\n",i,r_c.tuples[i].key,r_c.tuples[i+1].key);
             correct=0;
             //break;
         }

@@ -7,11 +7,11 @@
  *
  * @param filename - path of the file
  */
-int64_t **read_from_file(char *filename)
+table *read_from_file(char *filename)
 {
     FILE *fp;
-    int64_t **table;
     uint64_t rows, columns;
+    table *table_r = malloc(sizeof(table));
 
     //open file
     fp = fopen(filename, "rb");
@@ -22,10 +22,13 @@ int64_t **read_from_file(char *filename)
     }
 
     fscanf(fp, "%llu %llu", &rows, &columns);
+    
+    table_r->rows = columns;
+    table_r->columns = rows;
 
     //allocate memory
-    table = malloc(columns * sizeof(int64_t *));
-    if(table == NULL)
+    table_r->array = malloc(columns * sizeof(int64_t *));
+    if(table_r->array == NULL)
     {
         fprintf(stderr, "Cannot allocate memory\n");
         return NULL;
@@ -33,8 +36,8 @@ int64_t **read_from_file(char *filename)
 
     for(uint64_t i = 0; i < columns; i++)
     {
-        table[i] = malloc(rows * sizeof(int64_t));
-        if(table[i] == NULL)
+        table_r->array[i] = malloc(rows * sizeof(int64_t));
+        if(table_r->array[i] == NULL)
         {
             fprintf(stderr, "Cannot allocate memory\n");
             return NULL;
@@ -46,20 +49,20 @@ int64_t **read_from_file(char *filename)
     {
         for(uint64_t j = 0; j < columns; j++)
         {
-            fscanf(fp, "%llu", &table[j][i]);
+            fscanf(fp, "%llu", &table_r->array[j][i]);
         }
     }
 
-    /*for(uint64_t i = 0; i < columns; i++)
+    for(uint64_t i = 0; i < columns; i++)
     {
         for(uint64_t j = 0; j < rows; j++)
         {
-            printf("%llu\t", table[i][j]);
+            printf("%llu\t", table_r->array[i][j]);
         }
         printf("\n");
-    }*/
+    }
 
-    return table;
+    return table_r;
 }
 
 

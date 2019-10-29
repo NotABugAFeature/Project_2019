@@ -1,6 +1,20 @@
 #include <stdint.h>
 
 /** 
+ * Type definition for a table as read from a file
+ * rows - the number of initial table's columns 
+ * columns - the number of initial table's rows
+ * array - an rows x columns array
+ */
+typedef struct
+{
+    uint64_t rows;
+    uint64_t columns;
+    int64_t **array;
+}table;
+
+
+/** 
  * Type definition for a tuple
  * key - key of sorting and join operation
  * row_id - incremental id of the tuple
@@ -28,7 +42,7 @@ typedef struct
  *
  * @param filename - path of the file
  */
-int64_t **read_from_file(char *);
+table *read_from_file(char *);
 
 /**
  * Accepts a key column of the table and a relation pointer and creates the

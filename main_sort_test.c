@@ -12,8 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "./result_list/result_list.h"
-#include "relation.h"
-//#include "GeneralHeader.h"
+#include "radix_sort.h"
 
 int main(int argc, char** argv)
 {
@@ -31,25 +30,16 @@ int main(int argc, char** argv)
 //    }
 //    print_result_list(testlist);
 //    delete_result_list(testlist);
+    //Input From File Testing
+    table *test_table=read_from_file("./input.txt");
     //Relation Creation Testing
-    uint64_t size=16;
-    uint64_t* table=malloc(sizeof(uint64_t)*size);
-    for(uint64_t i=0;i<size;i++)
-    {
-        if(i%2==0)
-        {
-            table[i]=(size*1024-i);
-        }
-        else
-        {
-            table[i]=(size-i-1);
-        }
-    }
     relation r;r.tuples=NULL;r.num_tuples=0;
-    create_relation_from_table(table,size,&r);
+    create_relation_from_table(&test_table->array[0][0],test_table->columns,&r);
+    print_relation(&r);
     relation r_c;
-    r_c.num_tuples=size;
-    free(table);
+    r_c.num_tuples=r.num_tuples;
+    free(test_table->array);
+    free(test_table);
     r_c.tuples=malloc(r_c.num_tuples*sizeof(tuple));
     for(int i=0;i<r_c.num_tuples;i++)
     {
@@ -63,9 +53,9 @@ int main(int argc, char** argv)
     int correct=1;
     for(int64_t i=0;i<size-1;i++)
     {
-        if(r.tuples[i].key>r.tuples[i+1].key)
+        if(r_c.tuples[i].key>r_c.tuples[i+1].key)
         {
-            printf("Error i: %ld\t%ld\t%ld\n",i,r.tuples[i].key,r.tuples[i+1].key);
+            printf("Error i: %ld\t%ld\t%ld\n",i,r_c.tuples[i].key,r_c.tuples[i+1].key);
             correct=0;
             //break;
         }

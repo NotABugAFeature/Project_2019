@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "radix_sort.h"
-#include "quicksort.h"
+
 //----Histogram----
 /**
  * Histogram creation of a relation r
@@ -116,7 +116,7 @@ void radix_sort(unsigned short byte, relation *source, relation *result, uint64_
 	else
 	{
 		uint64_t *hist = malloc(HIST_SIZE*sizeof(uint64_t));
-		create_histogram(source, start_index, end_index, hist, byte);
+		create_histogram(*source, start_index, end_index, hist, byte);
 		transform_to_psum(hist);
 		copy_relation_with_psum(source, result, start_index, end_index, hist, byte);
 		

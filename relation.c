@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include "relation.h"
 
 /**
@@ -12,6 +13,10 @@ table *read_from_file(char *filename)
     FILE *fp;
     uint64_t rows, columns;
     table *table_r = malloc(sizeof(table));
+    if(table_r == NULL)
+    {
+    	printf("Cannot allocate memory\n");
+    }
 
     //open file
     fp = fopen(filename, "rb");
@@ -21,22 +26,22 @@ table *read_from_file(char *filename)
         return NULL;
     }
 
-    fscanf(fp, "%llu %llu", &rows, &columns);
+    fscanf(fp, "%" PRIu64 " %" PRIu64, &rows, &columns);
     
     table_r->rows = columns;
     table_r->columns = rows;
 
     //allocate memory
-    table_r->array = malloc(columns * sizeof(int64_t *));
+    table_r->array = malloc(columns * sizeof(uint64_t *));
     if(table_r->array == NULL)
     {
         fprintf(stderr, "Cannot allocate memory\n");
         return NULL;
     }
 
-    for(uint64_t i = 0; i < columns; i++)
+    for(uint64_t i=0; i<columns; i++)
     {
-        table_r->array[i] = malloc(rows * sizeof(int64_t));
+        table_r->array[i] = malloc(rows * sizeof(uint64_t));
         if(table_r->array[i] == NULL)
         {
             fprintf(stderr, "Cannot allocate memory\n");
@@ -49,15 +54,17 @@ table *read_from_file(char *filename)
     {
         for(uint64_t j = 0; j < columns; j++)
         {
-            fscanf(fp, "%llu", &table_r->array[j][i]);
+            fscanf(fp, "%" PRIu64, &table_r->array[j][i]);
         }
     }
+
+    fclose(fp);
 
     for(uint64_t i = 0; i < columns; i++)
     {
         for(uint64_t j = 0; j < rows; j++)
         {
-            printf("%llu\t", table_r->array[i][j]);
+            printf("%" PRIu64 "\t", table_r->array[i][j]);
         }
         printf("\n");
     }
@@ -124,7 +131,7 @@ void print_relation(relation* rel)
 
     for(uint64_t i=0;i<rel->num_tuples;i++)
     {
-        printf("%ld\t%ld\n",rel->tuples[i].row_id,rel->tuples[i].key);
+        printf("%" PRId64 "\t%" PRId64 "\n",rel->tuples[i].row_id,rel->tuples[i].key);
     }
 }
 /**
@@ -141,10 +148,10 @@ void print_tuples(tuple* t,uint64_t items)
         fprintf(stderr, "%s", "print_tuple: NULL parameter\n");
         return;
     }
-    printf("Number of items:%ld \n",items);
+    printf("Number of items:%" PRId64 " \n",items);
     printf("RowID\tKey\n");
     for(uint64_t i=0;i<items;i++)
     {
-        printf("%ld\t%ld\n",t[i].row_id,t[i].key);
+        printf("%" PRId64 "\t%" PRId64 "\n",t[i].row_id,t[i].key);
     }
 }

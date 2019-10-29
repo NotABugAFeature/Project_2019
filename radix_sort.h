@@ -1,6 +1,6 @@
 #ifndef RADIX_SORT_H
 #define RADIX_SORT_H
-#include "relation.h"
+#include "quicksort.h"
 //----Histogram----
 #define HIST_SIZE 256
 /**

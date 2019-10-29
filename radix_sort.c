@@ -100,17 +100,17 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
 void radix_sort(unsigned short byte, relation *source, relation *result, uint64_t start_index, uint64_t end_index)
 {
 	//Check if bucket is small enough
-	if((end_index - start_index)*sizeof(tuple) < 64*1024)
+	if((end_index - start_index)*sizeof(tuple) < 64*1024||byte>8)
 	{
 		//Choose whether to place result in source or result array
 		if(byte % 2 == 0)
 		{
-			quicksort(source->tuples, start_index, end_index-1, result->tuples);
+			quicksort(source->tuples, start_index, end_index, NULL);
 			//copy_relation(source, result, start_index, end_index);
 		}
 		else
 		{
-			quicksort(source->tuples, start_index, end_index-1, NULL);
+			quicksort(source->tuples, start_index, end_index, result->tuples);
 		}
 	}
 	else

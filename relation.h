@@ -1,3 +1,6 @@
+#ifndef RELATION_H
+#define RELATION_H
+
 #include <stdint.h>
 
 /** 
@@ -69,3 +72,4 @@ void print_relation(relation*);
  * @param uint64_t The number of items to print (0 - items-1)
  */
 void print_tuples(tuple* t,uint64_t items);
+#endif	// RELATION_H

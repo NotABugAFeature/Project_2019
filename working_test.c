@@ -61,6 +61,7 @@ int main(int argc, char **argv)
 	printf("\nSorted R:\n");
 	print_relation(rr);
 
+
 	//printf("\nS:\n");
 	//print_relation(s);
 	free(r->tuples);

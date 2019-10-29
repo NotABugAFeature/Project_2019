@@ -65,7 +65,7 @@ int main(void)
 
     relation sorted;
     sorted.tuples = malloc(5*sizeof(tuple));
-    radix_sort(0, &r, &sorted, 0, 5);
+    radix_sort(1, &r, &sorted, 0, 5);
 
     printf("\n\n\e[1;31mSorted relation: \e[0m\n");
     for(int i=0; i<5; i++) {

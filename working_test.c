@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 	rr->num_tuples = r->num_tuples;
 	rr->tuples = malloc(r->num_tuples*sizeof(tuple));
 
-	radix_sort(0, r, rr, 0, r->num_tuples);
+	radix_sort(1, r, rr, 0, r->num_tuples);
 
 	printf("\nSorted R:\n");
 	print_relation(rr);

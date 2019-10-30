@@ -113,11 +113,12 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
  * @param relation *auxiliary Auxiliary array for the sorting, same size as array
  * @param uint64_t start_index The starting index of the relation
  * @param uint64_t end_index The ending index of the relation
+ * @return 0 for success, <0 for error
  */
-void radix_sort_recursive(unsigned short byte, relation *array, relation *auxiliary, uint64_t start_index, uint64_t end_index)
+int radix_sort_recursive(unsigned short byte, relation *array, relation *auxiliary, uint64_t start_index, uint64_t end_index)
 {
 	//Check if bucket is small enough
-	if((end_index-start_index)*sizeof(tuple)<20||byte>8)
+	if((end_index-start_index)*sizeof(tuple)<64*1024||byte>8)
 	{
 		//Choose whether to place result in array or auxiliary array
 		if(byte % 2 == 0)
@@ -133,6 +134,12 @@ void radix_sort_recursive(unsigned short byte, relation *array, relation *auxili
 	else
 	{
 		uint64_t *hist = malloc(HIST_SIZE*sizeof(uint64_t));
+		if(hist == NULL)
+		{
+			perror("radix_sort_recursive: malloc error");
+			return -2;
+		}
+
 		for(uint64_t i=0; i<HIST_SIZE; i++)
 		{
 			hist[i] = 0;
@@ -147,7 +154,11 @@ void radix_sort_recursive(unsigned short byte, relation *array, relation *auxili
 		{
 			if(start<start_index+hist[i])
 			{
-				radix_sort_recursive(byte+1, auxiliary, array, start, start_index+hist[i]);
+				int retval = radix_sort_recursive(byte+1, auxiliary, array, start, start_index+hist[i]);
+				if(retval != 0)
+				{
+					return retval;
+				}
 			}
 			if(hist[i]+start_index>end_index)
             {
@@ -157,21 +168,41 @@ void radix_sort_recursive(unsigned short byte, relation *array, relation *auxili
 		}
 		free(hist);
 	}
+
+	return 0;
 }
 
 /**
  * Sets up and executes the recursive radix sort
  * @param relation *array The array to be sorted
+ * @return 0 for success, <0 for error
  */
-void radix_sort(relation *array)
+int radix_sort(relation *array)
 {
 	//Create array to help with the sorting
 	relation *auxiliary = malloc(sizeof(relation));
+	if(auxiliary == NULL)
+	{
+		perror("radix_sort: malloc error");
+		return -1;
+	}
 	auxiliary->num_tuples = array->num_tuples;
 	auxiliary->tuples = malloc(array->num_tuples*sizeof(tuple));
+	if(auxiliary->tuples == NULL)
+	{
+		perror("radix_sort: malloc error");
+		return -1;
+	}
 
-	radix_sort_recursive(1, array, auxiliary, 0, array->num_tuples);
+	int retval = radix_sort_recursive(1, array, auxiliary, 0, array->num_tuples);
+	if(retval != 0)
+	{
+		fprintf(stderr, "Radix sort error\n");
+		return retval;
+	}
 
 	free(auxiliary->tuples);
 	free(auxiliary);
+
+	return 0;
 }

@@ -41,12 +41,14 @@ int copy_relation_with_psum(relation* source, relation* target, uint64_t index_s
  * @param relation *auxiliary Auxiliary array for the sorting, same size as array
  * @param uint64_t start_index The starting index of the relation
  * @param uint64_t end_index The ending index of the relation
+ * @return 0 for success, <0 for error
  */
-void radix_sort_recursive(unsigned short byte, relation *array, relation *auxiliary, uint64_t start_index, uint64_t end_index);
+int radix_sort_recursive(unsigned short byte, relation *array, relation *auxiliary, uint64_t start_index, uint64_t end_index);
 /**
  * Sets up and executes the recursive radix sort
  * @param relation *array The array to be sorted
+ * @return 0 for success, <0 for error
  */
-void radix_sort(relation *array);
+int radix_sort(relation *array);
 
 #endif // RADIX_SORT_H

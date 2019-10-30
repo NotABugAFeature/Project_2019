@@ -44,6 +44,7 @@ typedef struct
  * Reads a table from a file
  *
  * @param filename - path of the file
+ * @return table in table * format, NULL for error
  */
 table *read_from_file(char *);
 
@@ -55,7 +56,7 @@ table *read_from_file(char *);
  * @param uint64_t* The key column of the table
  * @param uint64_t The number of items in the column
  * @param relation* The relation where the tuples will be stored
- * @return 
+ * @return 0 for success, >0 for error
  */
 int create_relation_from_table(uint64_t* ,uint64_t , relation*);
 

@@ -7,6 +7,7 @@
  * Reads a table from a file
  *
  * @param filename - path of the file
+ * @return table in table * format, NULL for error
  */
 table *read_from_file(char *filename)
 {
@@ -15,14 +16,15 @@ table *read_from_file(char *filename)
     table *table_r = malloc(sizeof(table));
     if(table_r == NULL)
     {
-    	printf("Cannot allocate memory\n");
+    	perror("read_from_file: malloc error");
+    	return NULL;
     }
 
     //open file
     fp = fopen(filename, "rb");
     if(fp == NULL)
     {
-        fprintf(stderr, "File not found\n");
+        perror("read_from_file: fopen error");
         return NULL;
     }
 
@@ -35,7 +37,7 @@ table *read_from_file(char *filename)
     table_r->array = malloc(columns * sizeof(uint64_t *));
     if(table_r->array == NULL)
     {
-        fprintf(stderr, "Cannot allocate memory\n");
+        perror("read_from_file: malloc error");
         return NULL;
     }
 
@@ -44,7 +46,7 @@ table *read_from_file(char *filename)
         table_r->array[i] = malloc(rows * sizeof(uint64_t));
         if(table_r->array[i] == NULL)
         {
-            fprintf(stderr, "Cannot allocate memory\n");
+            perror("read_from_file: malloc error");
             return NULL;
         }
     }
@@ -81,7 +83,7 @@ table *read_from_file(char *filename)
  * @param uint64_t* The key column of the table
  * @param uint64_t The number of items in the column
  * @param relation* The relation where the tuples will be stored
- * @return 
+ * @return 0 for success, >0 for error
  */
 int create_relation_from_table(uint64_t* key_column,uint64_t column_size,relation* rel)
 {
@@ -96,7 +98,7 @@ int create_relation_from_table(uint64_t* key_column,uint64_t column_size,relatio
     rel->tuples=malloc(column_size*sizeof(tuple));
     if(rel->tuples==NULL)
     {
-        fprintf(stderr, "%s", "create_relation_from_table: tuple malloc failed\n");
+    	perror("create_relation_from_table: malloc error");
         return 2;
     }
 

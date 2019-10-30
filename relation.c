@@ -78,12 +78,12 @@ table *read_from_file(char *filename)
  * rowid, key tuples. The tuples are dynamically allocated so the free function
  * must be called when the relation must be deleted.
  *
- * @param int64_t* The key column of the table
+ * @param uint64_t* The key column of the table
  * @param uint64_t The number of items in the column
  * @param relation* The relation where the tuples will be stored
  * @return 
  */
-int create_relation_from_table(int64_t* key_column,uint64_t column_size,relation* rel)
+int create_relation_from_table(uint64_t* key_column,uint64_t column_size,relation* rel)
 {
     //Check parameters can be removed
     if(key_column==NULL||rel==NULL||rel->num_tuples!=0||rel->tuples!=NULL)
@@ -126,12 +126,12 @@ void print_relation(relation* rel)
         return;
     }
 
-    printf("Number of tuples:%ld \n",rel->num_tuples);
+    printf("Number of tuples:% \n"PRIu64,rel->num_tuples);
     printf("RowID\tKey\n");
 
     for(uint64_t i=0;i<rel->num_tuples;i++)
     {
-        printf("%" PRId64 "\t%" PRId64 "\n",rel->tuples[i].row_id,rel->tuples[i].key);
+        printf("%" PRIu64 "\t%" PRIu64 "\n",rel->tuples[i].row_id,rel->tuples[i].key);
     }
 }
 /**
@@ -148,10 +148,10 @@ void print_tuples(tuple* t,uint64_t items)
         fprintf(stderr, "%s", "print_tuple: NULL parameter\n");
         return;
     }
-    printf("Number of items:%" PRId64 " \n",items);
+    printf("Number of items:%" PRIu64 " \n",items);
     printf("RowID\tKey\n");
     for(uint64_t i=0;i<items;i++)
     {
-        printf("%" PRId64 "\t%" PRId64 "\n",t[i].row_id,t[i].key);
+        printf("%" PRIu64 "\t%" PRIu64 "\n",t[i].row_id,t[i].key);
     }
 }

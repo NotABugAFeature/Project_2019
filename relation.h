@@ -49,6 +49,12 @@ typedef struct
 table *read_from_file(char *);
 
 /**
+ * Frees the momory used by the table
+ * @param table*
+ */
+void delete_table(table*);
+
+/**
  * Accepts a key column of the table and a relation pointer and creates the
  * rowid, key tuples. The tuples are dynamically allocated so the free function
  * must be called when the relation must be deleted.

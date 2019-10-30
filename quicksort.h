@@ -16,10 +16,10 @@ void swap(tuple *, tuple *);
  * @param uint64_t low Starging index
  * @param uint64_t high Ending index
  */
-int partition(tuple *, uint64_t, uint64_t);
+uint64_t partition(tuple *, uint64_t, uint64_t);
 
 /** 
- * QuickSort (sorted array can be found both in source and in target)
+ * QuickSort
  * @param tuple *source Array to be sorted
  * @param uint64_t low Starging index
  * @param uint64_t high Ending index

@@ -74,6 +74,25 @@ table *read_from_file(char *filename)
     return table_r;
 }
 
+/**
+ * Frees the momory used by the table
+ * @param table*
+ */
+void delete_table(table*table_r)
+{
+    if(table_r!=NULL)
+    {
+        for(uint64_t i=0; i<table_r->rows; i++)
+        {
+            free(table_r->array[i]);
+            table_r->array[i]=NULL;
+        }
+        free(table_r->array);
+        table_r->array=NULL;
+        free(table_r);
+        table_r=NULL;
+    }
+}
 
 /**
  * Accepts a key column of the table and a relation pointer and creates the

@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     {
         if(r_c.tuples[i].key>r_c.tuples[i+1].key)
         {
-            printf("Error i: %" PRId64 "\t%" PRId64 "\t%" PRId64 "\n",i,r_c.tuples[i].key,r_c.tuples[i+1].key);
+            printf("Error i: %" PRId64 "\t%" PRIu64 "\t%" PRIu64 "\n",i,r_c.tuples[i].key,r_c.tuples[i+1].key);
             correct=0;
             //break;
         }

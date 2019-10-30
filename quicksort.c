@@ -26,7 +26,7 @@ void swap(tuple *a, tuple *b)	//TODO: Maybe should be void *
  */
 int partition(tuple *source, int64_t low, int64_t high, tuple *target)
 {
-	int64_t pivot = source[high].key;    //pivot
+	uint64_t pivot = source[high].key;    //pivot
 	int64_t i = (low - 1);  //Index of smaller element
 
 	for(int64_t j = low; j <= high- 1; j++)

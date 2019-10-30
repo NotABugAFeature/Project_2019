@@ -13,7 +13,7 @@ typedef struct
 {
     uint64_t rows;
     uint64_t columns;
-    int64_t **array;
+    uint64_t **array;
 }table;
 
 
@@ -24,8 +24,8 @@ typedef struct
  */
 typedef struct
 {
-    int64_t key;
-    int64_t row_id;
+    uint64_t key;
+    uint64_t row_id;
 }tuple;
 
 /** 
@@ -52,12 +52,12 @@ table *read_from_file(char *);
  * rowid, key tuples. The tuples are dynamically allocated so the free function
  * must be called when the relation must be deleted.
  *
- * @param int64_t* The key column of the table
+ * @param uint64_t* The key column of the table
  * @param uint64_t The number of items in the column
  * @param relation* The relation where the tuples will be stored
  * @return 
  */
-int create_relation_from_table(int64_t* ,uint64_t , relation*);
+int create_relation_from_table(uint64_t* ,uint64_t , relation*);
 
 /**
  * Prints all the tuples of the relation given

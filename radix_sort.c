@@ -22,7 +22,6 @@ void create_histogram(relation r, uint64_t start_index, uint64_t end_index, uint
         uint64_t key=r.tuples[i].key;
         int position=(key>>((8-byte_number)<<3)) & 0xff;
         hist[position]++;
-        //printf("key: %" PRIu64 ", position: %d\n", key, position);
     }
 }
 
@@ -95,10 +94,8 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
     {
         //Find in which place the next tuple will be copied to from the psum
         histogram_index = ((source->tuples[i].key) >> ((8-nbyte) << 3)) & 0xff;
-       // printf("i: %" PRIu64 " histogram %hd\n",i,histogram_index);
-        //printf("psum[histogram_index]: %" PRIu64 "\n", psum[histogram_index]);
         target_index=psum[histogram_index]+index_start;
-        //printf("%" PRIu64 "\n",target_index); //will be removed 
+
         //Increase the psum index for the next tuple with the same byte
         psum[histogram_index]++;
         //Copy the tuple
@@ -108,24 +105,29 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
     return 0;
 }
 
-void radix_sort(unsigned short byte, relation *source, relation *result, uint64_t start_index, uint64_t end_index)
+
+/**
+ * Implements radix sort
+ * @param unsigned short byte Which byte is used to create the histogram
+ * @param relation *array The array to be sorted
+ * @param relation *auxiliary Auxiliary array for the sorting, same size as array
+ * @param uint64_t start_index The starting index of the relation
+ * @param uint64_t end_index The ending index of the relation
+ */
+void radix_sort_recursive(unsigned short byte, relation *array, relation *auxiliary, uint64_t start_index, uint64_t end_index)
 {
-	printf("Byte:%d RADIX: %" PRIu64 " to %" PRIu64 "\n",byte, start_index, end_index);
 	//Check if bucket is small enough
 	if((end_index-start_index)*sizeof(tuple)<20||byte>8)
 	{
-		printf("RADIX TO QUICK: %" PRIu64 " to %" PRIu64 "\n", start_index, end_index-1);
-		//Choose whether to place result in source or result array
+		//Choose whether to place result in array or auxiliary array
 		if(byte % 2 == 0)
 		{
-			quicksort(source->tuples, start_index, end_index-1, NULL);
-			//copy_relation(source, result, start_index, end_index);
+			quicksort(array->tuples, start_index, end_index-1, NULL);
+			copy_relation(array, auxiliary, start_index, end_index);
 		}
 		else
 		{
-			//quicksort(source->tuples, start_index, end_index-1, result->tuples);
-			quicksort(source->tuples, start_index, end_index-1, NULL);
-			copy_relation(source, result, start_index, end_index);
+			quicksort(array->tuples, start_index, end_index-1, NULL);
 		}
 	}
 	else
@@ -135,47 +137,41 @@ void radix_sort(unsigned short byte, relation *source, relation *result, uint64_
 		{
 			hist[i] = 0;
 		}
-		create_histogram(*source, start_index, end_index, hist, byte);
-		printf("histogram ok\n");
-	/*	printf("HIST:\n");
-		for(uint64_t i=0; i<HIST_SIZE; i++)
-		{
-			printf("i: %" PRIu64 " - %" PRIu64 "\n", i, hist[i]);
-		}*/
+		create_histogram(*array, start_index, end_index, hist, byte);
 		transform_to_psum(hist);
-		printf("psum ok\n");
-		/*printf("PSUM:\n");
-		for(uint64_t i=0; i<HIST_SIZE; i++)
-		{
-			printf("i: %" PRIu64 " - %" PRIu64 "\n", i, hist[i]);
-		}*/
-		copy_relation_with_psum(source, result, start_index, end_index, hist, byte);
-		printf("relation ok\n");
-		/*printf("PSUM THEN:\n");
-		for(uint64_t i=0; i<HIST_SIZE; i++)
-		{
-			printf("i: %" PRIu64 " - %" PRIu64 "\n", i, hist[i]);
-		}*/
-		//printf("And result: \n");
-		//print_relation(result);
+		copy_relation_with_psum(array, auxiliary, start_index, end_index, hist, byte);
 		
 		//Recursively sort every part of the array
 		uint64_t start = start_index;
 		for(uint64_t i=0; i<HIST_SIZE; i++)
 		{
-			//if(start < hist[i])
 			if(start<start_index+hist[i])
 			{
-				//radix_sort(byte+1, result, source, start, hist[i]);
-				radix_sort(byte+1, result, source, start, start_index+hist[i]);
+				radix_sort_recursive(byte+1, auxiliary, array, start, start_index+hist[i]);
 			}
 			if(hist[i]+start_index>end_index)
-            		{
-                		break;
-            		}
-			//start = hist[i];
+            {
+				break;
+			}
 			start=start_index+hist[i];
 		}
 		free(hist);
 	}
+}
+
+/**
+ * Sets up and executes the recursive radix sort
+ * @param relation *array The array to be sorted
+ */
+void radix_sort(relation *array)
+{
+	//Create array to help with the sorting
+	relation *auxiliary = malloc(sizeof(relation));
+	auxiliary->num_tuples = array->num_tuples;
+	auxiliary->tuples = malloc(array->num_tuples*sizeof(tuple));
+
+	radix_sort_recursive(1, array, auxiliary, 0, array->num_tuples);
+
+	free(auxiliary->tuples);
+	free(auxiliary);
 }

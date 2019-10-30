@@ -37,32 +37,32 @@ int main(int argc, char** argv)
     relation r;r.tuples=NULL;r.num_tuples=0;
     create_relation_from_table(&test_table->array[0][0],test_table->columns,&r);
     print_relation(&r);
-    relation r_c;
-    r_c.num_tuples=r.num_tuples;
+   // relation r_c;
+   // r_c.num_tuples=r.num_tuples;
     for(uint64_t i=0; i<test_table->rows; i++)
     {
         free(test_table->array[i]);
     }
     free(test_table->array);
     free(test_table);
-    r_c.tuples=malloc(r_c.num_tuples*sizeof(tuple));
+  /*  r_c.tuples=malloc(r_c.num_tuples*sizeof(tuple));
     for(int i=0;i<r_c.num_tuples;i++)
     {
         r_c.tuples[i].key=0;
-    }
+    }*/
     //Sort
-    radix_sort(1,&r,&r_c,0,r.num_tuples);
-    printf("RESULT\n\n\n");
+    radix_sort(&r);
+    printf("\n\nRESULT\n");
     printf("\nR:\n");
     print_relation(&r);
-    printf("\nRC:\n");
-    print_relation(&r_c);
+  //  printf("\nRC:\n");
+   // print_relation(&r_c);
     int correct=1;
-    for(int64_t i=0;i<r_c.num_tuples-1;i++)
+    for(int64_t i=0;i<r.num_tuples-1;i++)
     {
-        if(r_c.tuples[i].key>r_c.tuples[i+1].key)
+        if(r.tuples[i].key>r.tuples[i+1].key)
         {
-            printf("Error i: %" PRId64 "\t%" PRIu64 "\t%" PRIu64 "\n",i,r_c.tuples[i].key,r_c.tuples[i+1].key);
+            printf("Error i: %" PRId64 "\t%" PRIu64 "\t%" PRIu64 "\n",i,r.tuples[i].key,r.tuples[i+1].key);
             correct=0;
             //break;
         }
@@ -72,6 +72,6 @@ int main(int argc, char** argv)
         printf("Correct\n");
     }
     free(r.tuples);
-    free(r_c.tuples);
+  //  free(r_c.tuples);
     return(EXIT_SUCCESS);
 }

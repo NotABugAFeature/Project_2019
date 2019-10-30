@@ -58,6 +58,14 @@ void transform_to_psum(uint64_t *hist)
     }
 }
 //----Radix Sort----
+void copy_relation(relation* source, relation* target, uint64_t start_index, uint64_t end_index)
+{
+    for(uint64_t i=start_index; i<end_index; i++)
+    {
+        target->tuples[i].key=source->tuples[i].key;
+        target->tuples[i].row_id=source->tuples[i].row_id;
+    }
+}
 /**
  * Copies a part of the source relation to the target relation with the use of 
  * the cumulative histogram (psum)
@@ -102,9 +110,9 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
 
 void radix_sort(unsigned short byte, relation *source, relation *result, uint64_t start_index, uint64_t end_index)
 {
-	printf("RADIX: %" PRIu64 " to %" PRIu64 "\n", start_index, end_index);
+	printf("Byte:%d RADIX: %" PRIu64 " to %" PRIu64 "\n",byte, start_index, end_index);
 	//Check if bucket is small enough
-	if((end_index - start_index) < 20 || byte > 8)
+	if((end_index-start_index)*sizeof(tuple)<20||byte>8)
 	{
 		printf("RADIX TO QUICK: %" PRIu64 " to %" PRIu64 "\n", start_index, end_index-1);
 		//Choose whether to place result in source or result array
@@ -115,7 +123,9 @@ void radix_sort(unsigned short byte, relation *source, relation *result, uint64_
 		}
 		else
 		{
-			quicksort(source->tuples, start_index, end_index-1, result->tuples);
+			//quicksort(source->tuples, start_index, end_index-1, result->tuples);
+			quicksort(source->tuples, start_index, end_index-1, NULL);
+			copy_relation(source, result, start_index, end_index);
 		}
 	}
 	else
@@ -153,11 +163,18 @@ void radix_sort(unsigned short byte, relation *source, relation *result, uint64_
 		uint64_t start = start_index;
 		for(uint64_t i=0; i<HIST_SIZE; i++)
 		{
-			if(start < hist[i])
+			//if(start < hist[i])
+			if(start<start_index+hist[i])
 			{
-				radix_sort(byte+1, result, source, start, hist[i]);
+				//radix_sort(byte+1, result, source, start, hist[i]);
+				radix_sort(byte+1, result, source, start, start_index+hist[i]);
 			}
-			start = hist[i];
+			if(hist[i]+start_index>end_index)
+            		{
+                		break;
+            		}
+			//start = hist[i];
+			start=start_index+hist[i];
 		}
 		free(hist);
 	}

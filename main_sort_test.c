@@ -39,6 +39,10 @@ int main(int argc, char** argv)
     print_relation(&r);
     relation r_c;
     r_c.num_tuples=r.num_tuples;
+    for(uint64_t i=0; i<test_table->rows; i++)
+    {
+        free(test_table->array[i]);
+    }
     free(test_table->array);
     free(test_table);
     r_c.tuples=malloc(r_c.num_tuples*sizeof(tuple));
@@ -58,7 +62,7 @@ int main(int argc, char** argv)
     {
         if(r_c.tuples[i].key>r_c.tuples[i+1].key)
         {
-            printf("Error i: %" PRId64 "\t%" PRId64 "\t%" PRId64 "\n",i,r_c.tuples[i].key,r_c.tuples[i+1].key);
+            printf("Error i: %" PRId64 "\t%" PRIu64 "\t%" PRIu64 "\n",i,r_c.tuples[i].key,r_c.tuples[i+1].key);
             correct=0;
             //break;
         }

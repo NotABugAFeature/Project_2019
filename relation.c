@@ -126,7 +126,7 @@ void print_relation(relation* rel)
         return;
     }
 
-    printf("Number of tuples:% \n"PRIu64,rel->num_tuples);
+    printf("Number of tuples:%"PRIu64 "\n",rel->num_tuples);
     printf("RowID\tKey\n");
 
     for(uint64_t i=0;i<rel->num_tuples;i++)

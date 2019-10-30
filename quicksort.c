@@ -20,55 +20,45 @@ void swap(tuple *a, tuple *b)	//TODO: Maybe should be void *
  * Takes last element as pivot, places it in its correct position
  * and places all smaller elements to its left and all greater to its right
  * @param tuple *source Array to be sorted
- * @param int64_t low Starging index
- * @param int64_t high Ending index
- * @param tuple *target Array to place results
+ * @param uint64_t low Starging index
+ * @param uint64_t high Ending index
  */
-int partition(tuple *source, int64_t low, int64_t high, tuple *target)
+uint64_t partition(tuple *source, uint64_t low, uint64_t high)
 {
 	uint64_t pivot = source[high].key;    //pivot
-	int64_t i = (low - 1);  //Index of smaller element
+	uint64_t i = low;  //Index of smaller element
 
-	for(int64_t j = low; j <= high- 1; j++)
+	for(uint64_t j = low; j < high; j++)
 	{
 		//If current element is smaller than the pivot
-		if(source[j].key < pivot)
+		if(source[j].key <= pivot)
 		{
 			i++;    //Increment index of smaller element
-			if(target != NULL && target != source)
-			{
-				target[i] = source[j];
-				target[j] = source[i];
-			}
 			swap(&source[i], &source[j]);
 		}
 	}
-	if(target != NULL && target != source)
-	{
-		target[i + 1] = source[high];
-		target[high] = source[i + 1];
-	}
-	swap(&source[i + 1], &source[high]);
-	return (i + 1);
+	(&source[i], &source[high]);
+	return i;
 }
  
 /** 
- * QuickSort (sorted array can be found both in source and in target)
+ * QuickSort
  * @param tuple *source Array to be sorted
- * @param int64_t low Starging index
- * @param int64_t high Ending index
- * @param tuple *target Array to place results (can be given as NULL if not needed)
+ * @param uint64_t low Starging index
+ * @param uint64_t high Ending index
  */
-void quicksort(tuple *source, int64_t low, int64_t high, tuple *target)
+void quicksort(tuple *source, uint64_t low, uint64_t high)
 {
 	//printf("QUICK: %" PRId64 " to %" PRId64 "\n", low, high);
-	if(low <= high)
+	if(low < high)
 	{
 		//pi is partitioning index, source[p] is now at right place
-		int64_t pi = partition(source, low, high, target);
-
-		//Separately sort elements before partition and after partition
-		quicksort(source, low, pi - 1, target);
+		uint64_t pi = partition(source, low, high, target);
+		if(pi>0)
+        	{
+			//Separately sort elements before partition and after partition
+			quicksort(source, low, pi - 1, target);
+		}
 		quicksort(source, pi + 1, high, target);
 	}
 }

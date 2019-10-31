@@ -123,12 +123,12 @@ int radix_sort_recursive(unsigned short byte, relation *array, relation *auxilia
 		//Choose whether to place result in array or auxiliary array
 		if(byte % 2 == 0)
 		{
-			quicksort(array->tuples, start_index, end_index-1, NULL);
+			quicksort(array->tuples, start_index, end_index-1);
 			copy_relation(array, auxiliary, start_index, end_index);
 		}
 		else
 		{
-			quicksort(array->tuples, start_index, end_index-1, NULL);
+			quicksort(array->tuples, start_index, end_index-1);
 		}
 	}
 	else

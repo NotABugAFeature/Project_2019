@@ -10,9 +10,16 @@
  * @param list - result list
  * @param t - first relation
  * @param s - second relation
+ * @return an integer code {0,1,2}
  */
-void final_join(result_list* list, relation *t, relation *s)
+int final_join(result_list* list, relation *t, relation *s)
 {
+    if(list == NULL || t == NULL || s == NULL)
+    {
+        perror("Error: arguments cannot be null");
+        return 1;
+    }
+  
     //printf("num_tuples: %" PRIu64 " %" PRIu64 "\n", t->num_tuples, s->num_tuples);
     for(uint64_t i = 0; i < t->num_tuples; i++)
     {
@@ -27,12 +34,13 @@ void final_join(result_list* list, relation *t, relation *s)
                 if(append_to_list(list, t->tuples[i].row_id, s->tuples[j].row_id))
                 {
                     perror("Error: append to list");
-                    return;
+                    return 2;
                 }
             }
             j++;
         }
     }
+    return 0;
 }
 
 
@@ -85,7 +93,12 @@ result_list *sort_merge_join(relation *relR, relation *relS)
 	}
 
 	//Join
-	final_join(results, relR, relS);
+	int res = final_join(results, relR, relS);
+    if(res)
+    {
+        fprintf(stderr, "Error in final_join\n");
+        return NULL;
+    }
 
 	return results;
 }

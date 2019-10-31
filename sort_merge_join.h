@@ -8,8 +8,9 @@
  * @param list - result list
  * @param t - first relation
  * @param s - second relation
+ * @return an integer code {0,1,2}
  */
-void final_join(result_list*, relation *, relation *);
+int final_join(result_list*, relation *, relation *);
 
 
 

@@ -12,7 +12,7 @@
 #ifndef RESULTLIST_H
 #define RESULTLIST_H
 
-#include <stdint.h>
+#include <inttypes.h>
 
 #define RESULT_LIST_BUCKET_SIZE 1048576/(2*sizeof(uint64_t))
 #define ROWID_R_INDEX 0
@@ -57,5 +57,11 @@ int is_result_list_empty(result_list* list);
  * @param
  * @return int The number of nodes
  */
-int result_list_get_number_of_buckets(result_list*);
+unsigned int result_list_get_number_of_buckets(result_list*);
+/**
+ * Returns the number of records in the result list.
+ * @param
+ * @return uint64_t The number of records
+ */
+uint64_t result_list_get_number_of_records(result_list*);
 #endif /*CLIENTLIST_H*/

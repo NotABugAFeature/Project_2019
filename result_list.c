@@ -71,9 +71,9 @@ struct result_list_node* create_result_list_node()
  * @param result_list_bucket The bucket to check
  * @return int 1 if the bucket is full else 0
  */
-int is_result_list_bucket_full(result_list_bucket bucket)
+int is_result_list_bucket_full(result_list_bucket* bucket)
 {
-    return bucket.index_to_add_next==RESULT_LIST_BUCKET_SIZE ? 0 : 1;
+    return bucket->index_to_add_next==RESULT_LIST_BUCKET_SIZE ? 0 : 1;
 }
 
 /**
@@ -85,7 +85,7 @@ int is_result_list_bucket_full(result_list_bucket bucket)
  */
 int append_to_bucket(result_list_bucket* bucket, uint64_t r_row_id, uint64_t s_row_id)
 {
-    if(is_result_list_bucket_full(*bucket))
+    if(is_result_list_bucket_full(bucket))
     {
         bucket->row_ids[bucket->index_to_add_next][ROWID_R_INDEX]=r_row_id;
         bucket->row_ids[bucket->index_to_add_next][ROWID_S_INDEX]=s_row_id;
@@ -98,13 +98,13 @@ int append_to_bucket(result_list_bucket* bucket, uint64_t r_row_id, uint64_t s_r
  * Prints the contents of the bucket (index and array)
  * @param result_list_bucket the bucket to print
  */
-void print_bucket(result_list_bucket bucket)
+void print_bucket(result_list_bucket* bucket)
 {
     //Print the array inside the bucket
-    printf("Index to add next: %u\n", bucket.index_to_add_next);
-    for(int i=0; i<bucket.index_to_add_next; i++)
+    printf("Index to add next: %u\n", bucket->index_to_add_next);
+    for(int i=0; i<bucket->index_to_add_next; i++)
     {
-        printf("RowIdR: %" PRIu64 " RowIdS: %" PRIu64 "\n", bucket.row_ids[i][ROWID_R_INDEX], bucket.row_ids[i][ROWID_S_INDEX]);
+        printf("RowIdR: %" PRIu64 " RowIdS: %" PRIu64 "\n", bucket->row_ids[i][ROWID_R_INDEX], bucket->row_ids[i][ROWID_S_INDEX]);
     }
 }
 
@@ -164,7 +164,7 @@ void print_result_list(result_list* list)
     while(temp!=NULL)//Visit all the nodes and print them
     {
         printf("Bucket Index: %d\n", index);
-        print_bucket(temp->bucket);
+        print_bucket(&(temp->bucket));
         index++;
         temp=temp->next;
     }
@@ -214,13 +214,13 @@ int append_to_list(result_list* list, uint64_t r_row_id, uint64_t s_row_id)
     return 0;
 }
 
-int is_result_list_empty(result_list list)
+int is_result_list_empty(result_list* list)
 {
     //return list->Head==NULL ? 1 : 0;
-    return list.number_of_nodes==0 ? 1 : 0;
+    return list->number_of_nodes==0 ? 1 : 0;
 }
 
-int result_list_get_number_of_buckets(result_list list)
+int result_list_get_number_of_buckets(result_list* list)
 {
-    return list.number_of_nodes;
+    return list->number_of_nodes;
 }

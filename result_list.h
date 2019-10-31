@@ -51,11 +51,11 @@ void print_result_list(result_list*);
  * @param result_list The res
  * @return int 1 if empty else 0
  */
-int is_result_list_empty(result_list list);
+int is_result_list_empty(result_list* list);
 /**
  * Returns the number of nodes in the result list.
  * @param
  * @return int The number of nodes
  */
-int result_list_get_number_of_buckets(result_list);
+int result_list_get_number_of_buckets(result_list*);
 #endif /*CLIENTLIST_H*/

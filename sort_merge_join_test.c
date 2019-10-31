@@ -1,10 +1,3 @@
-/*
- * File:   sort_merge_join_test.c
- * Author: userp
- *
- * Created on 31 Οκτ 2019, 5:47:51 μμ
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <CUnit/Basic.h>
@@ -53,7 +46,9 @@ int main()
 
     /* Initialize the CUnit test registry */
     if(CUE_SUCCESS!=CU_initialize_registry())
+    {
         return CU_get_error();
+    }
 
     /* Add a suite to the registry */
     pSuite=CU_add_suite("sort_merge_join_test", init_suite, clean_suite);

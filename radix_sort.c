@@ -14,12 +14,12 @@
  * @param hist - array already allocated and initialized with 0s
  * @param byte_number - ranges from 1 (most significant left-most byte) to 8 (less significant right-most byte)
  */
-void create_histogram(relation r, uint64_t start_index, uint64_t end_index, uint64_t *hist, unsigned short byte_number)
+void create_histogram(relation* r, uint64_t start_index, uint64_t end_index, uint64_t *hist, unsigned short byte_number)
 {
 
     for(uint64_t i=start_index; i<end_index; i++)
     {
-        uint64_t key=r.tuples[i].key;
+        uint64_t key=r->tuples[i].key;
         int position=(key>>((8-byte_number)<<3)) & 0xff;
         hist[position]++;
     }
@@ -144,7 +144,7 @@ int radix_sort_recursive(unsigned short byte, relation *array, relation *auxilia
 		{
 			hist[i] = 0;
 		}
-		create_histogram(*array, start_index, end_index, hist, byte);
+		create_histogram(array, start_index, end_index, hist, byte);
 		transform_to_psum(hist);
 		copy_relation_with_psum(array, auxiliary, start_index, end_index, hist, byte);
 		

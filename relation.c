@@ -132,6 +132,57 @@ int create_relation_from_table(uint64_t* key_column,uint64_t column_size,relatio
     return 0;
 }
 
+/**
+ * Reads relation data from file and creates a relation
+ * @param char * The name of the file
+ * @return relation * A pointer to the created relation
+ */
+relation *relation_from_file(char *filename)
+{
+	FILE *fp;
+    
+    //open file
+    fp = fopen(filename, "rb");
+    if(fp == NULL)
+    {
+        perror("relation_from_file: fopen error");
+        return NULL;
+    }
+
+    uint64_t rows = 0;
+    char str[100];
+
+    while(fgets(str, 99, fp) != NULL)
+    {
+    	rows++;
+    }
+
+    printf("File %s has %" PRIu64 " rows\n", filename, rows);
+    relation *rel = malloc(sizeof(relation));
+    if(rel == NULL)
+    {
+    	perror("relation_from_file: malloc error");
+    	return NULL;
+    }
+    rel->num_tuples = rows;
+    rel->tuples = malloc(rows*sizeof(tuple));
+    if(rel->tuples == NULL)
+    {
+    	perror("relation_from_file: malloc error");
+    	return NULL;
+    }
+    
+    rewind(fp);
+    for(uint64_t i=0; i<rows; i++)
+    {
+    	fgets(str, 99, fp);
+    	sscanf(str, "%" PRIu64 ",%" PRIu64, &(rel->tuples[i].key), &(rel->tuples[i].row_id));
+    }
+
+    fclose(fp);
+    return rel;
+}
+
 
 /**
  * Prints all the tuples of the relation given

@@ -67,6 +67,13 @@ void delete_table(table*);
 int create_relation_from_table(uint64_t* ,uint64_t , relation*);
 
 /**
+ * Reads relation data from file and creates a relation
+ * @param char * The name of the file
+ * @return relation * A pointer to the created relation
+ */
+relation *relation_from_file(char *);
+
+/**
  * Prints all the tuples of the relation given
  * 
  * @param rel* The relation to print

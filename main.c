@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-
+/*
 	table *r_table = read_from_file(argv[1]);
 	relation *r = malloc(sizeof(relation));
 	if(r == NULL)
@@ -30,7 +30,20 @@ int main(int argc, char **argv)
     }
     s->tuples = NULL; s->num_tuples = 0;
     create_relation_from_table(&s_table->array[0][0], s_table->columns, s);
+*/
+	relation *r = relation_from_file(argv[1]);
+	if(r == NULL)
+	{
+		fprintf(stderr, "Error in relation_from_file\n");
+		return -2;
+	}
 
+	relation *s = relation_from_file(argv[2]);
+	if(s == NULL)
+	{
+		fprintf(stderr, "Error in relation_from_file\n");
+		return -2;
+	}
 
     result_list *results = sort_merge_join(r, s);
     if(results == NULL)
@@ -44,8 +57,8 @@ int main(int argc, char **argv)
     printf("\n");
 
     delete_result_list(results);
-    free(r_table);
-    free(s_table);
+    //free(r_table);
+    //free(s_table);
 
     free(r->tuples);
     free(r);

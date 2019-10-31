@@ -20,10 +20,10 @@ void final_join(result_list* list, relation *t, relation *s)
         uint64_t j = 0;
         while(t->tuples[i].key >= s->tuples[j].key && j < s->num_tuples)
         {
-            printf("NOW: %" PRIu64 " %" PRIu64 "\n", t->tuples[i].key, s->tuples[j].key);
+            //printf("NOW: %" PRIu64 " %" PRIu64 "\n", t->tuples[i].key, s->tuples[j].key);
             if(t->tuples[i].key == s->tuples[j].key)
             {
-                printf("FOUND\n");
+                //printf("FOUND\n");
                 if(append_to_list(list, t->tuples[i].row_id, s->tuples[j].row_id))
                 {
                     perror("Error: append to list");
@@ -47,9 +47,11 @@ result_list *sort_merge_join(relation *relR, relation *relS)
 {
 	printf("R relation:\n");
 	print_relation(relR);
+	printf("\n");
 
 	printf("S relation:\n");
 	print_relation(relS);
+	printf("\n");
 
 	//Sort the two relations
 	int retval = radix_sort(relR);
@@ -66,11 +68,14 @@ result_list *sort_merge_join(relation *relR, relation *relS)
 		return NULL;
 	}
 
+	printf("\n");
 	printf("Sorted R:\n");
 	print_relation(relR);
+	printf("\n");
 
 	printf("Sorted S:\n");
 	print_relation(relS);
+	printf("\n");
 
 	result_list *results = create_result_list();
 	if(results == NULL)

@@ -101,7 +101,7 @@ int append_to_bucket(result_list_bucket* bucket, uint64_t r_row_id, uint64_t s_r
 void print_bucket(result_list_bucket* bucket)
 {
     //Print the array inside the bucket
-    printf("Index to add next: %u\n", bucket->index_to_add_next);
+    //printf("Index to add next: %u\n", bucket->index_to_add_next);
     for(int i=0; i<bucket->index_to_add_next; i++)
     {
         printf("RowIdR: %" PRIu64 " RowIdS: %" PRIu64 "\n", bucket->row_ids[i][ROWID_R_INDEX], bucket->row_ids[i][ROWID_S_INDEX]);
@@ -137,12 +137,12 @@ void delete_result_list(result_list* list)
     //Delete all the nodes
     while(list->head!=NULL)
     {
-        printf("Nodes: %d\n", list->number_of_nodes);
+        //printf("Nodes: %d\n", list->number_of_nodes);
         list->head=temp->next;
         free(temp);
         temp=list->head;
         list->number_of_nodes--;
-        printf("Node Deleted\n");
+        //printf("Node Deleted\n");
     }
     free(list);
     printf("List Deleted\n");
@@ -150,9 +150,9 @@ void delete_result_list(result_list* list)
 
 void print_result_list(result_list* list)
 {
-    printf("%" PRIu64 "\n", sizeof(result_list));
-    printf("%" PRIu64 "\n", sizeof(result_list_node));
-    printf("%" PRIu64 "\n", sizeof(result_list_bucket));
+    //printf("%" PRIu64 "\n", sizeof(result_list));
+    //printf("%" PRIu64 "\n", sizeof(result_list_node));
+    //printf("%" PRIu64 "\n", sizeof(result_list_bucket));
     if(list==NULL)
     {
         printf("print_result_list: NULL list pointer\n");

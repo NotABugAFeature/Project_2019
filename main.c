@@ -41,6 +41,7 @@ int main(int argc, char **argv)
 
     printf("\nResults:\n");
     print_result_list(results);
+    printf("\n");
 
     delete_result_list(results);
     free(r_table);

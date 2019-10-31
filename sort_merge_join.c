@@ -1,6 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include "sort_merge_join.h"
+
+/**
+ * Implements the final join of two relations
+ * and places the result into a 'result_list'
+ * 
+ * @param list - result list
+ * @param t - first relation
+ * @param s - second relation
+ */
+void final_join(result_list* list, relation *t, relation *s)
+{
+    //printf("num_tuples: %" PRIu64 " %" PRIu64 "\n", t->num_tuples, s->num_tuples);
+    for(uint64_t i = 0; i < t->num_tuples; i++)
+    {
+        //printf("i: %" PRIu64 "\n", i);
+        uint64_t j = 0;
+        while(t->tuples[i].key >= s->tuples[j].key && j < s->num_tuples)
+        {
+            printf("NOW: %" PRIu64 " %" PRIu64 "\n", t->tuples[i].key, s->tuples[j].key);
+            if(t->tuples[i].key == s->tuples[j].key)
+            {
+                printf("FOUND\n");
+                if(append_to_list(list, t->tuples[i].row_id, s->tuples[j].row_id))
+                {
+                    perror("Error: append to list");
+                    return;
+                }
+            }
+            j++;
+        }
+    }
+}
+
 
 /**
  * Implements sort merge join

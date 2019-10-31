@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "./result_list/result_list.h"
+#include <stdlib.h>
 #include "sort_merge_join.h"
 
 int main(int argc, char **argv)

@@ -19,7 +19,7 @@ void final_join(result_list* list, relation *t, relation *s)
                 printf("FOUND\n");
                 if(append_to_list(list, t->tuples[i].key, s->tuples[j].key))
                 {
-                    fprintf(stderr, "Error in result_list \n");
+                    perror("Error: append to list");
                     return;
                 }
             }

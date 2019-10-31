@@ -33,8 +33,8 @@ uint64_t partition(tuple *source, uint64_t low, uint64_t high)
 		//If current element is smaller than the pivot
 		if(source[j].key <= pivot)
 		{
-			i++;    //Increment index of smaller element
 			swap(&source[i], &source[j]);
+			i++;    //Increment index of smaller element
 		}
 	}
 	swap(&source[i], &source[high]);

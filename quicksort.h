@@ -13,18 +13,16 @@ void swap(tuple *, tuple *);
  * Takes last element as pivot, places it in its correct position
  * and places all smaller elements to its left and all greater to its right
  * @param tuple *source Array to be sorted
- * @param int64_t low Starging index
- * @param int64_t high Ending index
- * @param tuple *target Array to place results
+ * @param uint64_t low Starging index
+ * @param uint64_t high Ending index
  */
-int partition(tuple *, int64_t, int64_t, tuple *);
+uint64_t partition(tuple *, uint64_t, uint64_t);
 
 /** 
- * QuickSort (sorted array can be found both in source and in target)
+ * QuickSort
  * @param tuple *source Array to be sorted
- * @param int64_t low Starging index
- * @param int64_t high Ending index
- * @param tuple *target Array to place results (can be given as NULL if not needed)
+ * @param uint64_t low Starging index
+ * @param uint64_t high Ending index
  */
-void quicksort(tuple *, int64_t, int64_t, tuple *);
+void quicksort(tuple *, uint64_t, uint64_t);
 #endif	// QUICKSORT_H

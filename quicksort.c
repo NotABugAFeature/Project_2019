@@ -37,7 +37,7 @@ uint64_t partition(tuple *source, uint64_t low, uint64_t high)
 			swap(&source[i], &source[j]);
 		}
 	}
-	(&source[i], &source[high]);
+	swap(&source[i], &source[high]);
 	return i;
 }
  

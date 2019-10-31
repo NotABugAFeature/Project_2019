@@ -13,7 +13,7 @@
  * @param hist - array already allocated and initialized with 0s
  * @param byte_number - ranges from 1 (most significant left-most byte) to 8 (less significant right-most byte)
  */
-void create_histogram(relation r, uint64_t start_index, uint64_t end_index, uint64_t *hist, unsigned short byte_number);
+void create_histogram(relation *r, uint64_t start_index, uint64_t end_index, uint64_t *hist, unsigned short byte_number);
 /**
  * Psum creation of a relation r based on its histogram
  *

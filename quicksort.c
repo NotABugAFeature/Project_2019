@@ -53,12 +53,12 @@ void quicksort(tuple *source, uint64_t low, uint64_t high)
 	if(low < high)
 	{
 		//pi is partitioning index, source[p] is now at right place
-		uint64_t pi = partition(source, low, high, target);
+		uint64_t pi = partition(source, low, high);
 		if(pi>0)
         	{
 			//Separately sort elements before partition and after partition
-			quicksort(source, low, pi - 1, target);
+			quicksort(source, low, pi - 1);
 		}
-		quicksort(source, pi + 1, high, target);
+		quicksort(source, pi + 1, high);
 	}
 }

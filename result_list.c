@@ -73,7 +73,7 @@ struct result_list_node* create_result_list_node()
  */
 int is_result_list_bucket_full(result_list_bucket* bucket)
 {
-    return bucket->index_to_add_next==RESULT_LIST_BUCKET_SIZE ? 0 : 1;
+    return bucket->index_to_add_next==RESULT_LIST_BUCKET_SIZE ? 1 : 0;
 }
 
 /**
@@ -85,7 +85,7 @@ int is_result_list_bucket_full(result_list_bucket* bucket)
  */
 int append_to_bucket(result_list_bucket* bucket, uint64_t r_row_id, uint64_t s_row_id)
 {
-    if(is_result_list_bucket_full(bucket))
+    if(!is_result_list_bucket_full(bucket))
     {
         bucket->row_ids[bucket->index_to_add_next][ROWID_R_INDEX]=r_row_id;
         bucket->row_ids[bucket->index_to_add_next][ROWID_S_INDEX]=s_row_id;

@@ -14,17 +14,16 @@
  */
 int final_join(result_list* list, relation *t, relation *s)
 {
-    if(list == NULL || t == NULL || s == NULL)
+    if(list == NULL || t == NULL || s == NULL ||t->tuples==NULL||s->tuples==NULL)
     {
-        perror("Error: arguments cannot be null");
+	fprintf(stderr, "%s", "final_join Error: arguments cannot be null\n");
         return 1;
     }
-  
+    uint64_t j = 0;
     //printf("num_tuples: %" PRIu64 " %" PRIu64 "\n", t->num_tuples, s->num_tuples);
     for(uint64_t i = 0; i < t->num_tuples; i++)
     {
         //printf("i: %" PRIu64 "\n", i);
-        uint64_t j = 0;
         while(t->tuples[i].key >= s->tuples[j].key && j < s->num_tuples)
         {
             //printf("NOW: %" PRIu64 " %" PRIu64 "\n", t->tuples[i].key, s->tuples[j].key);
@@ -33,7 +32,7 @@ int final_join(result_list* list, relation *t, relation *s)
                 //printf("FOUND\n");
                 if(append_to_list(list, t->tuples[i].row_id, s->tuples[j].row_id))
                 {
-                    perror("Error: append to list");
+                    fprintf(stderr, "%s", "final_join Error: append to list\n");
                     return 2;
                 }
             }
@@ -53,9 +52,9 @@ int final_join(result_list* list, relation *t, relation *s)
  */
 result_list *sort_merge_join(relation *relR, relation *relS)
 {
-    if(relR == NULL || relS == NULL)
+    if(relR==NULL||relS==NULL||relR->tuples==NULL||relS->tuples==NULL)
     {
-        perror("Error: arguments cannot be null");
+        fprintf(stderr, "%s", "sort_merge_join Error: arguments cannot be null\n");
         return 1;
     }
 

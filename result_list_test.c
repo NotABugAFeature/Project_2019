@@ -125,7 +125,9 @@ void testAppend_to_bucket()
 
 void testCreate_result_list()
 {
+    //Create a result list
     result_list* list=create_result_list();
+    //Check if the list is initialized correctly
     if(list==NULL||list->head!=NULL||list->number_of_nodes!=0||list->tail!=NULL)
     {
         CU_ASSERT(0);
@@ -135,8 +137,9 @@ void testCreate_result_list()
 
 void testAppend_to_list()
 {
+    //Create a result list
     result_list* list=create_result_list();
-    if(list==NULL)
+    if(list==NULL)//Check if it was created
     {
         CU_ASSERT(0);
         return;
@@ -144,8 +147,10 @@ void testAppend_to_list()
     uint64_t r_row_id=1;
     uint64_t s_row_id=2;
     unsigned int i=0;
+    //Append the maximum records of one node in the list
     for(;i<RESULT_LIST_BUCKET_SIZE;i++)
     {
+        //Check if the items were added correctly in head and tail nodes
         if(append_to_list(list, r_row_id, s_row_id)!=0||
                 list->head->bucket.row_ids[i][ROWID_R_INDEX]!=r_row_id||
                 list->head->bucket.row_ids[i][ROWID_S_INDEX]!=s_row_id||
@@ -157,12 +162,15 @@ void testAppend_to_list()
         r_row_id+=2;
         s_row_id+=2;
     }
-    if(list->number_of_nodes!=1||list->head->bucket.index_to_add_next!=i||list->head!=list->tail)
+    //Check if only one node exists and it is full
+    if(list->number_of_nodes!=1||is_result_list_bucket_full(&list->head->bucket)!=1||list->head->bucket.index_to_add_next!=i||list->head!=list->tail)
     {
         CU_ASSERT(0);
     }
+    //Append the maximum records of one node in the list
     for(i=0;i<RESULT_LIST_BUCKET_SIZE;i++)
     {
+        //Check if the items were added correctly in tail node
         if(append_to_list(list, r_row_id, s_row_id)!=0||list->tail->bucket.row_ids[i][ROWID_R_INDEX]!=r_row_id||list->tail->bucket.row_ids[i][ROWID_S_INDEX]!=s_row_id)
         {
             CU_ASSERT(0);
@@ -170,7 +178,8 @@ void testAppend_to_list()
         r_row_id+=2;
         s_row_id+=2;
     }
-    if(list->number_of_nodes!=2||list->head->bucket.index_to_add_next!=i||list->tail->bucket.index_to_add_next!=i||list->head==list->tail)
+    //Check if two nodes exists and are both full
+    if(list->number_of_nodes!=2||is_result_list_bucket_full(&list->head->bucket)!=1||is_result_list_bucket_full(&list->tail->bucket)!=1||list->head->bucket.index_to_add_next!=i||list->tail->bucket.index_to_add_next!=i||list->head==list->tail)
     {
         CU_ASSERT(0);
     }

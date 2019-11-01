@@ -53,6 +53,12 @@ int final_join(result_list* list, relation *t, relation *s)
  */
 result_list *sort_merge_join(relation *relR, relation *relS)
 {
+    if(relR == NULL || relS == NULL)
+    {
+        perror("Error: arguments cannot be null");
+        return 1;
+    }
+
 	printf("R relation:\n");
 	print_relation(relR);
 	printf("\n");

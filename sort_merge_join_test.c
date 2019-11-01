@@ -26,8 +26,8 @@ int clean_suite(void)
 void testFinal_join1()
 {
     result_list* list = create_result_list();
-    relation* p2;
-    int res = final_join(list, NULL, p2);
+    relation p2;
+    int res = final_join(list, NULL, &p2);
 
     CU_ASSERT_EQUAL(res, 1);
 }
@@ -53,8 +53,8 @@ void testFinal_join2()
  */
 void testFinal_join3()
 {
-    relation* p1, p2;
-    int res = final_join(NULL, p1, p2);
+    relation p1, p2;
+    int res = final_join(NULL, &p1, &p2);
 
     CU_ASSERT_EQUAL(res, 1);
 }
@@ -68,7 +68,7 @@ void testFinal_join4()
 {
     result_list* list = create_result_list();
 
-    relation* p1, p2;
+    relation p1, p2;
 
     p1.num_tuples = 0;
     p1.tuples = NULL;
@@ -79,15 +79,15 @@ void testFinal_join4()
     p2.tuples[0].row_id = 1;
 
     p2.tuples[1].key = 1;
-    p1.tuples[1].row_id = 2;
+    p2.tuples[1].row_id = 2;
 
     p2.tuples[2].key = 3;
     p2.tuples[2].row_id = 3;
 
 
-    int res = final_join(list, p1, p2);
+    int res = final_join(list, &p1, &p2);
 
-    CU_ASSERT_EQUAL(res, 0);
+    CU_ASSERT_EQUAL(res, 1);
 
     free(p2.tuples);
 }
@@ -101,7 +101,7 @@ void testFinal_join5()
 {
     result_list* list = create_result_list();
 
-    relation* p1, p2;
+    relation p1, p2;
 
     p1.num_tuples = 0;
     p1.tuples = NULL;
@@ -112,15 +112,15 @@ void testFinal_join5()
     p2.tuples[0].row_id = 1;
 
     p2.tuples[1].key = 1;
-    p1.tuples[1].row_id = 2;
+    p2.tuples[1].row_id = 2;
 
     p2.tuples[2].key = 3;
     p2.tuples[2].row_id = 3;
 
 
-    int res = final_join(list, p2, p1);
+    int res = final_join(list, &p2, &p1);
 
-    CU_ASSERT_EQUAL(res, 0);
+    CU_ASSERT_EQUAL(res, 1);
 
     free(p2.tuples);
 }
@@ -134,7 +134,7 @@ void testFinal_join6()
 {
     result_list* list = create_result_list();
     
-    relation* p1, p2;
+    relation p1, p2;
 
     p1.num_tuples = 4;
     p1.tuples = malloc(4*sizeof(tuple));
@@ -163,7 +163,7 @@ void testFinal_join6()
     p2.tuples[2].row_id = 3;
 
 
-    int res = final_join(list, p1, p2);
+    int res = final_join(list, &p1, &p2);
 
     CU_ASSERT_EQUAL(res, 0);
     CU_ASSERT_EQUAL(result_list_get_number_of_records(list), 3);
@@ -181,7 +181,7 @@ void testFinal_join7()
 {
     result_list* list = create_result_list();
     
-    relation* p1, p2;
+    relation p1, p2;
 
     p1.num_tuples = 4;
     p1.tuples = malloc(4*sizeof(tuple));
@@ -210,7 +210,7 @@ void testFinal_join7()
     p2.tuples[2].row_id = 3;
 
 
-    int res = final_join(list, p1, p2);
+    int res = final_join(list, &p1, &p2);
 
     CU_ASSERT_EQUAL(res, 0);
     CU_ASSERT_EQUAL(result_list_get_number_of_records(list), 0);
@@ -228,7 +228,7 @@ void testFinal_join8()
 {
     result_list* list = create_result_list();
     
-    relation* p1, p2;
+    relation p1, p2;
 
     p1.num_tuples = 4;
     p1.tuples = malloc(4*sizeof(tuple));
@@ -257,7 +257,7 @@ void testFinal_join8()
     p2.tuples[2].row_id = 3;
 
 
-    int res = final_join(list, p1, p2);
+    int res = final_join(list, &p1, &p2);
 
     CU_ASSERT_EQUAL(res, 0);
     CU_ASSERT_EQUAL(result_list_get_number_of_records(list), 2);
@@ -275,7 +275,7 @@ void testSort_merge_join1()
 {
     relation* relS;
     result_list* result = sort_merge_join(NULL, relS);
-    
+    CU_ASSERT_EQUAL(result, NULL);
 }
 
 
@@ -287,7 +287,7 @@ void testSort_merge_join2()
 {
     relation* relR;
     result_list* result = sort_merge_join(relR, NULL);
-    
+    CU_ASSERT_EQUAL(result, NULL);
 }
 
 
@@ -297,7 +297,7 @@ void testSort_merge_join2()
  */
 void testSort_merge_join3()
 {
-    relation* p1, p2;
+    relation p1, p2;
 
     p1.num_tuples = 4;
     p1.tuples = malloc(4*sizeof(tuple));
@@ -325,7 +325,7 @@ void testSort_merge_join3()
     p2.tuples[2].key = 3;
     p2.tuples[2].row_id = 3;
 
-    result_list* result = sort_merge_join(p1, p2);
+    result_list* result = sort_merge_join(&p1, &p2);
 
     CU_ASSERT_NOT_EQUAL(result, NULL);
     CU_ASSERT_EQUAL(result_list_get_number_of_records(result), 3);
@@ -341,9 +341,9 @@ void testSort_merge_join3()
  */
 void testSort_merge_join4()
 {
-    relation* p1, p2;
+    relation p1, p2;
 
-    p1.num_tuples = 1000000000;
+    p1.num_tuples = 500000000;
     uint64_t init = 2251799813685020;
     p1.tuples = malloc((p1.num_tuples)*sizeof(tuple));
     for(int i = 0; i < p1.num_tuples; i++)
@@ -364,7 +364,7 @@ void testSort_merge_join4()
     p2.tuples[2].key = 2251799813685020;
     p2.tuples[2].row_id = 3;
 
-    result_list* result = sort_merge_join(p1, p2);
+    result_list* result = sort_merge_join(&p1, &p2);
 
     CU_ASSERT_NOT_EQUAL(result, NULL);
     CU_ASSERT_EQUAL(result_list_get_number_of_records(result), 3);
@@ -380,9 +380,9 @@ void testSort_merge_join4()
  */
 void testSort_merge_join5()
 {
-    relation* p1, p2;
+    relation p1, p2;
 
-    p1.num_tuples = 1000000000;
+    p1.num_tuples = 300000000;
     uint64_t init = 4647856104846919648;
     p1.tuples = malloc((p1.num_tuples)*sizeof(tuple));
     for(int i = 0; i < p1.num_tuples; i++)
@@ -403,7 +403,7 @@ void testSort_merge_join5()
     p2.tuples[2].key = 4647856104846911248;
     p2.tuples[2].row_id = 3;
 
-    result_list* result = sort_merge_join(p1, p2);
+    result_list* result = sort_merge_join(&p1, &p2);
 
     CU_ASSERT_NOT_EQUAL(result, NULL);
     CU_ASSERT_EQUAL(result_list_get_number_of_records(result), 3);
@@ -419,9 +419,9 @@ void testSort_merge_join5()
  */
 void testSort_merge_join6()
 {
-    relation* p1, p2;
+    relation p1, p2;
 
-    p1.num_tuples = 1000000000;
+    p1.num_tuples = 100000000;
     uint64_t init = 4647856104846919648;
     p1.tuples = malloc((p1.num_tuples)*sizeof(tuple));
     for(int i = 0; i < p1.num_tuples; i++)
@@ -431,7 +431,8 @@ void testSort_merge_join6()
         p1.tuples[i].row_id = i;
     }
 
-    p2.num_tuples = 1000000000;
+    p2.num_tuples = 100000000;
+    init=4647856104846919648;
     p2.tuples = malloc((p2.num_tuples)*sizeof(tuple));
     for(int i = 0; i < p2.num_tuples; i++)
     {
@@ -440,10 +441,10 @@ void testSort_merge_join6()
         p2.tuples[i].row_id = i;
     }
 
-    result_list* result = sort_merge_join(p1, p2);
+    result_list* result = sort_merge_join(&p1, &p2);
 
     CU_ASSERT_NOT_EQUAL(result, NULL);
-    CU_ASSERT_EQUAL(result_list_get_number_of_records(result), 1000000000);
+    CU_ASSERT_EQUAL(result_list_get_number_of_records(result), 100000000);
 
     free(p1.tuples);
     free(p2.tuples);    
@@ -482,8 +483,7 @@ int main()
         (NULL==CU_add_test(pSuite, "testSort_merge_join3", testSort_merge_join3))||
         (NULL==CU_add_test(pSuite, "testSort_merge_join4", testSort_merge_join4))||
         (NULL==CU_add_test(pSuite, "testSort_merge_join5", testSort_merge_join5))||
-        (NULL==CU_add_test(pSuite, "testSort_merge_join6", testSort_merge_join6))||
-      )
+        (NULL==CU_add_test(pSuite, "testSort_merge_join6", testSort_merge_join6)))
     {
         CU_cleanup_registry();
         return CU_get_error();

@@ -1,5 +1,3 @@
-#ifndef SORT_MERGE_JOIN_H
-#define SORT_MERGE_JOIN_H
 #include "result_list.h"
 #include "radix_sort.h"
 
@@ -10,8 +8,9 @@
  * @param list - result list
  * @param t - first relation
  * @param s - second relation
+ * @return an integer code {0,1,2}
  */
-void final_join(result_list*, relation *, relation *);
+int final_join(result_list*, relation *, relation *);
 
 
 
@@ -23,4 +22,3 @@ void final_join(result_list*, relation *, relation *);
  * @return Resulting table in result_list format
  */
 result_list *sort_merge_join(relation *relR, relation *relS);
-#endif	// SORT_MERGE_JOIN_H

@@ -12,7 +12,7 @@
 table *read_from_file(char *filename)
 {
     FILE *fp;
-    uint64_t rows, columns;
+    uint64_t rows=0, columns=0;
     table *table_r = malloc(sizeof(table));
     if(table_r == NULL)
     {
@@ -32,7 +32,11 @@ table *read_from_file(char *filename)
     
     table_r->rows = columns;
     table_r->columns = rows;
-
+    if(columns==0||rows==0)
+    {
+        fprintf(stderr, "%s", "read_from_file: columns==0 or rows==0\n");
+        return NULL;
+    }
     //allocate memory
     table_r->array = malloc(columns * sizeof(uint64_t *));
     if(table_r->array == NULL)

@@ -30,19 +30,24 @@ table *read_from_file(char *filename)
 
     if(fscanf(fp, "%" PRIu64 " %" PRIu64, &rows, &columns) != 2)
     {
-	perror("read_from_file: fscanf error");
+	fprintf(stderr, "read_from_file: incorrect file format\n");
 	return NULL;
     }
-    
+
     table_r->rows = columns;
     table_r->columns = rows;
+    if(rows == 0 || columns == 0)
+    {
+	fprintf(stderr, "read_from_file: can't create empty relation\n");
+	return NULL;
+    }
 
     //allocate memory
     table_r->array = malloc(columns * sizeof(uint64_t *));
     if(table_r->array == NULL)
     {
         perror("read_from_file: malloc error");
-        return NULL;
+	return NULL;
     }
 
     for(uint64_t i=0; i<columns; i++)
@@ -50,7 +55,7 @@ table *read_from_file(char *filename)
         table_r->array[i] = malloc(rows * sizeof(uint64_t));
         if(table_r->array[i] == NULL)
         {
-            perror("read_from_file: malloc error");
+	    perror("read_from_file: malloc error");
             return NULL;
         }
     }
@@ -62,7 +67,7 @@ table *read_from_file(char *filename)
         {
             if(fscanf(fp, "%" PRIu64, &table_r->array[j][i]) != 1)
 	    {
-		perror("read_from_file: fscanf error");
+		fprintf(stderr, "read_from_file: incorrect file format\n");
 		return NULL;
 	    }
         }
@@ -148,7 +153,7 @@ int create_relation_from_table(uint64_t* key_column,uint64_t column_size,relatio
 relation *relation_from_file(char *filename)
 {
 	FILE *fp;
-    
+
     //open file
     fp = fopen(filename, "rb");
     if(fp == NULL)
@@ -173,20 +178,26 @@ relation *relation_from_file(char *filename)
     	return NULL;
     }
     rel->num_tuples = rows;
+    if(rows == 0)
+    {
+	fprintf(stderr, "relation_from_file: can't create empty relation\n");
+	return NULL;
+    }
+
     rel->tuples = malloc(rows*sizeof(tuple));
     if(rel->tuples == NULL)
     {
     	perror("relation_from_file: malloc error");
     	return NULL;
     }
-    
+
     rewind(fp);
     for(uint64_t i=0; i<rows; i++)
     {
     	fgets(str, 99, fp);
     	if(sscanf(str, "%" PRIu64 ",%" PRIu64, &(rel->tuples[i].key), &(rel->tuples[i].row_id)) != 2)
 	{
-		perror("relation_from_file: sscanf error");
+		fprintf(stderr, "relation_from_file: incorrect file format\n");
 		return NULL;
 	}
     }

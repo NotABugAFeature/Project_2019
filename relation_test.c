@@ -65,7 +65,7 @@ void testRead_from_file4()
 {
     char *filename = "./test_files/empty_table_test_file.txt";
     table* t=read_from_file(filename);
-    if(t == NULL || t->rows != 0 || t->array != NULL)
+    if(t != NULL)
     {
         CU_ASSERT(0);
     }

@@ -24,7 +24,7 @@ int clean_suite(void)
  */
 void testRead_from_file1()
 {
-    char *filename = "/test_files/doesnt_exist.txt";
+    char *filename = "./test_files/doesnt_exist.txt";
     table* t=read_from_file(filename);
     if(t != NULL)
     {
@@ -37,7 +37,7 @@ void testRead_from_file1()
  */
 void testRead_from_file2()
 {
-    char *filename = "/test_files/empty_file.txt";
+    char *filename = "./test_files/empty_file.txt";
     table* t=read_from_file(filename);
     if(t != NULL)
     {
@@ -50,7 +50,7 @@ void testRead_from_file2()
  */
 void testRead_from_file3()
 {
-    char *filename = "/test_files/fail_table_test_file.txt";
+    char *filename = "./test_files/fail_table_test_file.txt";
     table* t=read_from_file(filename);
     if(t != NULL)
     {
@@ -63,7 +63,7 @@ void testRead_from_file3()
  */
 void testRead_from_file4()
 {
-    char *filename = "/test_files/empty_table_test_file.txt";
+    char *filename = "./test_files/empty_table_test_file.txt";
     table* t=read_from_file(filename);
     if(t == NULL || t->rows != 0 || t->array != NULL)
     {
@@ -76,7 +76,7 @@ void testRead_from_file4()
  */
 void testRead_from_file5()
 {
-    char *filename = "/test_files/small_table_test_file.txt";
+    char *filename = "./test_files/small_table_test_file.txt";
     table* t=read_from_file(filename);
     if(t == NULL || t->rows != 3 || t->columns != 4 || t->array == NULL)
     {
@@ -100,7 +100,7 @@ void testRead_from_file5()
  */
 void testRead_from_file6()
 {
-    char *filename = "/test_files/big_table_test_file.txt";
+    char *filename = "./test_files/big_table_test_file.txt";
     table* t=read_from_file(filename);
     if(t == NULL || t->rows != 1000 || t->columns != 1000 || t->array == NULL)
     {
@@ -149,7 +149,7 @@ void testCreate_relation_from_table1()
  */
 void testCreate_relation_from_table2()
 {
-    uint64_t **array = malloc(3*sizeof(uint64_t));
+    uint64_t **array = malloc(3*sizeof(uint64_t *));
     for(uint64_t i=0; i<3; i++)
     {
     	array[i] = malloc(3*sizeof(uint64_t));
@@ -168,7 +168,7 @@ void testCreate_relation_from_table2()
  */
 void testCreate_relation_from_table3()
 {
-    uint64_t **array = malloc(3*sizeof(uint64_t));
+    uint64_t **array = malloc(3*sizeof(uint64_t *));
     for(uint64_t i=0; i<3; i++)
     {
     	array[i] = malloc(3*sizeof(uint64_t));
@@ -199,23 +199,22 @@ void testCreate_relation_from_table3()
  */
 void testCreate_relation_from_table4()
 {
-    uint64_t **array = malloc(3*sizeof(uint64_t));
+    uint64_t **array = malloc(3*sizeof(uint64_t *));
     for(uint64_t i=0; i<3; i++)
     {
     	array[i] = malloc(4*sizeof(uint64_t));
     }
-
     for(uint64_t i=0; i<3; i++)
     {
     	for(uint64_t j=0; j<4; j++)
     	{
-    		array[i][j] != i+j;
+    		array[i][j] = i+j;
     	}
     }
 
     relation *rel = malloc(sizeof(relation));
     rel->tuples = NULL; rel->num_tuples = 0;
-    int result=create_relation_from_table(&(array[0][1]), 3, NULL);
+    int result=create_relation_from_table(&(array[0][0]), 3, rel);
     if(result != 0)
     {
     	CU_ASSERT(0);
@@ -223,7 +222,7 @@ void testCreate_relation_from_table4()
 
     for(uint64_t i=0; i<3; i++)
     {
-    	if(rel->tuples[i].key != i+1 || rel->tuples[i].row_id != i)
+    	if(rel->tuples[i].key != i || rel->tuples[i].row_id != i)
     	{
     		CU_ASSERT(0);
     	}
@@ -244,7 +243,7 @@ void testCreate_relation_from_table4()
  */
 void testCreate_relation_from_table5()
 {
-    uint64_t **array = malloc(1000*sizeof(uint64_t));
+    uint64_t **array = malloc(1000*sizeof(uint64_t *));
     for(uint64_t i=0; i<1000; i++)
     {
     	array[i] = malloc(1000*sizeof(uint64_t));
@@ -254,13 +253,13 @@ void testCreate_relation_from_table5()
     {
     	for(uint64_t j=1000; j<1000; j++)
     	{
-    		array[i][j] != i+j;
+    		array[i][j] = i+j;
     	}
     }
 
     relation *rel = malloc(sizeof(relation));
     rel->tuples = NULL; rel->num_tuples = 0;
-    int result=create_relation_from_table(&(array[0][0]), 1000, NULL);
+    int result=create_relation_from_table(&(array[0][0]), 1000, rel);
     if(result != 0)
     {
     	CU_ASSERT(0);
@@ -288,7 +287,7 @@ void testCreate_relation_from_table5()
  */
 void testRelation_from_file1()
 {
-	char *filename = "/test_files/doesnt_exist.txt";
+	char *filename = "./test_files/doesnt_exist.txt";
 	relation *rel=relation_from_file(filename);
 	if(rel != NULL)
 	{
@@ -301,7 +300,7 @@ void testRelation_from_file1()
  */
 void testRelation_from_file2()
 {
-	char *filename = "/test_files/fail_relation_from_file.txt";
+	char *filename = "./test_files/fail_relation_from_file.txt";
 	relation *rel=relation_from_file(filename);
 	if(rel != NULL)
 	{
@@ -314,7 +313,7 @@ void testRelation_from_file2()
  */
 void testRelation_from_file3()
 {
-	char *filename = "/test_files/empty_file.txt";
+	char *filename = "./test_files/empty_file.txt";
 	relation *rel=relation_from_file(filename);
 	if(rel != NULL)
 	{
@@ -327,7 +326,7 @@ void testRelation_from_file3()
  */
 void testRelation_from_file4()
 {
-	char *filename = "/test_files/small_relation_test_file.txt";
+	char *filename = "./test_files/small_relation_test_file.txt";
 	relation *rel=relation_from_file(filename);
 	if(rel == NULL || rel->num_tuples != 5 || rel->tuples == NULL)
 	{
@@ -349,7 +348,7 @@ void testRelation_from_file4()
  */
 void testRelation_from_file5()
 {
-	char *filename = "/test_files/big_relation_test_file.txt";
+	char *filename = "./test_files/big_relation_test_file.txt";
 	relation *rel=relation_from_file(filename);
 	if(rel == NULL || rel->num_tuples != 1000 || rel->tuples == NULL)
 	{

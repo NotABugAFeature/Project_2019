@@ -251,7 +251,7 @@ void testCreate_relation_from_table5()
 
     for(uint64_t i=0; i<1000; i++)
     {
-    	for(uint64_t j=1000; j<1000; j++)
+    	for(uint64_t j=0; j<1000; j++)
     	{
     		array[i][j] = i+j;
     	}

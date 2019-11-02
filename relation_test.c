@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
 #include "relation.h"
 
@@ -64,7 +65,7 @@ void testRead_from_file4()
 {
     char *filename = "/test_files/empty_table_test_file.txt";
     table* t=read_from_file(filename);
-    if(t == NULL || t->rows != 0 || t->table != NULL)
+    if(t == NULL || t->rows != 0 || t->array != NULL)
     {
         CU_ASSERT(0);
     }
@@ -77,7 +78,7 @@ void testRead_from_file5()
 {
     char *filename = "/test_files/small_table_test_file.txt";
     table* t=read_from_file(filename);
-    if(t == NULL || t->rows != 3 || t->columns != 4 || t->table == NULL)
+    if(t == NULL || t->rows != 3 || t->columns != 4 || t->array == NULL)
     {
         CU_ASSERT(0);
     }
@@ -86,7 +87,7 @@ void testRead_from_file5()
     {
     	for(uint64_t j=0; j<4; j++)
     	{
-    		if(t->table[i][j] != i+j)
+    		if(t->array[i][j] != i+j)
     		{
     			CU_ASSERT(0);
     		}
@@ -101,7 +102,7 @@ void testRead_from_file6()
 {
     char *filename = "/test_files/big_table_test_file.txt";
     table* t=read_from_file(filename);
-    if(t == NULL || t->rows != 1000 || t->columns != 1000 || t->table == NULL)
+    if(t == NULL || t->rows != 1000 || t->columns != 1000 || t->array == NULL)
     {
         CU_ASSERT(0);
     }
@@ -110,7 +111,7 @@ void testRead_from_file6()
     {
     	for(uint64_t j=0; j<4; j++)
     	{
-    		if(t->table[i][j] != i+j)
+    		if(t->array[i][j] != i+j)
     		{
     			CU_ASSERT(0);
     		}
@@ -119,15 +120,16 @@ void testRead_from_file6()
 }
 
 /* No test for delete */
+/*
 void testDelete_table()
 {
     table* p2;
     delete_table(p0);
-    if(1 /*check result*/)
+    if(1)
     {
         CU_ASSERT(0);
     }
-}
+}*/
 
 
 /**
@@ -177,7 +179,7 @@ void testCreate_relation_from_table3()
     for(uint64_t i=0; i<5; i++)
     {
     	rel->tuples[i].key = i;
-    	rel->tuples[i].rowId = 100*i;
+    	rel->tuples[i].row_id = 100*i;
     }
 
     int result=create_relation_from_table(&(array[0][0]), 3, rel);
@@ -189,7 +191,7 @@ void testCreate_relation_from_table3()
     }
     free(array);
     free(rel->tuples);
-    free(rel);    
+    free(rel);
 }
 
 /**
@@ -221,7 +223,7 @@ void testCreate_relation_from_table4()
 
     for(uint64_t i=0; i<3; i++)
     {
-    	if(rel->tuples[i].key != i+1 || rel->tuples[i] != i)
+    	if(rel->tuples[i].key != i+1 || rel->tuples[i].row_id != i)
     	{
     		CU_ASSERT(0);
     	}
@@ -266,7 +268,7 @@ void testCreate_relation_from_table5()
 
     for(uint64_t i=0; i<1000; i++)
     {
-    	if(rel->tuples[i].key != i || rel->tuples[i] != i)
+    	if(rel->tuples[i].key != i || rel->tuples[i].row_id != i)
     	{
     		CU_ASSERT(0);
     	}
@@ -288,7 +290,7 @@ void testRelation_from_file1()
 {
 	char *filename = "/test_files/doesnt_exist.txt";
 	relation *rel=relation_from_file(filename);
-	if(relation != NULL)
+	if(rel != NULL)
 	{
 		CU_ASSERT(0);
 	}
@@ -301,7 +303,7 @@ void testRelation_from_file2()
 {
 	char *filename = "/test_files/fail_relation_from_file.txt";
 	relation *rel=relation_from_file(filename);
-	if(relation != NULL)
+	if(rel != NULL)
 	{
 		CU_ASSERT(0);
 	}
@@ -314,7 +316,7 @@ void testRelation_from_file3()
 {
 	char *filename = "/test_files/empty_file.txt";
 	relation *rel=relation_from_file(filename);
-	if(relation != NULL)
+	if(rel != NULL)
 	{
 	    CU_ASSERT(0);
 	}
@@ -327,14 +329,14 @@ void testRelation_from_file4()
 {
 	char *filename = "/test_files/small_relation_test_file.txt";
 	relation *rel=relation_from_file(filename);
-	if(relation == NULL || relation->num_tuples != 5 || relation->tuples == NULL)
+	if(rel == NULL || rel->num_tuples != 5 || rel->tuples == NULL)
 	{
 	    CU_ASSERT(0);
 	}
 
 	for(uint64_t i=0; i<5; i++)
 	{
-		if(relation->tuples[i].key != i || relation->tuples[i].rowId != 4-i)
+		if(rel->tuples[i].key != i || rel->tuples[i].row_id != 4-i)
 		{
 			CU_ASSERT(0);
 		}
@@ -349,14 +351,14 @@ void testRelation_from_file5()
 {
 	char *filename = "/test_files/big_relation_test_file.txt";
 	relation *rel=relation_from_file(filename);
-	if(relation == NULL || relation->num_tuples != 1000 || relation->tuples == NULL)
+	if(rel == NULL || rel->num_tuples != 1000 || rel->tuples == NULL)
 	{
 	    CU_ASSERT(0);
 	}
 
 	for(uint64_t i=0; i<1000; i++)
 	{
-		if(relation->tuples[i].key != i || relation->tuples[i].rowId != 999-i)
+		if(rel->tuples[i].key != i || rel->tuples[i].row_id != 999-i)
 		{
 			CU_ASSERT(0);
 		}
@@ -365,27 +367,31 @@ void testRelation_from_file5()
 
 
 /* No test for print */
+/*
 void testPrint_relation()
 {
     relation* p2;
     print_relation(p0);
-    if(1 /*check result*/)
+    if(1)
     {
         CU_ASSERT(0);
     }
 }
+*/
 
 /* No test for print */
+/*
 void testPrint_tuples()
 {
     tuple* t;
     uint64_t items;
     print_tuples(t, items);
-    if(1 /*check result*/)
+    if(1)
     {
         CU_ASSERT(0);
     }
 }
+*/
 
 int main()
 {

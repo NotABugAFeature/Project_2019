@@ -73,7 +73,7 @@ void testRead_from_file4()
 /**
  * Test case 5: Normal file with 4 rows, 3 columns
  */
-void testRead_from_file4()
+void testRead_from_file5()
 {
     char *filename = "/test_files/small_table_test_file.txt";
     table* t=read_from_file(filename);
@@ -94,7 +94,31 @@ void testRead_from_file4()
     }
 }
 
+/**
+ * Test case 6: Normal file with 1000 rows, 1000 columns
+ */
+void testRead_from_file6()
+{
+    char *filename = "/test_files/big_table_test_file.txt";
+    table* t=read_from_file(filename);
+    if(t == NULL || t->rows != 1000 || t->columns != 1000 || t->table == NULL)
+    {
+        CU_ASSERT(0);
+    }
 
+    for(uint64_t i=0; i<3; i++)
+    {
+    	for(uint64_t j=0; j<4; j++)
+    	{
+    		if(t->table[i][j] != i+j)
+    		{
+    			CU_ASSERT(0);
+    		}
+    	}
+    }
+}
+
+/* No test for delete */
 void testDelete_table()
 {
     table* p2;
@@ -105,16 +129,156 @@ void testDelete_table()
     }
 }
 
-void testCreate_relation_from_table()
+
+/**
+ * Test case 1: key_column NULL
+ */
+void testCreate_relation_from_table1()
 {
-    uint64_t* p2;
-    uint64_t p3;
-    relation* p4;
-    int result=create_relation_from_table(p0, p1, p2);
-    if(1 /*check result*/)
+    relation* rel = malloc(sizeof(relation));
+    rel->tuples = NULL; rel->num_tuples = 0;
+    int result=create_relation_from_table(NULL, 1, rel);
+    CU_ASSERT_EQUAL(result, 1);
+    free(rel);
+}
+
+/**
+ * Test case 2: relation NULL
+ */
+void testCreate_relation_from_table2()
+{
+    uint64_t **array = malloc(3*sizeof(uint64_t));
+    for(uint64_t i=0; i<3; i++)
     {
-        CU_ASSERT(0);
+    	array[i] = malloc(3*sizeof(uint64_t));
     }
+    int result=create_relation_from_table(&(array[0][0]), 3, NULL);
+    CU_ASSERT_EQUAL(result, 1);
+    for(uint64_t i=0; i<3; i++)
+    {
+    	free(array[i]);
+    }
+    free(array);
+}
+
+/**
+ * Test case 3: Relation is full
+ */
+void testCreate_relation_from_table3()
+{
+    uint64_t **array = malloc(3*sizeof(uint64_t));
+    for(uint64_t i=0; i<3; i++)
+    {
+    	array[i] = malloc(3*sizeof(uint64_t));
+    }
+    relation *rel = malloc(sizeof(relation));
+    rel->num_tuples = 5;
+    rel->tuples = malloc(5*sizeof(tuple));
+    for(uint64_t i=0; i<5; i++)
+    {
+    	rel->tuples[i].key = i;
+    	rel->tuples[i].rowId = 100*i;
+    }
+
+    int result=create_relation_from_table(&(array[0][0]), 3, rel);
+    CU_ASSERT_EQUAL(result, 1);
+
+	for(uint64_t i=0; i<3; i++)
+    {
+    	free(array[i]);
+    }
+    free(array);
+    free(rel->tuples);
+    free(rel);    
+}
+
+/**
+ * Test case 4: Small table 3x4
+ */
+void testCreate_relation_from_table4()
+{
+    uint64_t **array = malloc(3*sizeof(uint64_t));
+    for(uint64_t i=0; i<3; i++)
+    {
+    	array[i] = malloc(4*sizeof(uint64_t));
+    }
+
+    for(uint64_t i=0; i<3; i++)
+    {
+    	for(uint64_t j=0; j<4; j++)
+    	{
+    		array[i][j] != i+j;
+    	}
+    }
+
+    relation *rel = malloc(sizeof(relation));
+    rel->tuples = NULL; rel->num_tuples = 0;
+    int result=create_relation_from_table(&(array[0][1]), 3, NULL);
+    if(result != 0)
+    {
+    	CU_ASSERT(0);
+    }
+
+    for(uint64_t i=0; i<3; i++)
+    {
+    	if(rel->tuples[i].key != i+1 || rel->tuples[i] != i)
+    	{
+    		CU_ASSERT(0);
+    	}
+    }
+
+    for(uint64_t i=0; i<3; i++)
+    {
+    	free(array[i]);
+    }
+    free(array);
+    free(rel->tuples);
+    free(rel);
+}
+
+
+/**
+ * Test case 5: Big table 1000x1000
+ */
+void testCreate_relation_from_table5()
+{
+    uint64_t **array = malloc(1000*sizeof(uint64_t));
+    for(uint64_t i=0; i<1000; i++)
+    {
+    	array[i] = malloc(1000*sizeof(uint64_t));
+    }
+
+    for(uint64_t i=0; i<1000; i++)
+    {
+    	for(uint64_t j=1000; j<1000; j++)
+    	{
+    		array[i][j] != i+j;
+    	}
+    }
+
+    relation *rel = malloc(sizeof(relation));
+    rel->tuples = NULL; rel->num_tuples = 0;
+    int result=create_relation_from_table(&(array[0][0]), 1000, NULL);
+    if(result != 0)
+    {
+    	CU_ASSERT(0);
+    }
+
+    for(uint64_t i=0; i<1000; i++)
+    {
+    	if(rel->tuples[i].key != i || rel->tuples[i] != i)
+    	{
+    		CU_ASSERT(0);
+    	}
+    }
+
+    for(uint64_t i=0; i<1000; i++)
+    {
+    	free(array[i]);
+    }
+    free(array);
+    free(rel->tuples);
+    free(rel);
 }
 
 /**
@@ -150,7 +314,7 @@ void testRelation_from_file3()
 {
 	char *filename = "/test_files/empty_file.txt";
 	relation *rel=relation_from_file(filename);
-	if(relation == NULL || relation->num_tuples != 0 || relation->tuples != NULL)
+	if(relation != NULL)
 	{
 	    CU_ASSERT(0);
 	}
@@ -200,7 +364,7 @@ void testRelation_from_file5()
 }
 
 
-
+/* No test for print */
 void testPrint_relation()
 {
     relation* p2;
@@ -211,6 +375,7 @@ void testPrint_relation()
     }
 }
 
+/* No test for print */
 void testPrint_tuples()
 {
     tuple* t;
@@ -239,12 +404,22 @@ int main()
     }
 
     /* Add the tests to the suite */
-    if((NULL==CU_add_test(pSuite, "testRead_from_file", testRead_from_file))||
-            (NULL==CU_add_test(pSuite, "testDelete_table", testDelete_table))||
-            (NULL==CU_add_test(pSuite, "testCreate_relation_from_table", testCreate_relation_from_table))||
-            (NULL==CU_add_test(pSuite, "testRelation_from_file", testRelation_from_file))||
-            (NULL==CU_add_test(pSuite, "testPrint_relation", testPrint_relation))||
-            (NULL==CU_add_test(pSuite, "testPrint_tuples", testPrint_tuples)))
+    if((NULL==CU_add_test(pSuite, "testRead_from_file1", testRead_from_file1))||
+    		(NULL==CU_add_test(pSuite, "testRead_from_file2", testRead_from_file2))||
+    		(NULL==CU_add_test(pSuite, "testRead_from_file3", testRead_from_file3))||
+    		(NULL==CU_add_test(pSuite, "testRead_from_file4", testRead_from_file4))||
+    		(NULL==CU_add_test(pSuite, "testRead_from_file5", testRead_from_file5))||
+    		(NULL==CU_add_test(pSuite, "testRead_from_file6", testRead_from_file6))||
+    		(NULL==CU_add_test(pSuite, "testCreate_relation_from_table1", testCreate_relation_from_table1))||
+    		(NULL==CU_add_test(pSuite, "testCreate_relation_from_table2", testCreate_relation_from_table2))||
+    		(NULL==CU_add_test(pSuite, "testCreate_relation_from_table3", testCreate_relation_from_table3))||
+    		(NULL==CU_add_test(pSuite, "testCreate_relation_from_table4", testCreate_relation_from_table4))||
+            (NULL==CU_add_test(pSuite, "testCreate_relation_from_table5", testCreate_relation_from_table5))||
+            (NULL==CU_add_test(pSuite, "testRelation_from_file1", testRelation_from_file1))||
+            (NULL==CU_add_test(pSuite, "testRelation_from_file2", testRelation_from_file2))||
+            (NULL==CU_add_test(pSuite, "testRelation_from_file3", testRelation_from_file3))||
+            (NULL==CU_add_test(pSuite, "testRelation_from_file4", testRelation_from_file4))||
+            (NULL==CU_add_test(pSuite, "testRelation_from_file5", testRelation_from_file5)))
     {
         CU_cleanup_registry();
         return CU_get_error();

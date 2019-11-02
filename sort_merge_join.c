@@ -55,7 +55,7 @@ result_list *sort_merge_join(relation *relR, relation *relS)
     if(relR==NULL||relS==NULL||relR->tuples==NULL||relS->tuples==NULL)
     {
         fprintf(stderr, "%s", "sort_merge_join Error: arguments cannot be null\n");
-        return 1;
+        return NULL;
     }
 
 	printf("R relation:\n");

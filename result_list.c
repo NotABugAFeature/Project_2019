@@ -43,7 +43,7 @@ typedef struct result_list
 {
     result_list_node* head; //The first node of the list
     result_list_node* tail; //The last node of the list
-    int number_of_nodes; //Counter of the buckets;
+    unsigned int number_of_nodes; //Counter of the buckets;
 } result_list;
 
 /**
@@ -73,7 +73,7 @@ struct result_list_node* create_result_list_node()
  */
 int is_result_list_bucket_full(result_list_bucket* bucket)
 {
-    return bucket->index_to_add_next==RESULT_LIST_BUCKET_SIZE ? 0 : 1;
+    return bucket->index_to_add_next==RESULT_LIST_BUCKET_SIZE ? 1 : 0;
 }
 
 /**
@@ -85,7 +85,7 @@ int is_result_list_bucket_full(result_list_bucket* bucket)
  */
 int append_to_bucket(result_list_bucket* bucket, uint64_t r_row_id, uint64_t s_row_id)
 {
-    if(is_result_list_bucket_full(bucket))
+    if(!is_result_list_bucket_full(bucket))
     {
         bucket->row_ids[bucket->index_to_add_next][ROWID_R_INDEX]=r_row_id;
         bucket->row_ids[bucket->index_to_add_next][ROWID_S_INDEX]=s_row_id;
@@ -102,7 +102,7 @@ void print_bucket(result_list_bucket* bucket)
 {
     //Print the array inside the bucket
     //printf("Index to add next: %u\n", bucket->index_to_add_next);
-    for(int i=0; i<bucket->index_to_add_next; i++)
+    for(unsigned int i=0; i<bucket->index_to_add_next; i++)
     {
         printf("RowIdR: %" PRIu64 " RowIdS: %" PRIu64 "\n", bucket->row_ids[i][ROWID_R_INDEX], bucket->row_ids[i][ROWID_S_INDEX]);
     }
@@ -137,7 +137,7 @@ void delete_result_list(result_list* list)
     //Delete all the nodes
     while(list->head!=NULL)
     {
-        //printf("Nodes: %d\n", list->number_of_nodes);
+        //printf("Nodes: %u\n", list->number_of_nodes);
         list->head=temp->next;
         free(temp);
         temp=list->head;
@@ -158,12 +158,13 @@ void print_result_list(result_list* list)
         printf("print_result_list: NULL list pointer\n");
         return;
     }
-    int index=0;
+    unsigned int index=0;
     result_list_node*temp=list->head;
-    printf("Number Of Buckets: %d\n", list->number_of_nodes);
+    printf("Number Of Records: %"PRIu64"\n",result_list_get_number_of_records(list));
+    printf("Number Of Buckets: %u\n", list->number_of_nodes);
     while(temp!=NULL)//Visit all the nodes and print them
     {
-        printf("Bucket Index: %d\n", index);
+        printf("Bucket Index: %u\n", index);
         print_bucket(&(temp->bucket));
         index++;
         temp=temp->next;
@@ -220,7 +221,16 @@ int is_result_list_empty(result_list* list)
     return list->number_of_nodes==0 ? 1 : 0;
 }
 
-int result_list_get_number_of_buckets(result_list* list)
+unsigned int result_list_get_number_of_buckets(result_list* list)
 {
     return list->number_of_nodes;
+}
+
+uint64_t result_list_get_number_of_records(result_list* list)
+{
+    if(list==NULL||list->number_of_nodes==0||list->tail==NULL)
+    {
+        return 0;
+    }
+    return ((list->number_of_nodes-1)*RESULT_LIST_BUCKET_SIZE+list->tail->bucket.index_to_add_next);
 }

@@ -12,7 +12,7 @@
 table *read_from_file(char *filename)
 {
     FILE *fp;
-    uint64_t rows, columns;
+    uint64_t rows=0, columns=0;
     table *table_r = malloc(sizeof(table));
     if(table_r == NULL)
     {
@@ -41,7 +41,6 @@ table *read_from_file(char *filename)
 	fprintf(stderr, "read_from_file: can't create empty relation\n");
 	return NULL;
     }
-
     //allocate memory
     table_r->array = malloc(columns * sizeof(uint64_t *));
     if(table_r->array == NULL)

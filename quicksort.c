@@ -49,6 +49,11 @@ uint64_t partition(tuple *source, uint64_t low, uint64_t high)
  */
 void quicksort(tuple *source, uint64_t low, uint64_t high)
 {
+	if(source==NULL)
+    	{
+        	fprintf(stderr, "%s", "quicksort: NULL parameter\n");
+        	return;
+   	}
 	//printf("QUICK: %" PRId64 " to %" PRId64 "\n", low, high);
 	if(low < high)
 	{

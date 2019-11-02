@@ -28,7 +28,11 @@ table *read_from_file(char *filename)
         return NULL;
     }
 
-    fscanf(fp, "%" PRIu64 " %" PRIu64, &rows, &columns);
+    if(fscanf(fp, "%" PRIu64 " %" PRIu64, &rows, &columns) != 2)
+    {
+	perror("read_from_file: fscanf error");
+	return NULL;
+    }
     
     table_r->rows = columns;
     table_r->columns = rows;
@@ -56,7 +60,11 @@ table *read_from_file(char *filename)
     {
         for(uint64_t j = 0; j < columns; j++)
         {
-            fscanf(fp, "%" PRIu64, &table_r->array[j][i]);
+            if(fscanf(fp, "%" PRIu64, &table_r->array[j][i]) != 1)
+	    {
+		perror("read_from_file: fscanf error");
+		return NULL;
+	    }
         }
     }
 
@@ -176,7 +184,11 @@ relation *relation_from_file(char *filename)
     for(uint64_t i=0; i<rows; i++)
     {
     	fgets(str, 99, fp);
-    	sscanf(str, "%" PRIu64 ",%" PRIu64, &(rel->tuples[i].key), &(rel->tuples[i].row_id));
+    	if(sscanf(str, "%" PRIu64 ",%" PRIu64, &(rel->tuples[i].key), &(rel->tuples[i].row_id)) != 2)
+	{
+		perror("relation_from_file: sscanf error");
+		return NULL;
+	}
     }
 
     fclose(fp);

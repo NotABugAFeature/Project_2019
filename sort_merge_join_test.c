@@ -30,6 +30,7 @@ void testFinal_join1()
     int res = final_join(list, NULL, &p2);
 
     CU_ASSERT_EQUAL(res, 1);
+    delete_result_list(list);
 }
 
 
@@ -40,10 +41,11 @@ void testFinal_join1()
 void testFinal_join2()
 {
     result_list* list = create_result_list();
-    relation* p2;
-    int res = final_join(list, p2, NULL);
+    relation p2;
+    int res = final_join(list, &p2, NULL);
 
     CU_ASSERT_EQUAL(res, 1);
+    delete_result_list(list);
 }
 
 
@@ -90,6 +92,7 @@ void testFinal_join4()
     CU_ASSERT_EQUAL(res, 1);
 
     free(p2.tuples);
+    delete_result_list(list);
 }
 
 
@@ -123,6 +126,7 @@ void testFinal_join5()
     CU_ASSERT_EQUAL(res, 1);
 
     free(p2.tuples);
+    delete_result_list(list);
 }
 
 
@@ -170,6 +174,7 @@ void testFinal_join6()
 
     free(p1.tuples);
     free(p2.tuples);
+    delete_result_list(list);
 }
 
 
@@ -217,6 +222,7 @@ void testFinal_join7()
 
     free(p1.tuples);
     free(p2.tuples);
+    delete_result_list(list);
 }
 
 
@@ -264,6 +270,7 @@ void testFinal_join8()
 
     free(p1.tuples);
     free(p2.tuples);
+    delete_result_list(list);
 }
 
 
@@ -332,6 +339,7 @@ void testSort_merge_join3()
 
     free(p1.tuples);
     free(p2.tuples);
+    delete_result_list(result);
 }
 
 
@@ -343,7 +351,7 @@ void testSort_merge_join4()
 {
     relation p1, p2;
 
-    p1.num_tuples = 500000000;
+    p1.num_tuples = 500000;
     uint64_t init = 2251799813685020;
     p1.tuples = malloc((p1.num_tuples)*sizeof(tuple));
     for(int i = 0; i < p1.num_tuples; i++)
@@ -371,6 +379,7 @@ void testSort_merge_join4()
 
     free(p1.tuples);
     free(p2.tuples);    
+    delete_result_list(result);
 }
 
 
@@ -382,7 +391,7 @@ void testSort_merge_join5()
 {
     relation p1, p2;
 
-    p1.num_tuples = 300000000;
+    p1.num_tuples = 300000;
     uint64_t init = 4647856104846919648;
     p1.tuples = malloc((p1.num_tuples)*sizeof(tuple));
     for(int i = 0; i < p1.num_tuples; i++)
@@ -410,6 +419,7 @@ void testSort_merge_join5()
 
     free(p1.tuples);
     free(p2.tuples);    
+    delete_result_list(result);
 }
 
 
@@ -421,7 +431,7 @@ void testSort_merge_join6()
 {
     relation p1, p2;
 
-    p1.num_tuples = 100000000;
+    p1.num_tuples = 100000;
     uint64_t init = 4647856104846919648;
     p1.tuples = malloc((p1.num_tuples)*sizeof(tuple));
     for(int i = 0; i < p1.num_tuples; i++)
@@ -431,7 +441,7 @@ void testSort_merge_join6()
         p1.tuples[i].row_id = i;
     }
 
-    p2.num_tuples = 100000000;
+    p2.num_tuples = 100000;
     init=4647856104846919648;
     p2.tuples = malloc((p2.num_tuples)*sizeof(tuple));
     for(int i = 0; i < p2.num_tuples; i++)
@@ -444,10 +454,11 @@ void testSort_merge_join6()
     result_list* result = sort_merge_join(&p1, &p2);
 
     CU_ASSERT_NOT_EQUAL(result, NULL);
-    CU_ASSERT_EQUAL(result_list_get_number_of_records(result), 100000000);
+    CU_ASSERT_EQUAL(result_list_get_number_of_records(result), 100000);
 
     free(p1.tuples);
     free(p2.tuples);    
+    delete_result_list(result);
 }
 
 

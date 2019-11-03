@@ -176,7 +176,10 @@ int radix_sort_recursive(unsigned short byte, relation *array, relation *auxilia
 		if(res)
             return -3;
 
-        transform_to_psum(hist);
+        res = transform_to_psum(hist);
+        if(res)
+            return -4;
+
 		copy_relation_with_psum(array, auxiliary, start_index, end_index, hist, byte);
 		
 		//Recursively sort every part of the array

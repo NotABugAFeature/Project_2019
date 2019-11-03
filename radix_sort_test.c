@@ -231,7 +231,7 @@ void testRadix_sort1()
 
     p2.num_tuples = 3;
     p2.tuples = malloc(3*sizeof(tuple));
-    p2.tuples[0].key = 1;
+    p2.tuples[0].key = 4;
     p2.tuples[0].row_id = 1;
 
     p2.tuples[1].key = 1;
@@ -241,7 +241,13 @@ void testRadix_sort1()
     p2.tuples[2].row_id = 3;
     
     int res = radix_sort(&p2);
+    
     CU_ASSERT_EQUAL(res, 0);
+    CU_ASSERT_EQUAL(p2.tuples[0].key, 1);
+    CU_ASSERT_EQUAL(p2.tuples[1].key, 3);
+    CU_ASSERT_EQUAL(p2.tuples[2].key, 4);
+
+    free(p2.tuples);
 }
 
 
@@ -270,7 +276,8 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testCreate_histogram4", testCreate_histogram4))||
         (NULL==CU_add_test(pSuite, "testCreate_histogram5", testCreate_histogram5))||
         (NULL==CU_add_test(pSuite, "testTransform_to_psum1", testTransform_to_psum1))||
-        (NULL==CU_add_test(pSuite, "testTransform_to_psum2", testTransform_to_psum2))
+        (NULL==CU_add_test(pSuite, "testTransform_to_psum2", testTransform_to_psum2))||
+        (NULL==CU_add_test(pSuite, "testRadix_sort1", testRadix_sort1))
       )
     {
         CU_cleanup_registry();

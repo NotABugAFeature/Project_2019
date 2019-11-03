@@ -3,7 +3,10 @@
 #include <inttypes.h>
 #include "radix_sort.h"
 
+
 //----Histogram----
+
+
 /**
  * Histogram creation of a relation r
  * We consider the indexes as valid and we perform no check
@@ -13,9 +16,15 @@
  * @param end_index - the ending index is the ending_index - 1
  * @param hist - array already allocated and initialized with 0s
  * @param byte_number - ranges from 1 (most significant left-most byte) to 8 (less significant right-most byte)
+ * @return 0 if successful else 1
  */
-void create_histogram(relation* r, uint64_t start_index, uint64_t end_index, uint64_t *hist, unsigned short byte_number)
+int create_histogram(relation* r, uint64_t start_index, uint64_t end_index, uint64_t *hist, unsigned short byte_number)
 {
+    if(r == NULL || r->tuples == NULL || hist == NULL)
+    {
+        fprintf(stderr, "%s", "create_histogram: null parameters\n");
+        return 1;
+    }
 
     for(uint64_t i=start_index; i<end_index; i++)
     {
@@ -23,15 +32,25 @@ void create_histogram(relation* r, uint64_t start_index, uint64_t end_index, uin
         int position=(key>>((8-byte_number)<<3)) & 0xff;
         hist[position]++;
     }
+    
+    return 0;
 }
+
 
 /**
  * Psum creation of a relation r based on its histogram
  *
  * @param hist - histogram
+ * @return 0 if successful else 1
  */
-void transform_to_psum(uint64_t *hist)
+int transform_to_psum(uint64_t *hist)
 {
+    if(hist == NULL)
+    {
+        fprintf(stderr, "%s", "transform_to_psum: null parameter\n");
+        return 1;
+    }
+
     int first=1;
     uint64_t offset=0;
 
@@ -55,8 +74,14 @@ void transform_to_psum(uint64_t *hist)
         else
             hist[i]=offset;
     }
+    
+    return 0;
 }
+
+
 //----Radix Sort----
+
+
 void copy_relation(relation* source, relation* target, uint64_t start_index, uint64_t end_index)
 {
     for(uint64_t i=start_index; i<end_index; i++)
@@ -65,6 +90,8 @@ void copy_relation(relation* source, relation* target, uint64_t start_index, uin
         target->tuples[i].row_id=source->tuples[i].row_id;
     }
 }
+
+
 /**
  * Copies a part of the source relation to the target relation with the use of 
  * the cumulative histogram (psum)
@@ -144,8 +171,15 @@ int radix_sort_recursive(unsigned short byte, relation *array, relation *auxilia
 		{
 			hist[i] = 0;
 		}
-		create_histogram(array, start_index, end_index, hist, byte);
-		transform_to_psum(hist);
+		
+		int res = create_histogram(array, start_index, end_index, hist, byte);
+		if(res)
+            return -3;
+
+        res = transform_to_psum(hist);
+        if(res)
+            return -4;
+
 		copy_relation_with_psum(array, auxiliary, start_index, end_index, hist, byte);
 		
 		//Recursively sort every part of the array
@@ -171,6 +205,7 @@ int radix_sort_recursive(unsigned short byte, relation *array, relation *auxilia
 
 	return 0;
 }
+
 
 /**
  * Sets up and executes the recursive radix sort

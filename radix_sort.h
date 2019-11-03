@@ -1,8 +1,14 @@
 #ifndef RADIX_SORT_H
 #define RADIX_SORT_H
 #include "quicksort.h"
+
+
 //----Histogram----
+
+
 #define HIST_SIZE 256
+
+
 /**
  * Histogram creation of a relation r
  * We consider the indexes as valid and we perform no check
@@ -12,15 +18,23 @@
  * @param end_index - the ending index is the ending_index - 1
  * @param hist - array already allocated and initialized with 0s
  * @param byte_number - ranges from 1 (most significant left-most byte) to 8 (less significant right-most byte)
+ * @return 0 if successful else 1
  */
-void create_histogram(relation *r, uint64_t start_index, uint64_t end_index, uint64_t *hist, unsigned short byte_number);
+int create_histogram(relation *r, uint64_t start_index, uint64_t end_index, uint64_t *hist, unsigned short byte_number);
+
+
 /**
  * Psum creation of a relation r based on its histogram
  *
  * @param hist - histogram
+ * @return 0 if successful else 1
  */
-void transform_to_psum(uint64_t *hist);
+int transform_to_psum(uint64_t *hist);
+
+
 //----Radix Sort----
+
+
 /**
  * Copies a part of the source relation to the target relation with the use of
  * the cumulative histogram (psum)
@@ -34,6 +48,8 @@ void transform_to_psum(uint64_t *hist);
  * @return
  */
 int copy_relation_with_psum(relation* source, relation* target, uint64_t index_start, uint64_t index_end, uint64_t* psum, unsigned short nbyte);
+
+
 /**
  * Implements radix sort
  * @param unsigned short byte Which byte is used to create the histogram
@@ -44,6 +60,8 @@ int copy_relation_with_psum(relation* source, relation* target, uint64_t index_s
  * @return 0 for success, <0 for error
  */
 int radix_sort_recursive(unsigned short byte, relation *array, relation *auxiliary, uint64_t start_index, uint64_t end_index);
+
+
 /**
  * Sets up and executes the recursive radix sort
  * @param relation *array The array to be sorted

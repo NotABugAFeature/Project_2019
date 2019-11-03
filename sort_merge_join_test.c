@@ -280,8 +280,8 @@ void testFinal_join8()
  */
 void testSort_merge_join1()
 {
-    relation* relS;
-    result_list* result = sort_merge_join(NULL, relS);
+    relation relS;
+    result_list* result = sort_merge_join(NULL, &relS);
     CU_ASSERT_EQUAL(result, NULL);
 }
 
@@ -292,8 +292,8 @@ void testSort_merge_join1()
  */
 void testSort_merge_join2()
 {
-    relation* relR;
-    result_list* result = sort_merge_join(relR, NULL);
+    relation relR;
+    result_list* result = sort_merge_join(&relR, NULL);
     CU_ASSERT_EQUAL(result, NULL);
 }
 
@@ -351,7 +351,7 @@ void testSort_merge_join4()
 {
     relation p1, p2;
 
-    p1.num_tuples = 500000;
+    p1.num_tuples = 100000;
     uint64_t init = 2251799813685020;
     p1.tuples = malloc((p1.num_tuples)*sizeof(tuple));
     for(int i = 0; i < p1.num_tuples; i++)

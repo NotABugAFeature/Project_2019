@@ -64,8 +64,6 @@ void testCreate_histogram1()
 
 void testCreate_histogram2()
 {
-    relation *p2;
-
     uint64_t *hist = malloc(HIST_SIZE*sizeof(uint64_t));
     CU_ASSERT_NOT_EQUAL(hist, NULL);
     
@@ -79,9 +77,9 @@ void testCreate_histogram2()
 
 void testCreate_histogram3()
 {
-    relation *p2;
+    relation p2;p2.num_tuples=0;p2.tuples=NULL;
     
-    int res = create_histogram(p2, 0, 3, NULL, 8);
+    int res = create_histogram(&p2, 0, 3, NULL, 8);
     
     CU_ASSERT_EQUAL(res, 1);
 }
@@ -89,9 +87,9 @@ void testCreate_histogram3()
 
 void testCreate_histogram4()
 {
-    relation *p2;
+    relation p2;p2.num_tuples=0;p2.tuples=NULL;
     
-    int res = create_histogram(p2, 0, 3, NULL, 8);
+    int res = create_histogram(&p2, 0, 3, NULL, 8);
     
     CU_ASSERT_EQUAL(res, 1);
 }
@@ -229,39 +227,41 @@ void testCopy_relation()
 
 void testCopy_relation_with_psum1()
 {
-    relation* target;
-    uint64_t index_start;
-    uint64_t index_end;
-    uint64_t* psum;
-    unsigned short nbyte;
+    relation target;target.num_tuples=0;target.tuples=NULL;
+    uint64_t index_start=0;
+    uint64_t index_end=0;
+    uint64_t *psum = malloc(HIST_SIZE*sizeof(uint64_t));
+    unsigned short nbyte=1;
 
-    int result = copy_relation_with_psum(NULL, target, index_start, index_end, psum, nbyte);
+    int result = copy_relation_with_psum(NULL, &target, index_start, index_end, psum, nbyte);
     CU_ASSERT_EQUAL(result, 1);
+    free(psum);
 }
 
 
 void testCopy_relation_with_psum2()
 {
-    relation* source;
-    uint64_t index_start;
-    uint64_t index_end;
-    uint64_t* psum;
-    unsigned short nbyte;
+    relation source;source.num_tuples=0;source.tuples=NULL;
+    uint64_t index_start=0;
+    uint64_t index_end=0;
+    uint64_t *psum = malloc(HIST_SIZE*sizeof(uint64_t));
+    unsigned short nbyte=1;
 
-    int result = copy_relation_with_psum(source, NULL, index_start, index_end, psum, nbyte);
+    int result = copy_relation_with_psum(&source, NULL, index_start, index_end, psum, nbyte);
     CU_ASSERT_EQUAL(result, 1);
+    free(psum);
 }
 
 
 void testCopy_relation_with_psum3()
 {
-    relation* source;
-    relation* target;
-    uint64_t index_start;
-    uint64_t index_end;
-    unsigned short nbyte;
+    relation source;source.num_tuples=0;source.tuples=NULL;
+    relation target;target.num_tuples=0;target.tuples=NULL;
+    uint64_t index_start=0;
+    uint64_t index_end=0;
+    unsigned short nbyte=1;
 
-    int result = copy_relation_with_psum(source, target, index_start, index_end, NULL, nbyte);
+    int result = copy_relation_with_psum(&source, &target, index_start, index_end, NULL, nbyte);
     CU_ASSERT_EQUAL(result, 1);
 }
 
@@ -310,6 +310,7 @@ void testCopy_relation_with_psum4()
     
     free(p2.tuples);
     free(p1.tuples);
+    free(hist);
 }
 
 
@@ -345,7 +346,7 @@ void testRadix_sort2()
 {
     relation p2;
 
-    p2.num_tuples = 50000000;
+    p2.num_tuples = 5000000;
     p2.tuples = malloc((p2.num_tuples)*sizeof(tuple));
     CU_ASSERT_NOT_EQUAL(p2.tuples, NULL);
     

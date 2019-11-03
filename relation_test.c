@@ -93,6 +93,7 @@ void testRead_from_file5()
     		}
     	}
     }
+	delete_table(t);
 }
 
 /**
@@ -117,6 +118,7 @@ void testRead_from_file6()
     		}
     	}
     }
+	delete_table(t);
 }
 
 /* No test for delete */
@@ -340,6 +342,8 @@ void testRelation_from_file4()
 			CU_ASSERT(0);
 		}
 	}
+	free(rel->tuples);
+	free(rel);
 }
 
 
@@ -362,6 +366,8 @@ void testRelation_from_file5()
 			CU_ASSERT(0);
 		}
 	}
+	free(rel->tuples);
+	free(rel);
 }
 
 

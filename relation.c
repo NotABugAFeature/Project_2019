@@ -32,7 +32,7 @@ table *read_from_file(char *filename)
     if(fscanf(fp, "%" PRIu64 " %" PRIu64, &rows, &columns) != 2)
     {
 	fprintf(stderr, "read_from_file: incorrect file format\n");
-	close(fp);
+	fclose(fp);
 	free(table_r);
 	return NULL;
     }
@@ -49,7 +49,7 @@ table *read_from_file(char *filename)
     if(table_r->array == NULL)
     {
         perror("read_from_file: malloc error");
-	close(fp);
+	fclose(fp);
 	free(table_r);
 	return NULL;
     }
@@ -60,7 +60,7 @@ table *read_from_file(char *filename)
         if(table_r->array[i] == NULL)
         {
 	    perror("read_from_file: malloc error");
-            close(fp);
+            fclose(fp);
 	    delete_table(table_r);
             return NULL;
         }
@@ -74,7 +74,7 @@ table *read_from_file(char *filename)
             if(fscanf(fp, "%" PRIu64, &table_r->array[j][i]) != 1)
 	    {
 		fprintf(stderr, "read_from_file: incorrect file format\n");
-		close(fp);
+		fclose(fp);
 	        delete_table(table_r);
 		return NULL;
 	    }
@@ -191,7 +191,7 @@ relation *relation_from_file(char *filename)
     {
 	fprintf(stderr, "relation_from_file: can't create empty relation\n");
 	free(rel);
-	close(fp);
+	fclose(fp);
 	return NULL;
     }
 

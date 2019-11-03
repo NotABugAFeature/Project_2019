@@ -72,7 +72,14 @@ int create_relation_from_table(uint64_t* ,uint64_t , relation*);
  * @return relation * A pointer to the created relation
  */
 relation *relation_from_file(char *);
-
+/**
+ * Stores the relation data from the relation to a file.
+ * The file is overwritten
+ * @param char * The name of the file
+ * @param relation * A pointer to the relation
+ * @return int 0 if successful
+ */
+int relation_to_file(char *,relation*);
 /**
  * Prints all the tuples of the relation given
  * 

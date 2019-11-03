@@ -14,7 +14,7 @@
 
 #include <inttypes.h>
 
-#define RESULT_LIST_BUCKET_SIZE 1048576/(2*sizeof(uint64_t))
+#define RESULT_LIST_BUCKET_SIZE (1048576/(2*sizeof(uint64_t)))
 #define ROWID_R_INDEX 0
 #define ROWID_S_INDEX 1
 

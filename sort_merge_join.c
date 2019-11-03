@@ -24,7 +24,7 @@ int final_join(result_list* list, relation *t, relation *s)
     for(uint64_t i = 0; i < t->num_tuples; i++)
     {
         //printf("i: %" PRIu64 "\n", i);
-        while(t->tuples[i].key >= s->tuples[j].key && j < s->num_tuples)
+        while(j < s->num_tuples && t->tuples[i].key >= s->tuples[j].key)
         {
             //printf("NOW: %" PRIu64 " %" PRIu64 "\n", t->tuples[i].key, s->tuples[j].key);
             if(t->tuples[i].key == s->tuples[j].key)
@@ -81,15 +81,15 @@ result_list *sort_merge_join(relation *relR, relation *relS)
 		return NULL;
 	}
 
-	printf("\n");
-	printf("Sorted R:\n");
-	print_relation(relR);
-	printf("\n");
-
-	printf("Sorted S:\n");
-	print_relation(relS);
-	printf("\n");
-
+	//printf("\n");
+	//printf("Sorted R:\n");
+	//print_relation(relR);
+	//printf("\n");
+	relation_to_file("sorted_relation_R",relR);
+	//printf("Sorted S:\n");
+	//print_relation(relS);
+	//printf("\n");
+	relation_to_file("sorted_relation_S",relS);
 	result_list *results = create_result_list();
 	if(results == NULL)
 	{

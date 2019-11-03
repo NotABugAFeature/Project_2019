@@ -22,7 +22,7 @@ int create_histogram(relation* r, uint64_t start_index, uint64_t end_index, uint
 {
     if(r == NULL || r->tuples == NULL || hist == NULL)
     {
-        perror("create_histogram: null parameters");
+        fprintf(stderr, "%s", "create_histogram: null parameters\n");
         return 1;
     }
 
@@ -47,7 +47,7 @@ int transform_to_psum(uint64_t *hist)
 {
     if(hist == NULL)
     {
-        perror("transform_to_psum: null parameter");
+        fprintf(stderr, "%s", "transform_to_psum: null parameter\n");
         return 1;
     }
 

@@ -187,51 +187,84 @@ void testTransform_to_psum2()
     free(hist);
 }
 
-/*
+
 void copy_relation(relation* source, relation* target, uint64_t start_index, uint64_t end_index);
 
 void testCopy_relation()
 {
-    relation* source;
-    relation* target;
-    uint64_t start_index;
-    uint64_t end_index;
-    copy_relation(source, target, start_index, end_index);
-    if(1)
-    {
-        CU_ASSERT(0);
-    }
+    relation p1, p2;
+
+    p2.num_tuples = 3;
+    p2.tuples = malloc(3*sizeof(tuple));
+    CU_ASSERT_NOT_EQUAL(p2.tuples, NULL);
+
+    p2.tuples[0].key = 1;
+    p2.tuples[0].row_id = 1;
+
+    p2.tuples[1].key = 1;
+    p2.tuples[1].row_id = 2;
+
+    p2.tuples[2].key = 3;
+    p2.tuples[2].row_id = 3;
+    
+    p1.tuples = malloc(3*sizeof(tuple));
+    CU_ASSERT_NOT_EQUAL(p1.tuples, NULL);
+    
+    copy_relation(&p2, &p1, 0, 3);
+    
+    CU_ASSERT_EQUAL(p2.tuples[0].key, p1.tuples[0].key);
+    CU_ASSERT_EQUAL(p2.tuples[0].row_id, p1.tuples[0].row_id);
+    
+    CU_ASSERT_EQUAL(p2.tuples[1].key, p1.tuples[1].key);
+    CU_ASSERT_EQUAL(p2.tuples[1].row_id, p1.tuples[1].row_id);
+    
+    CU_ASSERT_EQUAL(p2.tuples[2].key, p1.tuples[2].key);
+    CU_ASSERT_EQUAL(p2.tuples[2].row_id, p1.tuples[2].row_id);
+    
+    free(p2.tuples);
+    free(p1.tuples);
 }
 
-void testCopy_relation_with_psum()
+
+void testCopy_relation_with_psum1()
 {
-    relation* source;
     relation* target;
     uint64_t index_start;
     uint64_t index_end;
     uint64_t* psum;
     unsigned short nbyte;
-    int result=copy_relation_with_psum(source, target, index_start, index_end, psum, nbyte);
-    if(1)
-    {
-        CU_ASSERT(0);
-    }
+
+    int result = copy_relation_with_psum(NULL, target, index_start, index_end, psum, nbyte);
+    CU_ASSERT_EQUAL(result, 1);
 }
 
-void testRadix_sort_recursive()
+
+void testCopy_relation_with_psum2()
 {
-    unsigned short byte;
-    relation* array;
-    relation* auxiliary;
-    uint64_t start_index;
-    uint64_t end_index;
-    int result=radix_sort_recursive(byte, array, auxiliary, start_index, end_index);
-    if(1 )
-    {
-        CU_ASSERT(0);
-    }
+    relation* source;
+    uint64_t index_start;
+    uint64_t index_end;
+    uint64_t* psum;
+    unsigned short nbyte;
+
+    int result = copy_relation_with_psum(source, NULL, index_start, index_end, psum, nbyte);
+    CU_ASSERT_EQUAL(result, 1);
 }
-*/
+
+
+void testCopy_relation_with_psum3()
+{
+    relation* source;
+    relation* target;
+    uint64_t index_start;
+    uint64_t index_end;
+    unsigned short nbyte;
+
+    int result = copy_relation_with_psum(source, target, index_start, index_end, NULL, nbyte);
+    CU_ASSERT_EQUAL(result, 1);
+}
+
+
 void testRadix_sort1()
 {
     relation p2;
@@ -315,7 +348,11 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testTransform_to_psum1", testTransform_to_psum1))||
         (NULL==CU_add_test(pSuite, "testTransform_to_psum2", testTransform_to_psum2))||
         (NULL==CU_add_test(pSuite, "testRadix_sort1", testRadix_sort1))||
-        (NULL==CU_add_test(pSuite, "testRadix_sort2", testRadix_sort2))
+        (NULL==CU_add_test(pSuite, "testRadix_sort2", testRadix_sort2))||
+        (NULL==CU_add_test(pSuite, "testCopy_relation", testCopy_relation))||
+        (NULL==CU_add_test(pSuite, "testCopy_relation_with_psum1", testCopy_relation_with_psum1))||
+        (NULL==CU_add_test(pSuite, "testCopy_relation_with_psum2", testCopy_relation_with_psum2))||
+        (NULL==CU_add_test(pSuite, "testCopy_relation_with_psum3", testCopy_relation_with_psum3))
       )
     {
         CU_cleanup_registry();

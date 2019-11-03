@@ -25,12 +25,15 @@ table *read_from_file(char *filename)
     if(fp == NULL)
     {
         perror("read_from_file: fopen error");
+	free(table_r);
         return NULL;
     }
 
     if(fscanf(fp, "%" PRIu64 " %" PRIu64, &rows, &columns) != 2)
     {
 	fprintf(stderr, "read_from_file: incorrect file format\n");
+	close(fp);
+	free(table_r);
 	return NULL;
     }
 
@@ -46,6 +49,8 @@ table *read_from_file(char *filename)
     if(table_r->array == NULL)
     {
         perror("read_from_file: malloc error");
+	close(fp);
+	free(table_r);
 	return NULL;
     }
 
@@ -55,6 +60,8 @@ table *read_from_file(char *filename)
         if(table_r->array[i] == NULL)
         {
 	    perror("read_from_file: malloc error");
+            close(fp);
+	    delete_table(table_r);
             return NULL;
         }
     }
@@ -67,6 +74,8 @@ table *read_from_file(char *filename)
             if(fscanf(fp, "%" PRIu64, &table_r->array[j][i]) != 1)
 	    {
 		fprintf(stderr, "read_from_file: incorrect file format\n");
+		close(fp);
+	        delete_table(table_r);
 		return NULL;
 	    }
         }
@@ -74,14 +83,14 @@ table *read_from_file(char *filename)
 
     fclose(fp);
 
-    for(uint64_t i = 0; i < columns; i++)
-    {
-        for(uint64_t j = 0; j < rows; j++)
-        {
-            printf("%" PRIu64 "\t", table_r->array[i][j]);
-        }
-        printf("\n");
-    }
+    //for(uint64_t i = 0; i < columns; i++)
+    //{
+        //for(uint64_t j = 0; j < rows; j++)
+        //{
+            //printf("%" PRIu64 "\t", table_r->array[i][j]);
+        //}
+        //printf("\n");
+    //}
 
     return table_r;
 }
@@ -174,12 +183,15 @@ relation *relation_from_file(char *filename)
     if(rel == NULL)
     {
     	perror("relation_from_file: malloc error");
+	fclose(fp);
     	return NULL;
     }
     rel->num_tuples = rows;
     if(rows == 0)
     {
 	fprintf(stderr, "relation_from_file: can't create empty relation\n");
+	free(rel);
+	close(fp);
 	return NULL;
     }
 
@@ -187,6 +199,8 @@ relation *relation_from_file(char *filename)
     if(rel->tuples == NULL)
     {
     	perror("relation_from_file: malloc error");
+	free(rel);
+        fclose(fp);
     	return NULL;
     }
 
@@ -197,6 +211,9 @@ relation *relation_from_file(char *filename)
     	if(sscanf(str, "%" PRIu64 ",%" PRIu64, &(rel->tuples[i].key), &(rel->tuples[i].row_id)) != 2)
 	{
 		fprintf(stderr, "relation_from_file: incorrect file format\n");
+		free(rel->tuples);
+		free(rel);
+		fclose(fp);
 		return NULL;
 	}
     }
@@ -204,7 +221,37 @@ relation *relation_from_file(char *filename)
     fclose(fp);
     return rel;
 }
-
+/**
+ * Stores the relation data from the relation to a file.
+ * The file is overwritten
+ * @param char * The name of the file
+ * @param relation * A pointer to the relation
+ * @return int 0 if successful
+ */
+int relation_to_file(char *filename,relation*rel)
+{
+    if(filename==NULL||rel==NULL||rel->tuples==NULL||rel->num_tuples==0)
+    {
+        fprintf(stderr, "%s", "relation_to_file: wrong parameters\n");
+        return 1;
+    }
+    FILE *fp;
+    //open file
+    fp=fopen(filename, "w");
+    if(fp==NULL)
+    {
+        perror("relation_to_file: fopen error");
+        return 2;
+    }
+    char line[80];
+    for(uint64_t i=0; i<rel->num_tuples; i++)
+    {
+        snprintf(line,80,"%" PRIu64 ",%" PRIu64"\n", rel->tuples[i].key, rel->tuples[i].row_id);
+        fprintf(fp,"%s",line);
+    }
+    fclose(fp);
+    return 0;
+}
 
 /**
  * Prints all the tuples of the relation given

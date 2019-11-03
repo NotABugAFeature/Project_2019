@@ -207,6 +207,7 @@ void testCopy_relation()
     p2.tuples[2].key = 3;
     p2.tuples[2].row_id = 3;
     
+    p1.num_tuples = p2.num_tuples;
     p1.tuples = malloc(3*sizeof(tuple));
     CU_ASSERT_NOT_EQUAL(p1.tuples, NULL);
     
@@ -262,6 +263,53 @@ void testCopy_relation_with_psum3()
 
     int result = copy_relation_with_psum(source, target, index_start, index_end, NULL, nbyte);
     CU_ASSERT_EQUAL(result, 1);
+}
+
+
+void testCopy_relation_with_psum4()
+{
+    relation p1, p2;
+
+    p2.num_tuples = 3;
+    p2.tuples = malloc(3*sizeof(tuple));
+    CU_ASSERT_NOT_EQUAL(p2.tuples, NULL);
+
+    p2.tuples[0].key = 1;
+    p2.tuples[0].row_id = 1;
+
+    p2.tuples[1].key = 3;
+    p2.tuples[1].row_id = 2;
+
+    p2.tuples[2].key = 1;
+    p2.tuples[2].row_id = 3;
+
+    p1.num_tuples = p2.num_tuples;
+    p1.tuples = malloc((p1.num_tuples)*sizeof(tuple));
+    CU_ASSERT_NOT_EQUAL(p1.tuples, NULL);
+    
+    uint64_t *hist = malloc(HIST_SIZE*sizeof(uint64_t));
+    CU_ASSERT_NOT_EQUAL(hist, NULL);
+
+    for(uint64_t i=0; i<HIST_SIZE; i++)
+    {
+        hist[i] = 0;
+    }
+    
+    int res = create_histogram(&p2, 0, 3, hist, 8);
+    CU_ASSERT_EQUAL(res, 0);
+
+    res = transform_to_psum(hist);
+    CU_ASSERT_EQUAL(res, 0);
+    
+    res = copy_relation_with_psum(&p2, &p1, 0, 3, hist, 8);
+    CU_ASSERT_EQUAL(res, 0);
+    
+    CU_ASSERT_EQUAL(p1.tuples[0].key, 1);
+    CU_ASSERT_EQUAL(p1.tuples[1].key, 1);
+    CU_ASSERT_EQUAL(p1.tuples[2].key, 3);
+    
+    free(p2.tuples);
+    free(p1.tuples);
 }
 
 
@@ -347,12 +395,13 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testCreate_histogram5", testCreate_histogram5))||
         (NULL==CU_add_test(pSuite, "testTransform_to_psum1", testTransform_to_psum1))||
         (NULL==CU_add_test(pSuite, "testTransform_to_psum2", testTransform_to_psum2))||
-        (NULL==CU_add_test(pSuite, "testRadix_sort1", testRadix_sort1))||
-        (NULL==CU_add_test(pSuite, "testRadix_sort2", testRadix_sort2))||
         (NULL==CU_add_test(pSuite, "testCopy_relation", testCopy_relation))||
         (NULL==CU_add_test(pSuite, "testCopy_relation_with_psum1", testCopy_relation_with_psum1))||
         (NULL==CU_add_test(pSuite, "testCopy_relation_with_psum2", testCopy_relation_with_psum2))||
-        (NULL==CU_add_test(pSuite, "testCopy_relation_with_psum3", testCopy_relation_with_psum3))
+        (NULL==CU_add_test(pSuite, "testCopy_relation_with_psum3", testCopy_relation_with_psum3))||
+        (NULL==CU_add_test(pSuite, "testCopy_relation_with_psum4", testCopy_relation_with_psum4))||
+        (NULL==CU_add_test(pSuite, "testRadix_sort1", testRadix_sort1))||
+        (NULL==CU_add_test(pSuite, "testRadix_sort2", testRadix_sort2))
       )
     {
         CU_cleanup_registry();

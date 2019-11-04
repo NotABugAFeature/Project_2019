@@ -27,7 +27,7 @@
 #### relation.c (.h):
 * read_from_file: διαβάζει έναν πίνακα από αρχείο
 * delete_table: απελευθέρωση μνήμης του πίνακα
-* create_relation_from_table:
+* create_relation_from_table: δημιουργεί τον πίνακα {rowid, key}
 * relation_from_file:
 * relation_to_file:
 * print_relation:

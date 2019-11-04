@@ -51,8 +51,9 @@ int append_to_list(result_list*, uint64_t r_row_id, uint64_t s_row_id);
 /**
  * Prints All The Nodes And Buckets Of The List From First To Last.
  * @param result_list The result list to print
+ * @param FILE* Where the output will be printed
  */
-void print_result_list(result_list*);
+void print_result_list(result_list*,FILE*);
 
 
 /**

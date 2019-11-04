@@ -11,22 +11,28 @@
 Τα CUnit tests εκτελέστηκαν στους προσωπικούς μας υπολογιστές κατόπιν αδυναμίας εκτέλεσης τους στα μηχανήματα του Τμήματος
 
 ### 1) Λίγα λόγια για την υλοποίηση της εργασίας ανά αρχείο
-Η υλοποίηση της εργασίας έγινε σε γλώσσα C (C99) και αποτελείται από δεκαπέντε (15) αρχεία:\
-    1) main.c\
-    2) quicksort.c\
-    3) quicksort.h\
-    4) radix_sort.c\
-    5) radix_sort.h\
-    6) relation.c\
-    7) relation.h\
-    8) result_list.c\
-    9) result_list.h\
-    10) sort_merge_join.c\
-    11) sort_merge_join.h\
-    12)
-    13) main.c:    
-    14) Makefile:  Ένα απλό Makefile για την μεταγλώττιση των προγραμμάτων.
-    15) README.md: Αυτό εδώ το ReadMe.
+Η υλοποίηση της εργασίας έγινε σε γλώσσα C (C99) και αποτελείται από δώδεκα (12) αρχεία:\
+#### main.c
+περιέχει την main συνάρτηση του προγράμματος\
+
+#### quicksort.c (.h): 
+Περιέχει την υλοποίηση της quicksort με την οποία ταξινομούνται οι εγγραφές ενός κάδου
+
+#### radix_sort.c
+* create_histogram: δημιουργία πίνακα histogram
+* transform_to_psum: μετατροπή του histogram σε psum
+* copy_relation_with_psum: τοποθέτηση των εγγραφών από τον αρχικό πίνακα στον ταξινομημένο με βάση το psum
+* radix_sort_recursive/radix_sort:
+
+
+#### radix_sort.h
+#### relation.c
+#### relation.h
+#### result_list.c
+#### result_list.h
+#### sort_merge_join.c
+#### sort_merge_join.h
+#### Makefile:  Ένα απλό Makefile για την μεταγλώττιση των προγραμμάτων.
     
 ### 2) Διαφορές με την εκφώνηση και κάποιες σχεδιαστικές επιλογές
 

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <CUnit/Basic.h>
-#include "radix_sort.h"
+#include "../radix_sort.h"
 
 /*
  * CUnit Test Suite

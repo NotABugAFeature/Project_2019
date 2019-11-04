@@ -1,15 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "sort_merge_join.h"
 
 int main(int argc, char **argv)
 {
-	if(argc != 3)
+	char *file1 = NULL, *file2 = NULL;
+	bool result_in_file = false;
+	if(argc != 3 && argc != 4)
 	{
-		fprintf(stderr, "Usage: %s <table1_file> <table2_file>\n", argv[0]);
+		fprintf(stderr, "Usage: %s (-f) <table1_file> <table2_file>\n", argv[0]);
 		return -1;
 	}
 
+	for(int i=0; i<argc; i++)
+	{
+		if(strcmp(argv[i], "-f") == 0)
+		{
+			result_in_file = true;
+		}
+		else
+		{
+			if(file1 != NULL)
+			{
+				file2 = argv[i];
+				continue;
+			}
+			file1 = argv[i];
+		}
+	}
+
+	if(file1 == NULL || file2 == NULL)
+	{
+		fprintf(stderr, "Usage: %s (-f) <table1_file> <table2_file>\n", argv[0]);
+		return -1;
+	}
 /*
 	table *r_table = read_from_file(argv[1]);
 	relation *r = malloc(sizeof(relation));
@@ -53,7 +78,21 @@ int main(int argc, char **argv)
     }
 
     printf("\nResults:\n");
-    print_result_list(results,stdout);
+    if(result_in_file)
+    {
+	FILE *fp = fopen("join_result.txt", "w");
+	if(fp == NULL)
+	{
+	    perror("main: fopen error");
+	    return -4;
+	}
+	print_result_list(results, fp);
+	fclose(fp);
+    }
+    else
+    {
+	print_result_list(results, stdout);
+    }
     printf("\n");
 
     delete_result_list(results);

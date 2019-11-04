@@ -97,14 +97,15 @@ int append_to_bucket(result_list_bucket* bucket, uint64_t r_row_id, uint64_t s_r
 /**
  * Prints the contents of the bucket (index and array)
  * @param result_list_bucket the bucket to print
+ * @param FILE* Where the output will be printed
  */
-void print_bucket(result_list_bucket* bucket)
+void print_bucket(result_list_bucket* bucket,FILE*output)
 {
     //Print the array inside the bucket
     //printf("Index to add next: %u\n", bucket->index_to_add_next);
     for(unsigned int i=0; i<bucket->index_to_add_next; i++)
     {
-        printf("RowIdR: %" PRIu64 " RowIdS: %" PRIu64 "\n", bucket->row_ids[i][ROWID_R_INDEX], bucket->row_ids[i][ROWID_S_INDEX]);
+        fprintf(output,"RowIdR: %" PRIu64 " RowIdS: %" PRIu64 "\n", bucket->row_ids[i][ROWID_R_INDEX], bucket->row_ids[i][ROWID_S_INDEX]);
     }
 }
 
@@ -148,24 +149,24 @@ void delete_result_list(result_list* list)
     printf("List Deleted\n");
 }
 
-void print_result_list(result_list* list)
+void print_result_list(result_list* list,FILE*output)
 {
     //printf("%" PRIu64 "\n", sizeof(result_list));
     //printf("%" PRIu64 "\n", sizeof(result_list_node));
     //printf("%" PRIu64 "\n", sizeof(result_list_bucket));
     if(list==NULL)
     {
-        printf("print_result_list: NULL list pointer\n");
+        fprintf(stderr,"print_result_list: NULL list pointer\n");
         return;
     }
     unsigned int index=0;
     result_list_node*temp=list->head;
-    printf("Number Of Records: %"PRIu64"\n",result_list_get_number_of_records(list));
-    printf("Number Of Buckets: %u\n", list->number_of_nodes);
+    fprintf(output,"Number Of Records: %"PRIu64"\n",result_list_get_number_of_records(list));
+    fprintf(output,"Number Of Buckets: %u\n", list->number_of_nodes);
     while(temp!=NULL)//Visit all the nodes and print them
     {
-        printf("Bucket Index: %u\n", index);
-        print_bucket(&(temp->bucket));
+        fprintf(output,"Bucket Index: %u\n", index);
+        print_bucket(&(temp->bucket),output);
         index++;
         temp=temp->next;
     }

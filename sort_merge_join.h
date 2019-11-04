@@ -13,7 +13,6 @@
 int final_join(result_list*, relation *, relation *);
 
 
-
 /**
  * Implements sort merge join
  * Takes two relations, sorts them then joins them

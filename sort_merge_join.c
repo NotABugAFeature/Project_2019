@@ -20,16 +20,12 @@ int final_join(result_list* list, relation *t, relation *s)
         return 1;
     }
     uint64_t j = 0;
-    //printf("num_tuples: %" PRIu64 " %" PRIu64 "\n", t->num_tuples, s->num_tuples);
     for(uint64_t i = 0; i < t->num_tuples; i++)
     {
-        //printf("i: %" PRIu64 "\n", i);
         while(j < s->num_tuples && t->tuples[i].key >= s->tuples[j].key)
         {
-            //printf("NOW: %" PRIu64 " %" PRIu64 "\n", t->tuples[i].key, s->tuples[j].key);
             if(t->tuples[i].key == s->tuples[j].key)
             {
-                //printf("FOUND\n");
                 if(append_to_list(list, t->tuples[i].row_id, s->tuples[j].row_id))
                 {
                     fprintf(stderr, "%s", "final_join Error: append to list\n");

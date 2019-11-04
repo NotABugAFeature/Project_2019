@@ -11,9 +11,10 @@
 Τα CUnit tests εκτελέστηκαν στους προσωπικούς μας υπολογιστές κατόπιν αδυναμίας εκτέλεσης τους στα μηχανήματα του Τμήματος
 
 ### 1) Λίγα λόγια για την υλοποίηση της εργασίας ανά αρχείο
-Η υλοποίηση της εργασίας έγινε σε γλώσσα C (C99) και αποτελείται από δώδεκα (12) αρχεία:\
+Η υλοποίηση της εργασίας έγινε σε γλώσσα C (C99) και αποτελείται από δώδεκα (12) αρχεία:
+
 #### main.c
-περιέχει την main συνάρτηση του προγράμματος\
+περιέχει την main συνάρτηση του προγράμματος
 
 #### quicksort.c (.h): 
 Περιέχει την υλοποίηση της quicksort με την οποία ταξινομούνται οι εγγραφές ενός κάδου
@@ -22,20 +23,30 @@
 * create_histogram: δημιουργία πίνακα histogram
 * transform_to_psum: μετατροπή του histogram σε psum
 * copy_relation_with_psum: τοποθέτηση των εγγραφών από τον αρχικό πίνακα στον ταξινομημένο με βάση το psum
-* radix_sort_recursive/radix_sort: 
+* radix_sort_recursive/radix_sort: υλοποίηση της αναδρομικής radix για την ταξινόμηση ενός πίνακα
 
 #### relation.c (.h):
 * read_from_file: διαβάζει έναν πίνακα από αρχείο
 * delete_table: απελευθέρωση μνήμης του πίνακα
 * create_relation_from_table: δημιουργεί τον πίνακα {rowid, key}
-* relation_from_file:
-* relation_to_file:
-* print_relation:
-* print_tuples:
+* relation_from_file: διάβασμα των δεδομένων από ένα αρχείο για τη δημιουργία ενός relation
+* relation_to_file: αποθήκευση των δεδομένων ενός relation σε ένα αρχείο
+* print_relation: εκτύπωση όλων των tuples ενός relation
+* print_tuples: εκτύπωση του πίνακα {rowid, key}
 
 #### result_list.c (.h):
+Βοηθητική δομή στην οποία αποθηκεύονται τα αποτελέσματα της σύζευξης:\
+* create_result_list: αρχικοποίηση λίστας
+* delete_result_list: απελευθέρωση μνήμης λίστας
+* append_to_list: προσθήκη αποτελέσματος σύζευξης στη λίστα. Η λίστα γνωρίζει αν ένας κάδος έχει γεμίσει και δημιουργεί νέο αυτόματα
+* print_result_list: εκτύπωση αποτελεσμάτων
+* is_result_list_empty: επιστρέφει αν η λίστα είναι άδεια
+* result_list_get_number_of_buckets: επιστρέφει τον αριθμό των κάδων
+* result_list_get_number_of_records: επιστρέφει τον συνολικό αριθμό των εγγραφών σύζευξης
 
 #### sort_merge_join.c (.h):
+* final_join: διασχίζει παράλληλα δύο relations και κάνει τη σύζευξη
+* sort_merge_join: δέχεται δύο relations και παράγει το τελικό αποτέλεσμα των results
 
 #### Makefile:  
 Makefile για την μεταγλώττιση των προγραμμάτων.

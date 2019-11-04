@@ -54,52 +54,52 @@ result_list *sort_merge_join(relation *relR, relation *relS)
         return NULL;
     }
 
-	printf("R relation:\n");
-	print_relation(relR);
-	printf("\n");
+    printf("R relation:\n");
+    print_relation(relR);
+    printf("\n");
 
-	printf("S relation:\n");
-	print_relation(relS);
-	printf("\n");
+    printf("S relation:\n");
+    print_relation(relS);
+    printf("\n");
 
-	//Sort the two relations
-	int retval = radix_sort(relR);
-	if(retval != 0)
-	{
-		fprintf(stderr, "Error in radix_sort\n");
-		return NULL;
-	}
+    //Sort the two relations
+    int retval = radix_sort(relR);
+    if(retval != 0)
+    {
+	fprintf(stderr, "Error in radix_sort\n");
+	return NULL;
+    }
 
-	retval = radix_sort(relS);
-	if(retval != 0)
-	{
-		fprintf(stderr, "Error in radix_sort\n");
-		return NULL;
-	}
+    retval = radix_sort(relS);
+    if(retval != 0)
+    {
+	fprintf(stderr, "Error in radix_sort\n");
+	return NULL;
+    }
 
 	//printf("\n");
 	//printf("Sorted R:\n");
 	//print_relation(relR);
 	//printf("\n");
-	relation_to_file("sorted_relation_R",relR);
+    relation_to_file("sorted_relation_R",relR);
 	//printf("Sorted S:\n");
 	//print_relation(relS);
 	//printf("\n");
-	relation_to_file("sorted_relation_S",relS);
-	result_list *results = create_result_list();
-	if(results == NULL)
-	{
-		fprintf(stderr, "Error in create_result_list\n");
-		return NULL;
-	}
+    relation_to_file("sorted_relation_S",relS);
+    result_list *results = create_result_list();
+    if(results == NULL)
+    {
+	fprintf(stderr, "Error in create_result_list\n");
+	return NULL;
+    }
 
-	//Join
-	int res = final_join(results, relR, relS);
+    //Join
+    int res = final_join(results, relR, relS);
     if(res)
     {
         fprintf(stderr, "Error in final_join\n");
         return NULL;
     }
 
-	return results;
+    return results;
 }

@@ -52,8 +52,8 @@ typedef struct result_list
     int number_of_nodes; //Counter of the buckets;
 } result_list;
 result_list_node* create_result_list_node();
-void print_result_list(result_list*);
-void print_bucket(result_list_bucket*);
+void print_result_list(result_list*,FILE*);
+void print_bucket(result_list_bucket*,FILE*);
 int is_result_list_bucket_full(result_list_bucket* bucket);
 int append_to_bucket(result_list_bucket* bucket, uint64_t r_row_id, uint64_t s_row_id);
 /******************************************************************************/
@@ -120,7 +120,7 @@ void testAppend_to_bucket()
     {
         CU_ASSERT(0);
     }
-    print_bucket(&bucket);
+    print_bucket(&bucket,stdout);
 }
 
 void testCreate_result_list()
@@ -183,7 +183,7 @@ void testAppend_to_list()
     {
         CU_ASSERT(0);
     }
-    print_result_list(list);
+    print_result_list(list,stdout);
     delete_result_list(list);
 }
 
@@ -203,7 +203,7 @@ void testIs_result_list_empty()
     {
         CU_ASSERT(0);
     }
-    print_result_list(list);
+    print_result_list(list,stdout);
     delete_result_list(list);
 }
 
@@ -233,7 +233,7 @@ void testResult_list_get_number_of_buckets()
     {
         CU_ASSERT(0);
     }
-    print_result_list(list);
+    print_result_list(list,stdout);
     delete_result_list(list);
 }
 
@@ -263,7 +263,7 @@ void testResult_list_get_number_of_records()
     {
         CU_ASSERT(0);
     }
-    print_result_list(list);
+    print_result_list(list,stdout);
     delete_result_list(list);
 }
 

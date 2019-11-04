@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
-#include "relation.h"
+#include "../relation.h"
 
 /*
  * CUnit Test Suite

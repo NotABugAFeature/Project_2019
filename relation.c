@@ -44,6 +44,7 @@ table *read_from_file(char *filename)
 	fprintf(stderr, "read_from_file: can't create empty relation\n");
 	return NULL;
     }
+
     //allocate memory
     table_r->array = malloc(columns * sizeof(uint64_t *));
     if(table_r->array == NULL)
@@ -82,18 +83,9 @@ table *read_from_file(char *filename)
     }
 
     fclose(fp);
-
-    //for(uint64_t i = 0; i < columns; i++)
-    //{
-        //for(uint64_t j = 0; j < rows; j++)
-        //{
-            //printf("%" PRIu64 "\t", table_r->array[i][j]);
-        //}
-        //printf("\n");
-    //}
-
     return table_r;
 }
+
 
 /**
  * Frees the momory used by the table
@@ -114,6 +106,7 @@ void delete_table(table*table_r)
         table_r=NULL;
     }
 }
+
 
 /**
  * Accepts a key column of the table and a relation pointer and creates the
@@ -152,6 +145,7 @@ int create_relation_from_table(uint64_t* key_column,uint64_t column_size,relatio
     }
     return 0;
 }
+
 
 /**
  * Reads relation data from file and creates a relation
@@ -221,6 +215,8 @@ relation *relation_from_file(char *filename)
     fclose(fp);
     return rel;
 }
+
+
 /**
  * Stores the relation data from the relation to a file.
  * The file is overwritten
@@ -253,6 +249,7 @@ int relation_to_file(char *filename,relation*rel)
     return 0;
 }
 
+
 /**
  * Prints all the tuples of the relation given
  * 
@@ -275,6 +272,8 @@ void print_relation(relation* rel)
         printf("%" PRIu64 "\t%" PRIu64 "\n",rel->tuples[i].row_id,rel->tuples[i].key);
     }
 }
+
+
 /**
  * Prints the rowid and keys stored in the tuples
  *

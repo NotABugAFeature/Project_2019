@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     }
 
     printf("\nResults:\n");
-    print_result_list(results);
+    print_result_list(results,stdout);
     printf("\n");
 
     delete_result_list(results);

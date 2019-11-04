@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <CUnit/Basic.h>
-#include "sort_merge_join.h"
+#include "../sort_merge_join.h"
 
 /*
  * CUnit Test Suite

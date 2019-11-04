@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include "sort_merge_join.h"
 
 int main(int argc, char **argv)
@@ -56,14 +57,14 @@ int main(int argc, char **argv)
     s->tuples = NULL; s->num_tuples = 0;
     create_relation_from_table(&s_table->array[0][0], s_table->columns, s);
 */
-	relation *r = relation_from_file(argv[1]);
+	relation *r = relation_from_file(file1);
 	if(r == NULL)
 	{
 		fprintf(stderr, "Error in relation_from_file\n");
 		return -2;
 	}
 
-	relation *s = relation_from_file(argv[2]);
+	relation *s = relation_from_file(file2);
 	if(s == NULL)
 	{
 		fprintf(stderr, "Error in relation_from_file\n");

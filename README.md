@@ -18,21 +18,27 @@
 #### quicksort.c (.h): 
 Περιέχει την υλοποίηση της quicksort με την οποία ταξινομούνται οι εγγραφές ενός κάδου
 
-#### radix_sort.c
+#### radix_sort.c (.h):
 * create_histogram: δημιουργία πίνακα histogram
 * transform_to_psum: μετατροπή του histogram σε psum
 * copy_relation_with_psum: τοποθέτηση των εγγραφών από τον αρχικό πίνακα στον ταξινομημένο με βάση το psum
-* radix_sort_recursive/radix_sort:
+* radix_sort_recursive/radix_sort: 
 
+#### relation.c (.h):
+* read_from_file: διαβάζει έναν πίνακα από αρχείο
+* delete_table: απελευθέρωση μνήμης του πίνακα
+* create_relation_from_table:
+* relation_from_file:
+* relation_to_file:
+* print_relation:
+* print_tuples:
 
-#### radix_sort.h
-#### relation.c
-#### relation.h
-#### result_list.c
-#### result_list.h
-#### sort_merge_join.c
-#### sort_merge_join.h
-#### Makefile:  Ένα απλό Makefile για την μεταγλώττιση των προγραμμάτων.
+#### result_list.c (.h):
+
+#### sort_merge_join.c (.h):
+
+#### Makefile:  
+Makefile για την μεταγλώττιση των προγραμμάτων.
     
 ### 2) Διαφορές με την εκφώνηση και κάποιες σχεδιαστικές επιλογές
 

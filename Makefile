@@ -6,7 +6,7 @@ FLAGS= -Wall
 TESTFLAGS= -Wall -lcunit
 
 all: join
-	@echo "Use ./join path_to_relR path_to_relS  To Start!"
+	@echo "Use (-f) ./join path_to_relR path_to_relS  To Start!"
 
 tests: quicksort_test radix_sort_test relation_test result_list_test sort_merge_join_test
 

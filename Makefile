@@ -1,8 +1,9 @@
 #Makefile for Project_2019_1
 
-CC=gcc -std=c99
+CC=gcc -std=c11
 
-FLAGS= -Wall -lcunit 
+FLAGS= -Wall
+TESTFLAGS= -Wall -lcunit
 
 all: join
 	@echo "Use ./join path_to_relR path_to_relS  To Start!"
@@ -10,19 +11,19 @@ all: join
 tests: quicksort_test radix_sort_test relation_test result_list_test sort_merge_join_test
 
 quicksort_test: quicksort_test.o quicksort.o relation.o
-	$(CC) $(FLAGS) -o quicksort_test quicksort_test.o quicksort.o relation.o
+	$(CC) $(TESTFLAGS) -o quicksort_test quicksort_test.o quicksort.o relation.o
     
 radix_sort_test: radix_sort_test.o radix_sort.o quicksort.o
-	$(CC) $(FLAGS) -o radix_sort_test radix_sort_test.o radix_sort.o quicksort.o
+	$(CC) $(TESTFLAGS) -o radix_sort_test radix_sort_test.o radix_sort.o quicksort.o
 
 relation_test: relation_test.o relation.o
-	$(CC) $(FLAGS) -o relation_test relation_test.o relation.o
+	$(CC) $(TESTFLAGS) -o relation_test relation_test.o relation.o
     
 result_list_test: result_list_test.o result_list.o
-	$(CC) $(FLAGS) -o result_list_test result_list_test.o result_list.o
+	$(CC) $(TESTFLAGS) -o result_list_test result_list_test.o result_list.o
     
 sort_merge_join_test: sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o result_list.o relation.o
-	$(CC) $(FLAGS) -o sort_merge_join_test sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o result_list.o relation.o
+	$(CC) $(TESTFLAGS) -o sort_merge_join_test sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o result_list.o relation.o
 
 join: main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o
 	$(CC) $(FLAGS) -o join main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o

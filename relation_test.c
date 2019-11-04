@@ -121,19 +121,6 @@ void testRead_from_file6()
 	delete_table(t);
 }
 
-/* No test for delete */
-/*
-void testDelete_table()
-{
-    table* p2;
-    delete_table(p0);
-    if(1)
-    {
-        CU_ASSERT(0);
-    }
-}*/
-
-
 /**
  * Test case 1: key_column NULL
  */
@@ -346,7 +333,6 @@ void testRelation_from_file4()
 	free(rel);
 }
 
-
 /**
  * Test case 5: Normal file with 1000 lines
  */
@@ -369,34 +355,6 @@ void testRelation_from_file5()
 	free(rel->tuples);
 	free(rel);
 }
-
-
-/* No test for print */
-/*
-void testPrint_relation()
-{
-    relation* p2;
-    print_relation(p0);
-    if(1)
-    {
-        CU_ASSERT(0);
-    }
-}
-*/
-
-/* No test for print */
-/*
-void testPrint_tuples()
-{
-    tuple* t;
-    uint64_t items;
-    print_tuples(t, items);
-    if(1)
-    {
-        CU_ASSERT(0);
-    }
-}
-*/
 
 int main()
 {

@@ -28,6 +28,7 @@ typedef struct
     uint64_t row_id;
 }tuple;
 
+
 /** 
  * Type definition for a relation
  * tuples - array of tuples
@@ -48,11 +49,13 @@ typedef struct
  */
 table *read_from_file(char *);
 
+
 /**
  * Frees the momory used by the table
  * @param table*
  */
 void delete_table(table*);
+
 
 /**
  * Accepts a key column of the table and a relation pointer and creates the
@@ -66,12 +69,15 @@ void delete_table(table*);
  */
 int create_relation_from_table(uint64_t* ,uint64_t , relation*);
 
+
 /**
  * Reads relation data from file and creates a relation
  * @param char * The name of the file
  * @return relation * A pointer to the created relation
  */
 relation *relation_from_file(char *);
+
+
 /**
  * Stores the relation data from the relation to a file.
  * The file is overwritten
@@ -80,12 +86,16 @@ relation *relation_from_file(char *);
  * @return int 0 if successful
  */
 int relation_to_file(char *,relation*);
+
+
 /**
  * Prints all the tuples of the relation given
  * 
  * @param rel* The relation to print
  */
 void print_relation(relation*);
+
+
 /**
  * Prints the rowid and keys stored in the tuples
  *
@@ -93,4 +103,5 @@ void print_relation(relation*);
  * @param uint64_t The number of items to print (0 - items-1)
  */
 void print_tuples(tuple* t,uint64_t items);
+
 #endif	// RELATION_H

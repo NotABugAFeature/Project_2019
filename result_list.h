@@ -1,14 +1,3 @@
-/******************************************************************************/
-/*  Application         :    Project_2019                                     */
-/*  File                :    result_list.h                                    */
-/*  Author              :    Georgakopoulos Panagiotis 1115201600028          */
-/*  Team Member         :    Karamhna Maria            1115201600059          */
-/*  Team Member         :    Koursiounis Georgios      1115201600077          */
-/*  Instructor          :    Sarantis Paskalis                                */
-/*  All Tests Conducted At The University's Linux Machines                    */
-/******************************************************************************/
-/*  This File Contains The Declaration Of The Results List                    */
-
 #ifndef RESULTLIST_H
 #define RESULTLIST_H
 

@@ -22,7 +22,7 @@ int final_join(result_list* list, relation *t, relation *s)
     uint64_t z=0;
     for(uint64_t i = 0; i < t->num_tuples; i++)
     {
-	uint64_t j = z;
+	      uint64_t j = z;
         while(j < s->num_tuples && t->tuples[i].key >= s->tuples[j].key)
         {
             if(t->tuples[i].key == s->tuples[j].key)

@@ -93,6 +93,8 @@ int main(int argc, char **argv)
     else
     {
 	print_result_list(results, stdout);
+	//printf("Number Of Records: %"PRIu64"\n",result_list_get_number_of_records(results));
+	//printf("Number Of Buckets: %u\n",result_list_get_number_of_buckets(results));
     }
     printf("\n");
 

@@ -19,9 +19,10 @@ int final_join(result_list* list, relation *t, relation *s)
 	fprintf(stderr, "%s", "final_join Error: arguments cannot be null\n");
         return 1;
     }
+    uint64_t z=0;
     for(uint64_t i = 0; i < t->num_tuples; i++)
     {
-	uint64_t j = 0;
+	      uint64_t j = z;
         while(j < s->num_tuples && t->tuples[i].key >= s->tuples[j].key)
         {
             if(t->tuples[i].key == s->tuples[j].key)
@@ -32,6 +33,10 @@ int final_join(result_list* list, relation *t, relation *s)
                     return 2;
                 }
             }
+	    else
+	    {
+		z++;
+	    }
             j++;
         }
     }
@@ -53,15 +58,6 @@ result_list *sort_merge_join(relation *relR, relation *relS)
         fprintf(stderr, "%s", "sort_merge_join Error: arguments cannot be null\n");
         return NULL;
     }
-
-    printf("R relation:\n");
-    print_relation(relR);
-    printf("\n");
-
-    printf("S relation:\n");
-    print_relation(relS);
-    printf("\n");
-
     //Sort the two relations
     int retval = radix_sort(relR);
     if(retval != 0)
@@ -76,16 +72,10 @@ result_list *sort_merge_join(relation *relR, relation *relS)
 	fprintf(stderr, "Error in radix_sort\n");
 	return NULL;
     }
-
-	//printf("\n");
-	//printf("Sorted R:\n");
-	//print_relation(relR);
-	//printf("\n");
+#if defined(_SORTEDTOFILE_)
     relation_to_file("sorted_relation_R",relR);
-	//printf("Sorted S:\n");
-	//print_relation(relS);
-	//printf("\n");
     relation_to_file("sorted_relation_S",relS);
+#endif
     result_list *results = create_result_list();
     if(results == NULL)
     {

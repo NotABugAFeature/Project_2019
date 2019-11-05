@@ -5,6 +5,12 @@ CC=gcc -std=c11
 FLAGS= -Wall
 TESTFLAGS= -Wall -lcunit
 
+ifeq ($(IO),true) 
+
+FLAGS=$(CFLAGS) -D_SORTEDTOFILE_
+
+endif
+
 all: join
 	@echo "Use (-f) ./join path_to_relR path_to_relS  To Start!"
 

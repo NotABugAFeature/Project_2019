@@ -18,10 +18,11 @@ int final_join(result_list* list, relation *t, relation *s)
     {
 	fprintf(stderr, "%s", "final_join Error: arguments cannot be null\n");
         return 1;
-    }    
+    }
+    uint64_t z=0;
     for(uint64_t i = 0; i < t->num_tuples; i++)
     {
-	uint64_t j = 0;
+	uint64_t j = z;
         while(j < s->num_tuples && t->tuples[i].key >= s->tuples[j].key)
         {
             if(t->tuples[i].key == s->tuples[j].key)
@@ -32,6 +33,10 @@ int final_join(result_list* list, relation *t, relation *s)
                     return 2;
                 }
             }
+	    else
+	    {
+		z++;
+	    }
             j++;
         }
     }

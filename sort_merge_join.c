@@ -58,15 +58,6 @@ result_list *sort_merge_join(relation *relR, relation *relS)
         fprintf(stderr, "%s", "sort_merge_join Error: arguments cannot be null\n");
         return NULL;
     }
-
-    printf("R relation:\n");
-    print_relation(relR);
-    printf("\n");
-
-    printf("S relation:\n");
-    print_relation(relS);
-    printf("\n");
-
     //Sort the two relations
     int retval = radix_sort(relR);
     if(retval != 0)
@@ -81,16 +72,10 @@ result_list *sort_merge_join(relation *relR, relation *relS)
 	fprintf(stderr, "Error in radix_sort\n");
 	return NULL;
     }
-
-	//printf("\n");
-	//printf("Sorted R:\n");
-	//print_relation(relR);
-	//printf("\n");
+#if defined(_SORTEDTOFILE_)
     relation_to_file("sorted_relation_R",relR);
-	//printf("Sorted S:\n");
-	//print_relation(relS);
-	//printf("\n");
     relation_to_file("sorted_relation_S",relS);
+#endif
     result_list *results = create_result_list();
     if(results == NULL)
     {

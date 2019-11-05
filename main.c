@@ -78,9 +78,9 @@ int main(int argc, char **argv)
     	return -3;
     }
 
-    printf("\nResults:\n");
     if(result_in_file)
     {
+	printf("\nWriting results to file: join_result.txt\n");
 	FILE *fp = fopen("join_result.txt", "w");
 	if(fp == NULL)
 	{
@@ -92,6 +92,7 @@ int main(int argc, char **argv)
     }
     else
     {
+	printf("\nResults:\n");
 	print_result_list(results, stdout);
 	//printf("Number Of Records: %"PRIu64"\n",result_list_get_number_of_records(results));
 	//printf("Number Of Buckets: %u\n",result_list_get_number_of_buckets(results));

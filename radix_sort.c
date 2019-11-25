@@ -241,3 +241,105 @@ int radix_sort(relation *array)
 
 	return 0;
 }
+
+
+int radix_sort_iterative(relation *array)
+{
+	//Create array to help with the sorting
+	relation *auxiliary = malloc(sizeof(relation));
+	if(auxiliary == NULL)
+	{
+		perror("radix_sort: malloc error");
+		return -1;
+	}
+	auxiliary->num_tuples = array->num_tuples;
+	auxiliary->tuples = malloc(array->num_tuples*sizeof(tuple));
+	if(auxiliary->tuples == NULL)
+	{
+		perror("radix_sort: malloc error");
+		return -1;
+	}
+
+	Window *window, new_window;
+	Queue *queue = malloc(sizeof(Queue));
+	window = malloc(sizeof(Window));
+	window->start = 0;
+	window->end = array->num_tuples;
+	window->byte = 1;
+	queue.push(window);
+	
+	while(!queue.empty())
+	{
+		new_window = queue.pop();
+		if(new_window->byte > window->byte)
+		{
+			relation *temp = array;
+			array = auxiliary;
+			auxiliary = temp;
+		}
+		window = new_window;
+		if((window->end-window->start)*sizeof(tuple) > 64*1024 || byte>8)
+		{
+			//Choose whether to place result in array or auxiliary array
+			if(window->byte % 2 == 0)
+			{
+				quicksort(array->tuples, window->start, window->end-1);
+				copy_relation(array, auxiliary, window->start, window->end);
+			}
+			else
+			{
+				quicksort(array->tuples, window->start, window->end-1);
+			}
+		}
+		else
+		{
+			uint64_t *hist = malloc(HIST_SIZE*sizeof(uint64_t));
+			if(hist == NULL)
+			{
+				perror("radix_sort_recursive: malloc error");
+				return -2;
+			}
+			
+			for(uint64_t i=0; i<HIST_SIZE; i++)
+			{
+				hist[i] = 0;
+			}
+			
+			int res = create_histogram(array, start_index, end_index, hist, byte);
+			if(res)
+				return -3;
+			
+			res = transform_to_psum(hist);
+			if(res)
+				return -4;
+			
+			copy_relation_with_psum(array, auxiliary, start_index, end_index, hist, byte);
+			
+			//Recursively sort every part of the array
+			uint64_t start = window->start;
+			for(uint64_t i=0; i<HIST_SIZE; i++)
+			{
+				if(start<window->start+hist[i])
+				{
+					//int retval = radix_sort_recursive(byte+1, auxiliary, array, start, start_index+hist[i]);
+					new_window = malloc(sizeof(Window));
+					new_window->start = start;
+					new_window->end = window->start+hist[i];
+					new_window->byte = byte+1;
+					queue.push(new_window);
+				}
+				if(hist[i]+window->start>window->end)
+				{
+					break;
+				}
+				start=window->start+hist[i];
+			}
+			free(hist);
+		}
+		
+	}
+	
+	free(auxiliary->tuples);
+	free(auxiliary);
+	return 0;
+}

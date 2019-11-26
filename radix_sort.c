@@ -134,6 +134,8 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
 }
 
 
+
+
 /**
  * Implements radix sort
  * in bfs order, using a queue
@@ -249,5 +251,117 @@ int radix_sort(relation *array)
 	free(q);
 	free(auxiliary->tuples);
 	free(auxiliary);
+	return 0;
+}
+
+
+/**
+ * Implements radix sort in recursive way
+ * @param unsigned short byte Which byte is used to create the histogram
+ * @param relation *array The array to be sorted
+ * @param relation *auxiliary Auxiliary array for the sorting, same size as array
+ * @param uint64_t start_index The starting index of the relation
+ * @param uint64_t end_index The ending index of the relation
+ * @return 0 for success, <0 for error
+ * Not used
+ */
+int radix_sort_recursive(unsigned short byte, relation *array, relation *auxiliary, uint64_t start_index, uint64_t end_index)
+{
+	//Check if bucket is small enough
+	if((end_index-start_index)*sizeof(tuple)<64*1024||byte>8)
+	{
+		//Choose whether to place result in array or auxiliary array
+		if(byte % 2 == 0)
+		{
+			quicksort(array->tuples, start_index, end_index-1);
+			copy_relation(array, auxiliary, start_index, end_index);
+		}
+		else
+		{
+			quicksort(array->tuples, start_index, end_index-1);
+		}
+	}
+	else
+	{
+		uint64_t *hist = malloc(HIST_SIZE*sizeof(uint64_t));
+		if(hist == NULL)
+		{
+			perror("radix_sort_recursive: malloc error");
+			return -2;
+		}
+
+		for(uint64_t i=0; i<HIST_SIZE; i++)
+		{
+			hist[i] = 0;
+		}
+		
+		int res = create_histogram(array, start_index, end_index, hist, byte);
+		if(res)
+            return -3;
+
+        res = transform_to_psum(hist);
+        if(res)
+            return -4;
+
+		copy_relation_with_psum(array, auxiliary, start_index, end_index, hist, byte);
+		
+		//Recursively sort every part of the array
+		uint64_t start = start_index;
+		for(uint64_t i=0; i<HIST_SIZE; i++)
+		{
+			if(start<start_index+hist[i])
+			{
+				int retval = radix_sort_recursive(byte+1, auxiliary, array, start, start_index+hist[i]);
+				if(retval != 0)
+				{
+					return retval;
+				}
+			}
+			if(hist[i]+start_index>end_index)
+            {
+				break;
+			}
+			start=start_index+hist[i];
+		}
+		free(hist);
+	}
+
+	return 0;
+}
+
+
+/**
+ * Sets up and executes the recursive radix sort
+ * @param relation *array The array to be sorted
+ * @return 0 for success, <0 for error
+ * Not used
+ */
+int radix_sort_recursive_setup(relation *array)
+{
+	//Create array to help with the sorting
+	relation *auxiliary = malloc(sizeof(relation));
+	if(auxiliary == NULL)
+	{
+		perror("radix_sort: malloc error");
+		return -1;
+	}
+	auxiliary->num_tuples = array->num_tuples;
+	auxiliary->tuples = malloc(array->num_tuples*sizeof(tuple));
+	if(auxiliary->tuples == NULL)
+	{
+		perror("radix_sort: malloc error");
+		return -1;
+	}
+
+	int retval = radix_sort_recursive(1, array, auxiliary, 0, array->num_tuples);
+	if(retval != 0)
+	{
+		fprintf(stderr, "Radix sort error\n");
+		return retval;
+	}
+
+	free(auxiliary->tuples);
+	free(auxiliary);
+
 	return 0;
 }

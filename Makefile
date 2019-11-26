@@ -77,4 +77,4 @@ sort_merge_join_test.o: ./tests/sort_merge_join_test.c
 	$(CC) $(FLAGS) -c ./tests/sort_merge_join_test.c
 
 clean:
-	rm -f *.o join quicksort_test radix_sort_test relation_test result_list_test sort_merge_join_test
+	rm -f *.o join queue_test quicksort_test radix_sort_test relation_test result_list_test sort_merge_join_test

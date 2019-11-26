@@ -7,7 +7,7 @@ TESTFLAGS= -Wall -lcunit
 
 ifeq ($(IO),true) 
 
-FLAGS=$(CFLAGS) -D_SORTEDTOFILE_
+FLAGS+= -D_SORTEDTOFILE_
 
 endif
 

@@ -2,7 +2,7 @@
 
 CC=gcc -std=c11
 
-FLAGS= -Wall
+FLAGS= -Wall -g
 TESTFLAGS= -Wall -lcunit
 
 ifeq ($(IO),true) 

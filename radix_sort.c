@@ -159,12 +159,13 @@ int radix_sort(relation *array)
 
 	window *win, *new_win;
 	queue *q = create_queue();
+
 	win = malloc(sizeof(window));
 	win->start = 0;
 	win->end = array->num_tuples;
 	win->byte = 1;
 	push(q, win);
-	
+
 	while(!is_empty(q))
 	{
 		new_win = pop(q);
@@ -176,7 +177,14 @@ int radix_sort(relation *array)
 			array = auxiliary;
 			auxiliary = temp;
 		}
-		win = new_win;
+
+		if(win != new_win)
+		{
+			free(win);
+			win = new_win;
+		}
+
+		//Check if less than 64KB
 		if((win->end - win->start)*sizeof(tuple) > 64*1024 || win->byte>8)
 		{
 			//Choose whether to place result in array or auxiliary array
@@ -195,7 +203,7 @@ int radix_sort(relation *array)
 			uint64_t *hist = malloc(HIST_SIZE*sizeof(uint64_t));
 			if(hist == NULL)
 			{
-				perror("radix_sort_recursive: malloc error");
+				perror("radix_sort: malloc error");
 				return -2;
 			}
 			
@@ -218,28 +226,27 @@ int radix_sort(relation *array)
 			uint64_t start = win->start;
 			for(uint64_t i=0; i<HIST_SIZE; i++)
 			{
-				if(start<win->start+hist[i])
+				if(start < win->start+hist[i])
 				{
-					//int retval = radix_sort_recursive(byte+1, auxiliary, array, start, start_index+hist[i]);
 					new_win = malloc(sizeof(window));
 					new_win->start = start;
-					new_win->end = win->start+hist[i];
+					new_win->end = win->start + hist[i];
 					new_win->byte = win->byte + 1;
 					push(q, new_win);
 				}
-				if(hist[i]+win->start>win->end)
+				if(hist[i]+win->start > win->end)
 				{
+					printf("YES\n");
 					break;
 				}
-				start=win->start+hist[i];
+				start = win->start + hist[i];
 			}
 			free(hist);
 		}
-		
 	}
-	
-	free(q);
+	free(win);
 
+	free(q);
 	free(auxiliary->tuples);
 	free(auxiliary);
 	return 0;

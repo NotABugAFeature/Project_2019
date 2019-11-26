@@ -31,8 +31,8 @@ result_list_test: result_list_test.o result_list.o
 sort_merge_join_test: sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o result_list.o relation.o
 	$(CC) $(TESTFLAGS) -o sort_merge_join_test sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o result_list.o relation.o
 
-join: main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o
-	$(CC) $(FLAGS) -o join main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o
+join: main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o queue.o
+	$(CC) $(FLAGS) -o join main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o queue.o
 
 main.o: main.c
 	$(CC) $(FLAGS) -c main.c
@@ -40,7 +40,7 @@ main.o: main.c
 sort_merge_join.o: sort_merge_join.c sort_merge_join.h
 	$(CC) $(FLAGS) -c sort_merge_join.c
 
-radix_sort.o: radix_sort.c radix_sort.h quicksort.h relation.h
+radix_sort.o: radix_sort.c radix_sort.h quicksort.h relation.h queue.h
 	$(CC) $(FLAGS) -c radix_sort.c
 
 quicksort.o: quicksort.c quicksort.h relation.h
@@ -51,6 +51,9 @@ relation.o: relation.c relation.h
 
 result_list.o: result_list.c result_list.h
 	$(CC) $(FLAGS) -c result_list.c
+
+queue.o: queue.c queue.h
+	$(CC) $(FLAGS) -c queue.c
 
 quicksort_test.o: ./tests/quicksort_test.c 
 	$(CC) $(FLAGS) -c ./tests/quicksort_test.c

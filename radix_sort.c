@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include "radix_sort.h"
+#include "queue.h"
 
 
 //----Histogram----
@@ -212,7 +213,7 @@ int radix_sort_recursive(unsigned short byte, relation *array, relation *auxilia
  * @param relation *array The array to be sorted
  * @return 0 for success, <0 for error
  */
-int radix_sort(relation *array)
+int radix_sort_old(relation *array)
 {
 	//Create array to help with the sorting
 	relation *auxiliary = malloc(sizeof(relation));
@@ -243,7 +244,7 @@ int radix_sort(relation *array)
 }
 
 
-int radix_sort_iterative(relation *array)
+int radix_sort(relation *array)
 {
 	//Create array to help with the sorting
 	relation *auxiliary = malloc(sizeof(relation));
@@ -260,35 +261,37 @@ int radix_sort_iterative(relation *array)
 		return -1;
 	}
 
-	Window *window, new_window;
-	Queue *queue = malloc(sizeof(Queue));
-	window = malloc(sizeof(Window));
-	window->start = 0;
-	window->end = array->num_tuples;
-	window->byte = 1;
-	queue.push(window);
+	window *win, *new_win;
+	queue *q = create_queue();
+	win = malloc(sizeof(window));
+	win->start = 0;
+	win->end = array->num_tuples;
+	win->byte = 1;
+	push(q, win);
 	
-	while(!queue.empty())
+	while(!is_empty(q))
 	{
-		new_window = queue.pop();
-		if(new_window->byte > window->byte)
+		new_win = pop(q);
+
+		//Change of level, swap relations
+		if(new_win->byte > win->byte)
 		{
 			relation *temp = array;
 			array = auxiliary;
 			auxiliary = temp;
 		}
-		window = new_window;
-		if((window->end-window->start)*sizeof(tuple) > 64*1024 || byte>8)
+		win = new_win;
+		if((win->end - win->start)*sizeof(tuple) > 64*1024 || win->byte>8)
 		{
 			//Choose whether to place result in array or auxiliary array
-			if(window->byte % 2 == 0)
+			if(win->byte % 2 == 0)
 			{
-				quicksort(array->tuples, window->start, window->end-1);
-				copy_relation(array, auxiliary, window->start, window->end);
+				quicksort(array->tuples, win->start, win->end-1);
+				copy_relation(array, auxiliary, win->start, win->end);
 			}
 			else
 			{
-				quicksort(array->tuples, window->start, window->end-1);
+				quicksort(array->tuples, win->start, win->end-1);
 			}
 		}
 		else
@@ -305,7 +308,7 @@ int radix_sort_iterative(relation *array)
 				hist[i] = 0;
 			}
 			
-			int res = create_histogram(array, start_index, end_index, hist, byte);
+			int res = create_histogram(array, win->start, win->end, hist, win->byte);
 			if(res)
 				return -3;
 			
@@ -313,32 +316,34 @@ int radix_sort_iterative(relation *array)
 			if(res)
 				return -4;
 			
-			copy_relation_with_psum(array, auxiliary, start_index, end_index, hist, byte);
+			copy_relation_with_psum(array, auxiliary, win->start, win->end, hist, win->byte);
 			
 			//Recursively sort every part of the array
-			uint64_t start = window->start;
+			uint64_t start = win->start;
 			for(uint64_t i=0; i<HIST_SIZE; i++)
 			{
-				if(start<window->start+hist[i])
+				if(start<win->start+hist[i])
 				{
 					//int retval = radix_sort_recursive(byte+1, auxiliary, array, start, start_index+hist[i]);
-					new_window = malloc(sizeof(Window));
-					new_window->start = start;
-					new_window->end = window->start+hist[i];
-					new_window->byte = byte+1;
-					queue.push(new_window);
+					new_win = malloc(sizeof(window));
+					new_win->start = start;
+					new_win->end = win->start+hist[i];
+					new_win->byte = win->byte + 1;
+					push(q, new_win);
 				}
-				if(hist[i]+window->start>window->end)
+				if(hist[i]+win->start>win->end)
 				{
 					break;
 				}
-				start=window->start+hist[i];
+				start=win->start+hist[i];
 			}
 			free(hist);
 		}
 		
 	}
 	
+	free(q);
+
 	free(auxiliary->tuples);
 	free(auxiliary);
 	return 0;

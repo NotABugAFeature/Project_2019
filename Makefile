@@ -19,8 +19,8 @@ tests: quicksort_test radix_sort_test relation_test result_list_test sort_merge_
 quicksort_test: quicksort_test.o quicksort.o relation.o
 	$(CC) $(TESTFLAGS) -o quicksort_test quicksort_test.o quicksort.o relation.o
     
-radix_sort_test: radix_sort_test.o radix_sort.o quicksort.o
-	$(CC) $(TESTFLAGS) -o radix_sort_test radix_sort_test.o radix_sort.o quicksort.o
+radix_sort_test: radix_sort_test.o radix_sort.o quicksort.o queue.o
+	$(CC) $(TESTFLAGS) -o radix_sort_test radix_sort_test.o radix_sort.o quicksort.o queue.o
 
 relation_test: relation_test.o relation.o
 	$(CC) $(TESTFLAGS) -o relation_test relation_test.o relation.o
@@ -28,8 +28,8 @@ relation_test: relation_test.o relation.o
 result_list_test: result_list_test.o result_list.o
 	$(CC) $(TESTFLAGS) -o result_list_test result_list_test.o result_list.o
     
-sort_merge_join_test: sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o result_list.o relation.o
-	$(CC) $(TESTFLAGS) -o sort_merge_join_test sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o result_list.o relation.o
+sort_merge_join_test: sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o queue.o result_list.o relation.o
+	$(CC) $(TESTFLAGS) -o sort_merge_join_test sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o queue.o result_list.o relation.o
 
 join: main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o queue.o
 	$(CC) $(FLAGS) -o join main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o queue.o
@@ -40,7 +40,7 @@ main.o: main.c
 sort_merge_join.o: sort_merge_join.c sort_merge_join.h
 	$(CC) $(FLAGS) -c sort_merge_join.c
 
-radix_sort.o: radix_sort.c radix_sort.h quicksort.h relation.h queue.h
+radix_sort.o: radix_sort.c radix_sort.h quicksort.h queue.h relation.h
 	$(CC) $(FLAGS) -c radix_sort.c
 
 quicksort.o: quicksort.c quicksort.h relation.h

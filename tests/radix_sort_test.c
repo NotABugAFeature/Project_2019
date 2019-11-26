@@ -346,7 +346,7 @@ void testRadix_sort2()
 {
     relation p2;
 
-    p2.num_tuples = 5000000;
+    p2.num_tuples = 50000000;
     p2.tuples = malloc((p2.num_tuples)*sizeof(tuple));
     CU_ASSERT_NOT_EQUAL(p2.tuples, NULL);
     

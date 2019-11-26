@@ -14,7 +14,10 @@ endif
 all: join
 	@echo "Use (-f) ./join path_to_relR path_to_relS  To Start!"
 
-tests: quicksort_test radix_sort_test relation_test result_list_test sort_merge_join_test
+tests: queue_test quicksort_test radix_sort_test relation_test result_list_test sort_merge_join_test
+
+queue_test: queue_test.o queue.o
+	$(CC) $(TESTFLAGS) -o queue_test queue_test.o queue.o
 
 quicksort_test: quicksort_test.o quicksort.o relation.o
 	$(CC) $(TESTFLAGS) -o quicksort_test quicksort_test.o quicksort.o relation.o
@@ -54,6 +57,9 @@ result_list.o: result_list.c result_list.h
 
 queue.o: queue.c queue.h
 	$(CC) $(FLAGS) -c queue.c
+
+queue_test.o: ./tests/queue_test.c
+	$(CC) $(FLAGS) -c ./tests/queue_test.c
 
 quicksort_test.o: ./tests/quicksort_test.c 
 	$(CC) $(FLAGS) -c ./tests/quicksort_test.c

@@ -49,21 +49,9 @@ int transform_to_psum(uint64_t *hist);
  */
 int copy_relation_with_psum(relation* source, relation* target, uint64_t index_start, uint64_t index_end, uint64_t* psum, unsigned short nbyte);
 
-
 /**
  * Implements radix sort
- * @param unsigned short byte Which byte is used to create the histogram
- * @param relation *array The array to be sorted
- * @param relation *auxiliary Auxiliary array for the sorting, same size as array
- * @param uint64_t start_index The starting index of the relation
- * @param uint64_t end_index The ending index of the relation
- * @return 0 for success, <0 for error
- */
-int radix_sort_recursive(unsigned short byte, relation *array, relation *auxiliary, uint64_t start_index, uint64_t end_index);
-
-
-/**
- * Sets up and executes the recursive radix sort
+ * in bfs order, using a queue
  * @param relation *array The array to be sorted
  * @return 0 for success, <0 for error
  */

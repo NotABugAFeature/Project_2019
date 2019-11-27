@@ -221,7 +221,7 @@ int radix_sort(relation *array)
 			if(hist == NULL)
 			{
 				perror("radix_sort: malloc error");
-				return -2;
+				return -1;
 			}
 			
 			for(uint64_t i=0; i<HIST_SIZE; i++)
@@ -265,6 +265,14 @@ int radix_sort(relation *array)
 			free(hist);
 		}
 	}
+	
+	if(win->byte % 2 == 0)
+	{
+		relation *temp = array;
+		array = auxiliary;
+		auxiliary = temp;
+	}
+
 	free(win);
 
 	free(q);

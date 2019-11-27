@@ -6,6 +6,11 @@
 queue *create_queue()
 {
 	queue *q = malloc(sizeof(queue));
+	if(q == NULL)
+	{
+		perror("create_queue: malloc error");
+		return NULL;
+	}
 	q->head = NULL;
 	q->tail = NULL;
 	return q;
@@ -19,6 +24,11 @@ bool is_empty(queue *q)
 void push(queue *q, window *rec)
 {
 	q_node *new_node = malloc(sizeof(q_node));
+	if(new_node == NULL)
+	{
+		perror("push: malloc error");
+		return;
+	}
 	new_node->record = rec;
 	new_node->next = NULL;
 	if(q->head == NULL || q->tail == NULL)

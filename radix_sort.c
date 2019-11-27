@@ -161,8 +161,18 @@ int radix_sort(relation *array)
 
 	window *win, *new_win;
 	queue *q = create_queue();
+	if(q == NULL)
+	{
+		fprintf(stderr, "radix_sort: create_queue error\n");
+		return -2;
+	}
 
 	win = malloc(sizeof(window));
+	if(win == NULL)
+	{
+		perror("radix_sort: malloc error");
+		return -1;
+	}
 	win->start = 0;
 	win->end = array->num_tuples;
 	win->byte = 1;
@@ -171,6 +181,11 @@ int radix_sort(relation *array)
 	while(!is_empty(q))
 	{
 		new_win = pop(q);
+		if(new_win == NULL)
+		{
+			fprintf(stderr, "radix_sort: pop error\n");
+			return -2;
+		}
 
 		//Change of level, swap relations
 		if(new_win->byte > win->byte)
@@ -187,7 +202,7 @@ int radix_sort(relation *array)
 		}
 
 		//Check if less than 64KB
-		if((win->end - win->start)*sizeof(tuple) > 64*1024 || win->byte>8)
+		if((win->end - win->start)*sizeof(tuple) < 64*1024 || win->byte > 8)
 		{
 			//Choose whether to place result in array or auxiliary array
 			if(win->byte % 2 == 0)
@@ -231,6 +246,11 @@ int radix_sort(relation *array)
 				if(start < win->start+hist[i])
 				{
 					new_win = malloc(sizeof(window));
+					if(new_win == NULL)
+					{
+						perror("radix_sort: malloc error");
+						return -1;
+					}
 					new_win->start = start;
 					new_win->end = win->start + hist[i];
 					new_win->byte = win->byte + 1;
@@ -238,7 +258,6 @@ int radix_sort(relation *array)
 				}
 				if(hist[i]+win->start > win->end)
 				{
-					printf("YES\n");
 					break;
 				}
 				start = win->start + hist[i];

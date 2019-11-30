@@ -80,7 +80,6 @@ void testAnalyze_query1()
     query* q=NULL;
     CU_ASSERT_NOT_EQUAL(analyze_query(query_str, q), 0);
     q=create_query();
-    print_query(q);
     q->number_of_tables=1;
     CU_ASSERT_NOT_EQUAL(analyze_query(query_str, q), 0);
     q->number_of_tables=0;
@@ -133,7 +132,7 @@ void testAnalyze_query2()
         for(unsigned int i=0; i<UCHAR_MAX; i++)
         {
             query_illegal_str[5]=(char) i;
-            printf("%s\n", query_illegal_str);
+//            printf("%s\n", query_illegal_str);
             CU_ASSERT_NOT_EQUAL(analyze_query(query_illegal_str, q), 0)
         }
         delete_query(q);
@@ -149,22 +148,24 @@ void testAnalyze_query3()
     query* q1=create_query();
     query* q2=create_query();
     query* q3=create_query();
-    if(q1==NULL||q2==NULL||q3==NULL)
+    query* q4=create_query();
+    if(q1==NULL||q2==NULL||q3==NULL||q4==NULL)
     {
         return;
     }
     char query_str1[20];
     char query_str2[20];
     char query_str3[20];
+    char query_str4[20];
     strncpy(query_str1, "|1.2=0.1|1.3", 19);
     CU_ASSERT_NOT_EQUAL(analyze_query(query_str1, q1), 0);
     strncpy(query_str2, "1 5||1.3", 19);
     CU_ASSERT_NOT_EQUAL(analyze_query(query_str2, q2), 0);
     strncpy(query_str3, "1 5|1.2=0.1|", 19);
     CU_ASSERT_NOT_EQUAL(analyze_query(query_str3, q3), 0);
-    delete_query(q1);
-    delete_query(q2);
-    delete_query(q3);
+    strncpy(query_str4, "||", 19);
+    CU_ASSERT_NOT_EQUAL(analyze_query(query_str4, q4), 0);
+    delete_query(q1);delete_query(q2);delete_query(q3);delete_query(q4);
 }
 
 /**

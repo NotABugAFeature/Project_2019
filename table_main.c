@@ -14,8 +14,10 @@ int main(void)
     printf("first column:\n");
     for(int i=0; i<t->rows; i++)
     {
-    	printf("%" PRIu64 "\n", t->array[0][i]);
+    	printf("%" PRIu64 "\n", t->array[1][i]);
     }
+
+    delete_table(t);
 
 
     return 0;

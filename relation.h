@@ -63,14 +63,14 @@ table *table_from_file(char *);
  * @param filename - path of the file
  * @return table in table * format, NULL for error
  */
-//table *read_from_file(char *);
+table *read_from_file(char *);
 
 
 /**
  * Frees the momory used by the table
  * @param table*
  */
-//void delete_table(table*);
+void delete_table(table*);
 
 
 /**
@@ -83,7 +83,7 @@ table *table_from_file(char *);
  * @param relation* The relation where the tuples will be stored
  * @return 0 for success, >0 for error
  */
-//int create_relation_from_table(uint64_t* ,uint64_t , relation*);
+int create_relation_from_table(uint64_t* ,uint64_t , relation*);
 
 
 /**

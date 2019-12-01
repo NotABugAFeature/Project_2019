@@ -323,13 +323,31 @@ void delete_table(table*table_r)
     }
 }
 
+/**
+ * Frees the momory used by the contents of a table (doesn't free the table itself)
+ * @param table*
+ */
+void delete_table_contents(table*table_r)
+{
+    if(table_r!=NULL)
+    {
+        for(uint64_t i=0; i<table_r->columns; i++)
+        {
+            free(table_r->array[i]);
+            table_r->array[i]=NULL;
+        }
+        free(table_r->array);
+        table_r->array=NULL;
+    }
+}
+
 
 /**
  * Takes a list of table names and reads the tables from their files into a table_index struct
  * @param list - list of filenames
  * @return the tables in table_index format
  */
-table_index *insert_tables(table_name_list *list)
+table_index *insert_tables_from_list(table_name_list *list)
 {
 	table_index *ti = malloc(sizeof(table_index));
 	if(ti == NULL)
@@ -360,5 +378,51 @@ table_index *insert_tables(table_name_list *list)
 		free(filename);
 	}
 
+	return ti;
+}
+
+
+/**
+ * Finds a table based on its id
+ * @param table_index - a table_index struct that holds the tables
+ * @param id - id of the table to find
+ # @return pointer to the table, NULL if not found
+ */
+table *get_table(table_index *ti, uint32_t id)
+{
+	for(int i=0; i<ti->num_tables; i++)
+	{
+		if(ti->tables[i].table_id == id)
+		{
+			return &(ti->tables[i]);
+		}
+	}
+	return NULL;
+}
+
+/**
+ * Deletes a table_index and all its tables
+ * @param table_index the table index
+ */
+void delete_table_index(table_index *ti)
+{
+	for(int i=0; i<ti->num_tables; i++)
+	{
+		delete_table_contents(&(ti->tables[i]));
+	}
+
+	free(ti);
+	ti = NULL;
+}
+
+
+/**
+ * Reads in the tables from the files given from stdin
+ * @return the tables in table_index format
+ */
+table_index *insert_tables(void)
+{
+	table_name_list *list = read_tables();
+	table_index *ti = insert_tables_from_list(list);
 	return ti;
 }

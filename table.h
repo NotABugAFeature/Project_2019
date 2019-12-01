@@ -119,10 +119,36 @@ table *read_from_file(char *);
 void delete_table(table*);
 
 /**
+ * Frees the momory used by the contents of a table (doesn't free the table itself)
+ * @param table*
+ */
+void delete_table_contents(table*);
+
+/**
  * Takes a list of table names and reads the tables from their files into a table_index struct
  * @param list - list of filenames
  * @return the tables in table_index format
  */
-table_index *insert_tables(table_name_list *);
+table_index *insert_tables_from_list(table_name_list *);
+
+/**
+ * Finds a table based on its id
+ * @param table_index - a table_index struct that holds the tables
+ * @param id - id of the table to find
+ # @return pointer to the table, NULL if not found
+ */
+table *get_table(table_index *, uint32_t);
+
+/**
+ * Deletes a table_index and all its tables
+ * @param table_index the table index
+ */
+void delete_table_index(table_index *);
+
+/**
+ * Reads in the tables from the files given from stdin
+ * @return the tables in table_index format
+ */
+ table_index *insert_tables(void);
 
 #endif	// TABLE_H

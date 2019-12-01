@@ -11,12 +11,20 @@ int main(void)
 	printf("List of names:\n");
 	table_name_list_print(list);
 
-	table_index *ti = insert_tables(list);
+	table_index *ti = insert_tables_from_list(list);
 	printf("ti->num_tables: %" PRIu64 "\n", ti->num_tables);
 	for(int i=0; i<ti->num_tables; i++)
 	{
 		printf("ti->tables[%d].table_id: %" PRIu32 " - ti->tables[%d].rows: %" PRIu64 "\n", i, ti->tables[i].table_id, i, ti->tables[i].rows);
 	}
+
+	uint32_t id;
+	printf("Table to find: ");
+	scanf("%" PRIu32, &id);
+	table *t = get_table(ti, id);
+	printf("Found table with table_id: %" PRIu32 ", rows: %" PRIu64 "\n", t->table_id, t->rows);
+
+	delete_table_index(ti);
 
 	return 0;
 	/*

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+
 /** 
  * Type definition for a table as read from a file
  * rows - the number of initial table's columns 
@@ -11,11 +12,23 @@
  */
 typedef struct
 {
+	uint64_t table_id;
     uint64_t rows;
     uint64_t columns;
-    uint64_t **array;
+    uint64_t **array;  //uint64_t *data; (maybe)
 }table;
 
+
+/**
+ * Type definition for the index of tables
+ * num_tables - the number of tables
+ * tables - an array of pointers to tables
+ */
+typedef struct
+{
+	uint64_t num_tables;
+	table *tables;
+} table_index;
 
 /** 
  * Type definition for a tuple

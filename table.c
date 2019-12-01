@@ -378,6 +378,7 @@ table_index *insert_tables_from_list(table_name_list *list)
 		free(filename);
 	}
 
+	free(list);
 	return ti;
 }
 
@@ -410,6 +411,7 @@ void delete_table_index(table_index *ti)
 	{
 		delete_table_contents(&(ti->tables[i]));
 	}
+	free(ti->tables);
 
 	free(ti);
 	ti = NULL;

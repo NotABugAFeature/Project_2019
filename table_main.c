@@ -22,8 +22,15 @@ int main(void)
 	printf("Table to find: ");
 	scanf("%" PRIu32, &id);
 	table *t = get_table(ti, id);
-	printf("Found table with table_id: %" PRIu32 ", rows: %" PRIu64 "\n", t->table_id, t->rows);
-
+	if(t == NULL)
+	{
+		printf("Nothing found :(\n");
+	}
+	else
+	{
+		printf("Found table with table_id: %" PRIu32 ", rows: %" PRIu64 "\n", t->table_id, t->rows);
+	}
+	
 	delete_table_index(ti);
 
 	return 0;

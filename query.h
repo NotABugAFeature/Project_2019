@@ -2,19 +2,19 @@
 #define QUERY_H
 typedef enum predicate_type
 {
-    Join, Filter
+    Join, Self_Join, Filter
 } predicate_type;
 typedef enum predicate_filter_type
 {
-    Not_Specified, Less, Less_Equal, Equal, More, More_Equal, Not_Equal
+    Not_Specified, Less, Less_Equal, Equal, Greater, Greater_Equal, Not_Equal
 } predicate_filter_type;
 /**
  * Contains a table id and a row id.
  */
 typedef struct table_column
 {
-    unsigned int table_id;
-    unsigned int column_id;
+    uint32_t table_id;
+    uint32_t column_id;
 } table_column;
 /**
  * The join predicate.
@@ -60,11 +60,11 @@ typedef struct projection
  */
 typedef struct query
 {
-    unsigned int number_of_tables;
-    unsigned int* table_ids;
-    unsigned int number_of_predicates;
+    uint32_t number_of_tables;
+    uint32_t*table_ids;
+    uint32_t number_of_predicates;
     predicate* predicates;
-    unsigned int number_of_projections;
+    uint32_t number_of_projections;
     projection* projections;
 } query;
 /**
@@ -85,9 +85,31 @@ void delete_query(query*);
  */
 int analyze_query(char*, query*);
 /**
+ * Accepts a query and checks if it is valid with the tables.
+ * @param query*
+ * @param
+ * @return 0 On succes
+ */
+//int validate_query(query*,);
+
+/**
+ * Optimizes a query by rearranging the predicates
+ * @param query* The query to optimize
+ * @param
+ * @return 0 On succes
+ */
+//int optimize_query(query*,);
+
+/**
  * Prints all data of the query
  * @param Pointer to the query to print
  */
 void print_query(query*);
+
+/**
+ * Executes a query
+ * @param Pointer to the query
+ */
+int execute_query(query *);
 
 #endif /* QUERY_H */

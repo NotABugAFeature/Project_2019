@@ -12,11 +12,11 @@
  */
 typedef struct
 {
-	//uint64_t table_id;
+	uint64_t table_id;
     uint64_t rows;
     uint64_t columns;
-    //uint64_t **array;
-    uint64_t *data;
+    uint64_t **array;
+    //uint64_t *data;
 }table;
 
 

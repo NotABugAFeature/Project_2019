@@ -14,7 +14,7 @@ int main(void)
     printf("first column:\n");
     for(int i=0; i<t->rows; i++)
     {
-    	printf("%" PRIu64 "\n", *(t->data+i*sizeof(uint64_t)));
+    	printf("%" PRIu64 "\n", t->array[0][i]);
     }
 
 

@@ -1,43 +1,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "relation.h"
 
 table *table_from_file(char *filename)
 {
-	int fd;
+	FILE *fp;
 	uint64_t rows, columns;
 
     //open file
-    fd = open(filename, O_RDONLY);
-    if(fd < 0)
+    fp = fopen(filename, "rb");
+    if(fp == NULL)
     {
         perror("table_from_file: open error");
         return NULL;
     }
-/*
-    if(read(fd, &rows, sizeof(uint64_t)) < 0)
+
+    if(fread(&rows, sizeof(uint64_t), 1, fp) < 0)
     {
     	perror("table_from_file: read error");
-    	close(fd);
+    	fclose(fp);
     	return NULL;
     }
 
-    if(read(fd, &columns, sizeof(uint64_t)) < 0)
+    if(fread(&columns, sizeof(uint64_t), 1, fp) < 0)
     {
     	perror("table_from_file: read error");
-    	close(fd);
+    	fclose(fp);
     	return NULL;
-    }*/
+    }
 
     //int size = rows*columns*sizeof(uint64_t) + 2*sizeof(uint64_t);
-    int size = 37480;
-    table *mem = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    //int size = 37480;
+    //table *mem = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
 
-    close(fd);
+    //close(fd);
     /*printf("Columns: %" PRIu64 ", rows: %" PRIu64 "\n", columns, rows);
     printf("First two things: %" PRIu64 " - %" PRIu64 "\n", *mem, *(mem+sizeof(uint64_t)));
 
@@ -54,7 +53,33 @@ table *table_from_file(char *filename)
 
     return table_r;*/
 
-    return mem;
+    table *t = malloc(sizeof(table));
+    t->rows = rows;
+    t->columns = columns;
+    t->array = malloc(columns * sizeof(uint64_t *));
+
+    for(uint64_t i=0; i<columns; i++)
+    {
+    	t->array[i] = malloc(rows * sizeof(uint64_t));
+    }
+
+    //read content
+    for(uint64_t i = 0; i < columns; i++)
+    {
+        for(uint64_t j = 0; j < rows; j++)
+        {
+            if(fread(&t->array[i][j], sizeof(uint64_t), 1, fp) < 0)
+	    	{
+				fprintf(stderr, "table_from_file: incorrect file format\n");
+				fclose(fp);
+				return NULL;
+	    	}
+        }
+    }
+
+    fclose(fp);
+
+    return t;
 
 }
 

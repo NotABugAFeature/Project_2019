@@ -2,34 +2,7 @@
 #define RELATION_H
 
 #include <stdint.h>
-
-
-/** 
- * Type definition for a table as read from a file
- * rows - the number of initial table's columns 
- * columns - the number of initial table's rows
- * array - an rows x columns array
- */
-typedef struct
-{
-	uint64_t table_id;
-    uint64_t rows;
-    uint64_t columns;
-    uint64_t **array;
-    //uint64_t *data;
-}table;
-
-
-/**
- * Type definition for the index of tables
- * num_tables - the number of tables
- * tables - an array of pointers to tables
- */
-typedef struct
-{
-	uint64_t num_tables;
-	table *tables;
-}table_index;
+#include "table.h"
 
 /** 
  * Type definition for a tuple
@@ -53,24 +26,6 @@ typedef struct
     tuple *tuples;
     uint64_t num_tuples;
 }relation;
-
-
-table *table_from_file(char *);
-
-/**
- * Reads a table from a file
- *
- * @param filename - path of the file
- * @return table in table * format, NULL for error
- */
-table *read_from_file(char *);
-
-
-/**
- * Frees the momory used by the table
- * @param table*
- */
-void delete_table(table*);
 
 
 /**

@@ -2,10 +2,24 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include "relation.h"
+#include "table.h"
 
 int main(void)
 {
-	
+
+	table_name_list *list = read_tables();
+	printf("List of names:\n");
+	table_name_list_print(list);
+
+	table_index *ti = insert_tables(list);
+	printf("ti->num_tables: %" PRIu64 "\n", ti->num_tables);
+	for(int i=0; i<ti->num_tables; i++)
+	{
+		printf("ti->tables[%d].table_id: %" PRIu32 " - ti->tables[%d].rows: %" PRIu64 "\n", i, ti->tables[i].table_id, i, ti->tables[i].rows);
+	}
+
+	return 0;
+	/*
 	table *t = table_from_file("r0");
 	if(t == NULL) return -1;
 	printf("Columns: %" PRIu64 ", rows: %" PRIu64 "\n", t->columns, t->rows);
@@ -18,6 +32,8 @@ int main(void)
     }
 
     delete_table(t);
+*/
+
 
 
     return 0;

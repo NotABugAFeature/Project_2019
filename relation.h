@@ -12,10 +12,11 @@
  */
 typedef struct
 {
-	uint64_t table_id;
+	//uint64_t table_id;
     uint64_t rows;
     uint64_t columns;
-    uint64_t **array;  //uint64_t *data; (maybe)
+    //uint64_t **array;
+    uint64_t *data;
 }table;
 
 
@@ -28,7 +29,7 @@ typedef struct
 {
 	uint64_t num_tables;
 	table *tables;
-} table_index;
+}table_index;
 
 /** 
  * Type definition for a tuple
@@ -54,20 +55,22 @@ typedef struct
 }relation;
 
 
+table *table_from_file(char *);
+
 /**
  * Reads a table from a file
  *
  * @param filename - path of the file
  * @return table in table * format, NULL for error
  */
-table *read_from_file(char *);
+//table *read_from_file(char *);
 
 
 /**
  * Frees the momory used by the table
  * @param table*
  */
-void delete_table(table*);
+//void delete_table(table*);
 
 
 /**
@@ -80,7 +83,7 @@ void delete_table(table*);
  * @param relation* The relation where the tuples will be stored
  * @return 0 for success, >0 for error
  */
-int create_relation_from_table(uint64_t* ,uint64_t , relation*);
+//int create_relation_from_table(uint64_t* ,uint64_t , relation*);
 
 
 /**

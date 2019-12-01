@@ -1,7 +1,63 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "relation.h"
+
+table *table_from_file(char *filename)
+{
+	int fd;
+	uint64_t rows, columns;
+
+    //open file
+    fd = open(filename, O_RDONLY);
+    if(fd < 0)
+    {
+        perror("table_from_file: open error");
+        return NULL;
+    }
+/*
+    if(read(fd, &rows, sizeof(uint64_t)) < 0)
+    {
+    	perror("table_from_file: read error");
+    	close(fd);
+    	return NULL;
+    }
+
+    if(read(fd, &columns, sizeof(uint64_t)) < 0)
+    {
+    	perror("table_from_file: read error");
+    	close(fd);
+    	return NULL;
+    }*/
+
+    //int size = rows*columns*sizeof(uint64_t) + 2*sizeof(uint64_t);
+    int size = 37480;
+    table *mem = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+    close(fd);
+    /*printf("Columns: %" PRIu64 ", rows: %" PRIu64 "\n", columns, rows);
+    printf("First two things: %" PRIu64 " - %" PRIu64 "\n", *mem, *(mem+sizeof(uint64_t)));
+
+    table *table_r = malloc(sizeof(table));
+    if(table_r == NULL)
+    {
+    	perror("table_from_file: malloc error");
+    	return NULL;
+    }
+    table_r->table_id = 0;
+    table_r->columns = columns;
+    table_r->rows = rows;
+    table_r->data = mem;
+
+    return table_r;*/
+
+    return mem;
+
+}
+
 
 /**
  * Reads a table from a file
@@ -9,7 +65,7 @@
  * @param filename - path of the file
  * @return table in table * format, NULL for error
  */
-table *read_from_file(char *filename)
+/*table *read_from_file(char *filename)
 {
     FILE *fp;
     uint64_t rows=0, columns=0;
@@ -85,13 +141,13 @@ table *read_from_file(char *filename)
     fclose(fp);
     return table_r;
 }
-
+*/
 
 /**
  * Frees the momory used by the table
  * @param table*
  */
-void delete_table(table*table_r)
+/*void delete_table(table*table_r)
 {
     if(table_r!=NULL)
     {
@@ -105,7 +161,7 @@ void delete_table(table*table_r)
         free(table_r);
         table_r=NULL;
     }
-}
+}*/
 
 
 /**
@@ -118,7 +174,7 @@ void delete_table(table*table_r)
  * @param relation* The relation where the tuples will be stored
  * @return 0 for success, >0 for error
  */
-int create_relation_from_table(uint64_t* key_column,uint64_t column_size,relation* rel)
+/*int create_relation_from_table(uint64_t* key_column,uint64_t column_size,relation* rel)
 {
     //Check parameters can be removed
     if(key_column==NULL||rel==NULL||rel->num_tuples!=0||rel->tuples!=NULL)
@@ -144,7 +200,7 @@ int create_relation_from_table(uint64_t* key_column,uint64_t column_size,relatio
         rel->tuples[i].row_id=i;
     }
     return 0;
-}
+}*/
 
 
 /**

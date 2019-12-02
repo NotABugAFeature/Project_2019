@@ -1,5 +1,7 @@
 #ifndef QUERY_H
 #define QUERY_H
+#include "table.h"
+
 typedef enum predicate_type
 {
     Join, Self_Join, Filter
@@ -14,7 +16,7 @@ typedef enum predicate_filter_type
 typedef struct table_column
 {
     uint32_t table_id;
-    uint32_t column_id;
+    uint64_t column_id;
 } table_column;
 /**
  * The join predicate.
@@ -110,6 +112,6 @@ void print_query(query*);
  * Executes a query
  * @param Pointer to the query
  */
-int execute_query(query *);
+int execute_query(query *, table_index *);
 
 #endif /* QUERY_H */

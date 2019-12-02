@@ -11,6 +11,39 @@ typedef struct middle_list_bucket middle_list_bucket;
 typedef struct middle_list_node middle_list_node;
 typedef struct middle_list middle_list;
 
+/**
+ * The Bucket inside a node of the middle list.
+ * Contains a 2d array of row ids (uint64_t) and an index (unsigned int)
+ * to the next empty space in the array.
+ */
+typedef struct middle_list_bucket
+{
+    uint64_t row_ids[middle_LIST_BUCKET_SIZE];
+    unsigned int index_to_add_next;
+} middle_list_bucket;
+
+/**
+ * The node of the middle list.
+ * Contains a bucket with the row ids and a pointer to the next node.
+ */
+typedef struct middle_list_node
+{
+    middle_list_bucket bucket;
+    middle_list_node* next;
+} middle_list_node;
+
+/**
+ * The middle list.
+ * Contains pointers to the head and tail nodes (for O(1) append)
+ * and a node counter.
+ */
+typedef struct middle_list
+{
+    middle_list_node* head; //The first node of the list
+    middle_list_node* tail; //The last node of the list
+    unsigned int number_of_nodes; //Counter of the buckets;
+} middle_list;
+
 
 /**
  * Creates an empty middle list and returns a pointer to that list

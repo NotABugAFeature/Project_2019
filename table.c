@@ -391,6 +391,18 @@ table_index *insert_tables_from_list(table_name_list *list)
  */
 table *get_table(table_index *ti, uint32_t id)
 {
+	if(ti == NULL)
+	{
+		fprintf(stderr, "get_table: table index is NULL\n");
+		return NULL;
+	}
+
+	if(ti->tables == NULL)
+	{
+		fprintf(stderr, "get_table: tables of table index is NULL\n");
+		return NULL;
+	}
+
 	for(int i=0; i<ti->num_tables; i++)
 	{
 		if(ti->tables[i].table_id == id)

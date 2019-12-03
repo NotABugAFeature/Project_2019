@@ -1791,6 +1791,61 @@ void testTable_from_File6()
 	}
 }
 
+/*
+ * Test case 1: Table index is NULL
+ */
+void testGet_table1()
+{
+	table_index *ti = NULL;
+	table *t = get_table(ti, 1);
+	CU_ASSERT_EQUAL(t, NULL);
+}
+
+/*
+ * Test case 2: Tables of table index is NULL
+ */
+void testGet_table2()
+{
+	table_index *ti = malloc(sizeof(table_index));
+	ti->tables = NULL;
+	table *t = get_table(ti, 1);
+	CU_ASSERT_EQUAL(t, NULL);
+}
+
+/*
+ * Test case 3: Table does not exist
+ */
+void testGet_table3()
+{
+	table_index *ti = malloc(sizeof(table_index));
+	ti->num_tables = 5;
+	ti->tables = malloc(ti->num_tables*sizeof(table));
+	for(int i=0; i<ti->num_tables; i++)
+	{
+		ti->tables[i].table_id = i;
+	}
+
+	table *t = get_table(ti, 10);
+	CU_ASSERT_EQUAL(t, NULL);
+}
+
+/*
+ * Test case 3: Table exists
+ */
+void testGet_table4()
+{
+	table_index *ti = malloc(sizeof(table_index));
+	ti->num_tables = 100;
+	ti->tables = malloc(ti->num_tables*sizeof(table));
+	for(int i=0; i<ti->num_tables; i++)
+	{
+		ti->tables[i].table_id = i;
+	}
+
+	table *t = get_table(ti, 10);
+	CU_ASSERT_EQUAL(t->table_id, 10);
+}
+
 int main(void)
 {
     CU_pSuite pSuite=NULL;
@@ -1883,7 +1938,12 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testTable_from_File3", testTable_from_File3))||
         (NULL==CU_add_test(pSuite, "testTable_from_File4", testTable_from_File4))||
         (NULL==CU_add_test(pSuite, "testTable_from_File5", testTable_from_File5))||
-        (NULL==CU_add_test(pSuite, "testTable_from_File6", testTable_from_File6))
+        (NULL==CU_add_test(pSuite, "testTable_from_File6", testTable_from_File6))||
+        (NULL==CU_add_test(pSuite, "testGet_table1", testGet_table1))||
+        (NULL==CU_add_test(pSuite, "testGet_table2", testGet_table2))||
+        (NULL==CU_add_test(pSuite, "testGet_table3", testGet_table3))||
+        (NULL==CU_add_test(pSuite, "testGet_table4", testGet_table4))
+
       )
     {
         CU_cleanup_registry();

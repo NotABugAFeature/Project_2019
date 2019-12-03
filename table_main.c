@@ -7,9 +7,9 @@
 int main(void)
 {
 
-	table_name_list *list = read_tables();
+	string_list *list = read_tables();
 	printf("List of names:\n");
-	table_name_list_print(list);
+	string_list_print(list);
 
 	table_index *ti = insert_tables_from_list(list);
 	printf("ti->num_tables: %" PRIu64 "\n", ti->num_tables);

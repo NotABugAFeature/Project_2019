@@ -4,136 +4,30 @@
 #include <string.h>
 #include "table.h"
 
-/* ---------- TABLE_NAME_LIST ---------- */
-
-/**
- * Creates a table_name_list
- * @return a table_name_list, NULL for error
- */
-table_name_list *table_name_list_create(void)
-{
-	table_name_list *list = malloc(sizeof(table_name_list));
-	if(list == NULL)
-	{
-		perror("table_name_list_create: malloc error");
-		return NULL;
-	}
-	list->num_nodes = 0;
-	list->head = NULL;
-	list->tail = NULL;
-
-	return list;
-}
-
-
-/**
- * Inserts a table name in a table_name_list
- *
- * @param list - an existing list
- * @param filename - name to insert
- * @return 0 for success, <0 for error
- */
-int table_name_list_insert(table_name_list *list, char *filename)
-{
-	table_name_list_node *node = malloc(sizeof(table_name_list_node));
-	if(node == NULL)
-	{
-		perror("table_name_list_insert: malloc error");
-		return -1;
-	}
-	strcpy(node->filename, filename);
-	node->next = NULL;
-
-	if(list->head == NULL)
-	{
-		list->head = node;
-		list->tail = node;
-	}
-	else
-	{
-		list->tail->next = node;
-		list->tail = node;
-	}
-	list->num_nodes++;
-
-	return 0;
-}
-
-
-/**
- * Removes the first name from a table_name_list
- * @param list - an existing list
- * @return the first filename
- */
-char *table_name_list_remove(table_name_list *list)
-{
-	if(list->head == NULL)
-	{
-		return NULL;
-	}
-
-	table_name_list_node *node = list->head;
-	if(list->head == list->tail)
-	{
-		list->tail = list->tail->next;
-	}
-	list->head = list->head->next;
-
-	char *filename = malloc(FILENAME_SIZE*sizeof(char));
-	if(filename == NULL)
-	{
-		perror("table_name_list_remove: malloc error");
-		free(node);
-		return NULL;
-	}
-	strcpy(filename, node->filename);
-	free(node);
-	list->num_nodes--;
-	return filename;
-}
-
-
-/**
- * Prints a table_name_list
- * @param list - list to print
- */
-void table_name_list_print(table_name_list *list)
-{
-	table_name_list_node *node = list->head;
-	while(node != NULL)
-	{
-		printf("%s\n", node->filename);
-		node = node->next;
-	}
-}
-
 
 /**
  * Reads filenames of tables from stdin and returns them in a list
- * @return table_name_list of the names
+ * @return string_list of the names
  */
-table_name_list *read_tables(void)
+string_list *read_tables(void)
 {
-	char line[FILENAME_SIZE];
-	table_name_list *list = table_name_list_create();
+	char line[STRING_SIZE];
+	string_list *list = string_list_create();
 
 	while(1)
 	{
-		fgets(line, FILENAME_SIZE, stdin);
+		fgets(line, STRING_SIZE, stdin);
 		line[strlen(line) - 1] = '\0';
 		if(strcmp(line, "Done") == 0)
 		{
 			break;
 		}
-		table_name_list_insert(list, line);
+		string_list_insert(list, line);
 
 	}
 
 	return list;
 }
-
-
-/* ---------- TABLES ---------- */
 
 
 /**
@@ -347,7 +241,7 @@ void delete_table_contents(table*table_r)
  * @param list - list of filenames
  * @return the tables in table_index format
  */
-table_index *insert_tables_from_list(table_name_list *list)
+table_index *insert_tables_from_list(string_list *list)
 {
 	table_index *ti = malloc(sizeof(table_index));
 	if(ti == NULL)
@@ -367,7 +261,7 @@ table_index *insert_tables_from_list(table_name_list *list)
 	char *filename;
 	for(int i=0; i<ti->num_tables; i++)
 	{
-		filename = table_name_list_remove(list);
+		filename = string_list_remove(list);
 		if(table_from_file(&(ti->tables[i]), filename) < 0)
 		{
 			fprintf(stderr, "insert_tables: error reading in table %s\n", filename);
@@ -436,7 +330,7 @@ void delete_table_index(table_index *ti)
  */
 table_index *insert_tables(void)
 {
-	table_name_list *list = read_tables();
+	string_list *list = read_tables();
 	table_index *ti = insert_tables_from_list(list);
 	return ti;
 }

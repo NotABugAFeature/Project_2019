@@ -197,6 +197,9 @@ struct{
 int execute_query(query *q, table_index* index, bool *sorting)
 {
   int bool_counter = 0;
+	uint32_t concatenated_tables[q->number_of_predicates][q->number_of_tables+1];
+	for(int i = 0; i < q->number_of_predicates; i++)
+			concatenated_tables[i][0] = 0;
 
   //check for argument format
   if(q == NULL /*|| tables == NULL*/)
@@ -209,25 +212,25 @@ int execute_query(query *q, table_index* index, bool *sorting)
   middleman *m = initialize_middleman(q->number_of_tables);
 
   FILE *ff = stdout;
-	m->tables[0].list = create_middle_list();
-	append_to_middle_list(m->tables[0].list , 0);
-	append_to_middle_list(m->tables[0].list , 1);
-	append_to_middle_list(m->tables[0].list , 2);
-  append_to_middle_list(m->tables[0].list , 3);
-  append_to_middle_list(m->tables[0].list , 4);
-  append_to_middle_list(m->tables[0].list , 5);
-  append_to_middle_list(m->tables[0].list , 6);
-  append_to_middle_list(m->tables[0].list , 7);
-  append_to_middle_list(m->tables[0].list , 8);
-  append_to_middle_list(m->tables[0].list , 9);
-
-
-  m->tables[1].list = create_middle_list();
-	append_to_middle_list(m->tables[1].list , 0);
-	append_to_middle_list(m->tables[1].list , 1);
-	append_to_middle_list(m->tables[1].list , 2);
-  append_to_middle_list(m->tables[1].list , 3);
-  append_to_middle_list(m->tables[1].list , 4);
+	// m->tables[0].list = create_middle_list();
+	// append_to_middle_list(m->tables[0].list , 0);
+	// append_to_middle_list(m->tables[0].list , 1);
+	// append_to_middle_list(m->tables[0].list , 2);
+  // append_to_middle_list(m->tables[0].list , 3);
+  // append_to_middle_list(m->tables[0].list , 4);
+  // append_to_middle_list(m->tables[0].list , 5);
+  // append_to_middle_list(m->tables[0].list , 6);
+  // append_to_middle_list(m->tables[0].list , 7);
+  // append_to_middle_list(m->tables[0].list , 8);
+  // append_to_middle_list(m->tables[0].list , 9);
+	//
+	//
+  // m->tables[1].list = create_middle_list();
+	// append_to_middle_list(m->tables[1].list , 0);
+	// append_to_middle_list(m->tables[1].list , 1);
+	// append_to_middle_list(m->tables[1].list , 2);
+  // append_to_middle_list(m->tables[1].list , 3);
+  // append_to_middle_list(m->tables[1].list , 4);
   // append_to_middle_list(m->tables[0].list , 5);
   // append_to_middle_list(m->tables[0].list , 6);
   // append_to_middle_list(m->tables[0].list , 7);
@@ -434,7 +437,7 @@ printf("all ok  %d\n", q->table_ids[filter->r.table_id]);
           return 6;
       }
 
-      printf("\n\n\AFTER JOIN\n\n\nRESULT R\n\n");
+      printf("\n\n\nAFTER JOIN\n\n\nRESULT R\n\n");
       print_middle_list(result_R, ff);
       printf("\n\nRESULT S\n\n");
       print_middle_list(result_S, ff);
@@ -501,23 +504,16 @@ printf("all ok  %d\n", q->table_ids[filter->r.table_id]);
 
 
 
-
 ///////////////////STABLE UP TO THIS POINT
       //now we update the rest of the concatenated lists..3rd code copy paste
       for(int k = 0; k < q->number_of_predicates; k++)
       {
-        predicate_join *check = NULL;
-
-        if(q->predicates[k].type == Join)
-          check = q->predicates[k].p;
-        else
-          continue;
-
-        if(check->r.table_id == join->r.table_id || check->s.table_id == join->s.table_id)
+				if(concatenated_tables[k][0] == 0)
+					continue;
 
         //swipe row - if flag=1 then we found something in this row
         int flag = 0;
-        for(int l = 0; l < q->number_of_tables; l++)
+        for(int l = 1; l <= concatenated_tables[k][0]; l++)
         {
           if(concatenated_tables[k][l] == join->r.table_id || concatenated_tables[k][l] == join->s.table_id)
           {
@@ -529,28 +525,28 @@ printf("all ok  %d\n", q->table_ids[filter->r.table_id]);
         //if r or s exists then update
         if(flag){
 
-          for(int l = 0; l < q->number_of_tables; l++)
+          for(int l = 1; l <= concatenated_tables[k][0]; l++)
           {
             //update all relations except for the s.table_id
-            if(concatenated_tables[k][l] != join->r.table_id && concatenated_tables[k][l] != join->s.table_id)
+            if(concatenated_tables[k][l] == join->r.table_id || concatenated_tables[k][l] == join->s.table_id)
+            	continue;
+
+            //create new list
+            middle_list *new_list = create_middle_list();
+
+            middle_list_bucket **lookup = construct_lookup_table(m->tables[concatenated_tables[k][l]].list);
+            //get the new list
+            middle_list_node *list_temp = result_R->head;
+            while(list_temp != NULL)
             {
-              //create new list
-              middle_list *new_list = create_middle_list();
+              //TODO check return
+              update_middle_bucket(lookup, &(list_temp->bucket), new_list);
+              list_temp = list_temp->next;
+            }
 
-              middle_list_bucket **lookup = construct_lookup_table(m->tables[concatenated_tables[k][l]].list);
-              //get the new list
-              middle_list_node *list_temp = result_R->head;
-              while(list_temp != NULL)
-              {
-                //TODO check return
-                update_middle_bucket(lookup, &(list_temp->bucket), new_list);
-                list_temp = list_temp->next;
-              }
-
-              print_middle_list(new_list, ff);
-              delete_middle_list(m->tables[concatenated_tables[k][l]].list);
-              m->tables[concatenated_tables[k][l]].list = new_list;
-            }//endif
+            print_middle_list(new_list, ff);
+            delete_middle_list(m->tables[concatenated_tables[k][l]].list);
+            m->tables[concatenated_tables[k][l]].list = new_list;
 
           }//endfor
 
@@ -558,22 +554,93 @@ printf("all ok  %d\n", q->table_ids[filter->r.table_id]);
 
       }
 
+			printf("\n\n\nPRINT CONCAT\n\n");
+			for(int k = 0; k < q->number_of_predicates; k++)
+			{
+				for(int l = 0; l < q->number_of_tables+1; l++)
+					printf("%d ", concatenated_tables[k][l]);
+				printf("\n");
+			}
 
-
-
-
-      //add the tables so we know they are concatenated
-      if(!check_concatenated_tables(concatenated_tables, concatenated_tables_number, join->r.table_id))
+			//find place of r and s
+			int r_position = -1, s_position = -1;
+			for(int k = 0; k < q->number_of_predicates; k++)
       {
-        concatenated_tables[concatenated_tables_number] = join->r.table_id;
-        concatenated_tables_number++;
-      }
+				if(concatenated_tables[k][0] == 0)
+					continue;
 
-      if(!check_concatenated_tables(concatenated_tables, concatenated_tables_number, join->s.table_id))
-      {
-        concatenated_tables[concatenated_tables_number] = join->s.table_id;
-        concatenated_tables_number++;
-      }
+        //swipe row - if flag=1 then we found something in this row
+        for(int l = 1; l <= concatenated_tables[k][0]; l++)
+        {
+          if(concatenated_tables[k][l] == join->r.table_id)
+            r_position = k;
+					else if(concatenated_tables[k][l] == join->s.table_id)
+						s_position = k;
+        }
+			}
+			printf("\n\nposition r %d, position s  %d\n", r_position, s_position);
+
+
+			//neither of them exist
+			if(r_position == -1 && s_position == -1)
+			{
+				for(int m = 0; m < q->number_of_predicates; m++)
+				{
+					if(concatenated_tables[m][0] == 0)
+					{
+						concatenated_tables[m][1] = join->r.table_id;
+						concatenated_tables[m][2] = join->s.table_id;
+						concatenated_tables[m][0] = 2;
+					}
+				}
+			}
+			else if(r_position == -1 && s_position != -1)
+			{
+				concatenated_tables[s_position][0]++;
+				concatenated_tables[s_position][concatenated_tables[s_position][0]] = join->r.table_id;
+			}
+			else if(r_position != -1 && s_position == -1)
+			{
+				concatenated_tables[r_position][0]++;
+				concatenated_tables[r_position][concatenated_tables[r_position][0]] = join->s.table_id;
+			}
+			else if(r_position != s_position)
+			{
+				int length = concatenated_tables[s_position][0];
+				for(int m = 1; m <= length; m++)
+				{
+					concatenated_tables[r_position][0]++;
+
+					concatenated_tables[r_position][concatenated_tables[r_position][0]] = concatenated_tables[s_position][m];
+
+					concatenated_tables[s_position][0]--;
+
+				}
+			}
+
+
+			printf("\n\n\nPRINT CONCAT AFTER\n\n");
+			for(int k = 0; k < q->number_of_predicates; k++)
+			{
+				for(int l = 0; l < q->number_of_tables+1; l++)
+					printf("%d ", concatenated_tables[k][l]);
+				printf("\n");
+			}
+
+
+
+      // //add the tables so we know they are concatenated
+      // if(!check_concatenated_tables(concatenated_tables, concatenated_tables_number, join->r.table_id))
+      // {
+      //   concatenated_tables[concatenated_tables_number] = join->r.table_id;
+      //   concatenated_tables_number++;
+      // }
+			//
+      // if(!check_concatenated_tables(concatenated_tables, concatenated_tables_number, join->s.table_id))
+      // {
+      //   concatenated_tables[concatenated_tables_number] = join->s.table_id;
+      //   concatenated_tables_number++;
+      // }
 
       //free synolikaa
     }

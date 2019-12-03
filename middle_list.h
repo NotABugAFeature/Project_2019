@@ -101,4 +101,6 @@ unsigned int middle_list_get_number_of_buckets(middle_list*);
  */
 uint64_t middle_list_get_number_of_records(middle_list*);
 
+middle_list_bucket **construct_lookup_table(middle_list*);
+
 #endif /*CLIENTLIST_H*/

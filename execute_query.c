@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <stdbool.h>
+#include "sort_merge_join.h"
 #include "query.h"
 #include "middle_list.h"
 #include "table.h"
@@ -65,7 +66,6 @@ middleman *initialize_middleman(uint32_t number_of_tables)
 int filter_middle_bucket(predicate_filter *filter,
                          middle_list_bucket *bucket,
                          table* table,
-                         uint32_t column_id,
                          middle_list *new_list)
 {
   // printf("rows %d cols %d\n", table->rows, table->columns);
@@ -75,18 +75,18 @@ int filter_middle_bucket(predicate_filter *filter,
   //     printf("%d  ", table->array[i][j]);
   //   printf("\n");
   // }
-printf("value: %d , filter %d\n", filter->value, filter->filter_type);
+printf("value: %d , filter %d, COLUMN: %d\n", filter->value, filter->filter_type, filter->r.column_id);
 
   for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
   {
 printf("bucket->row_ids[i]: %d\n", bucket->row_ids[i]);
-printf("PROCESSING: %d\n", table->array[bucket->row_ids[i]][column_id]);
-    if( (filter->filter_type == Less && table->array[bucket->row_ids[i]][column_id] < filter->value)||
-        (filter->filter_type == Less_Equal && table->array[bucket->row_ids[i]][column_id] <= filter->value)||
-        (filter->filter_type == Equal && table->array[bucket->row_ids[i]][column_id] == filter->value)||
-        (filter->filter_type == Greater && table->array[bucket->row_ids[i]][column_id] > filter->value)||
-        (filter->filter_type == Greater_Equal && table->array[bucket->row_ids[i]][column_id] >= filter->value)||
-        (filter->filter_type == Not_Equal && table->array[bucket->row_ids[i]][column_id] != filter->value)
+printf("PROCESSING: %d\n", table->array[bucket->row_ids[i]][filter->r.column_id]);
+    if( (filter->filter_type == Less && table->array[bucket->row_ids[i]][filter->r.column_id] < filter->value)||
+        (filter->filter_type == Less_Equal && table->array[bucket->row_ids[i]][filter->r.column_id] <= filter->value)||
+        (filter->filter_type == Equal && table->array[bucket->row_ids[i]][filter->r.column_id] == filter->value)||
+        (filter->filter_type == Greater && table->array[bucket->row_ids[i]][filter->r.column_id] > filter->value)||
+        (filter->filter_type == Greater_Equal && table->array[bucket->row_ids[i]][filter->r.column_id] >= filter->value)||
+        (filter->filter_type == Not_Equal && table->array[bucket->row_ids[i]][filter->r.column_id] != filter->value)
       )
     { printf("appending %d \n", bucket->row_ids[i]);
       if(append_to_middle_list(new_list, bucket->row_ids[i]))
@@ -99,18 +99,17 @@ printf("PROCESSING: %d\n", table->array[bucket->row_ids[i]][column_id]);
 
 int filter_original_table(predicate_filter *filter,
                           table* table,
-                          uint32_t column_id,
                           middle_list *new_list)
 {
 
   for(unsigned int i = 0; i < table->rows; i++)
   {
-    if( (filter->filter_type == Less && table->array[i][column_id] < filter->value)||
-        (filter->filter_type == Less_Equal && table->array[i][column_id] <= filter->value)||
-        (filter->filter_type == Equal && table->array[i][column_id] == filter->value)||
-        (filter->filter_type == Greater && table->array[i][column_id] > filter->value)||
-        (filter->filter_type == Greater_Equal && table->array[i][column_id] >= filter->value)||
-        (filter->filter_type == Not_Equal && table->array[i][column_id] != filter->value)
+    if( (filter->filter_type == Less && table->array[i][filter->r.column_id] < filter->value)||
+        (filter->filter_type == Less_Equal && table->array[i][filter->r.column_id] <= filter->value)||
+        (filter->filter_type == Equal && table->array[i][filter->r.column_id] == filter->value)||
+        (filter->filter_type == Greater && table->array[i][filter->r.column_id] > filter->value)||
+        (filter->filter_type == Greater_Equal && table->array[i][filter->r.column_id] >= filter->value)||
+        (filter->filter_type == Not_Equal && table->array[i][filter->r.column_id] != filter->value)
       )
     {
       if(append_to_middle_list(new_list, i))
@@ -121,8 +120,84 @@ int filter_original_table(predicate_filter *filter,
 }
 
 
-int execute_query(query *q, table_index* index)
+relation *construct_relation_from_table(table * table, uint64_t column_id)
 {
+  relation *rel = malloc(sizeof(relation));
+  if(rel == NULL)
+  {
+    //Error
+    return NULL;
+  }
+
+  rel->num_tuples = table->rows;
+  rel->tuples = malloc(table->rows*sizeof(tuple));
+  if(rel == NULL)
+  {
+    //Error
+    free(rel);
+    return NULL;
+  }
+
+  for(unsigned int i = 0; i < table->rows; i++)
+  {
+  //  printf("%d\n", table->array[i][column_id]);
+    rel->tuples[i].key = table->array[i][column_id];
+    rel->tuples[i].row_id = i;
+  }
+
+  return rel;
+}
+
+
+void construct_relation_from_middleman(middle_list_bucket *bucket,
+                                       table *table,
+                                       relation *rel,
+                                       uint64_t column_id,
+                                       uint64_t *counter)
+{
+  for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
+  {
+    rel->tuples[*counter].key = table->array[bucket->row_ids[i]][column_id];
+    rel->tuples[*counter].row_id = i;
+
+    (*counter)++;
+  }
+}
+
+
+int update_middle_bucket(middle_list_bucket **lookup, middle_list_bucket *bucket, middle_list *updated_list)
+{
+  for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
+  {
+    middle_list_bucket *target = lookup[(bucket->row_ids[i])/middle_LIST_BUCKET_SIZE];
+    //check append
+    append_to_middle_list(updated_list, target->row_ids[(bucket->row_ids[i])%middle_LIST_BUCKET_SIZE]);
+  }
+  return 0;
+}
+
+
+int check_concatenated_tables(uint32_t *table, int length, uint32_t target)
+{
+  for(int i = 0; i < length; i++)
+  {
+    if(table[i] == target)
+      return 1;
+  }
+  return 0;
+}
+
+
+
+struct{
+
+}concatenation;
+
+
+int execute_query(query *q, table_index* index, bool *sorting)
+{
+  int bool_counter = 0;
+
   //check for argument format
   if(q == NULL /*|| tables == NULL*/)
   {
@@ -134,18 +209,32 @@ int execute_query(query *q, table_index* index)
   middleman *m = initialize_middleman(q->number_of_tables);
 
   FILE *ff = stdout;
-	// m->tables[0].list = create_middle_list();
-	// append_to_middle_list(m->tables[0].list , 0);
-	// append_to_middle_list(m->tables[0].list , 1);
-	// append_to_middle_list(m->tables[0].list , 2);
-  // append_to_middle_list(m->tables[0].list , 3);
-  // append_to_middle_list(m->tables[0].list , 4);
+	m->tables[0].list = create_middle_list();
+	append_to_middle_list(m->tables[0].list , 0);
+	append_to_middle_list(m->tables[0].list , 1);
+	append_to_middle_list(m->tables[0].list , 2);
+  append_to_middle_list(m->tables[0].list , 3);
+  append_to_middle_list(m->tables[0].list , 4);
+  append_to_middle_list(m->tables[0].list , 5);
+  append_to_middle_list(m->tables[0].list , 6);
+  append_to_middle_list(m->tables[0].list , 7);
+  append_to_middle_list(m->tables[0].list , 8);
+  append_to_middle_list(m->tables[0].list , 9);
+
+
+  m->tables[1].list = create_middle_list();
+	append_to_middle_list(m->tables[1].list , 0);
+	append_to_middle_list(m->tables[1].list , 1);
+	append_to_middle_list(m->tables[1].list , 2);
+  append_to_middle_list(m->tables[1].list , 3);
+  append_to_middle_list(m->tables[1].list , 4);
   // append_to_middle_list(m->tables[0].list , 5);
   // append_to_middle_list(m->tables[0].list , 6);
   // append_to_middle_list(m->tables[0].list , 7);
   // append_to_middle_list(m->tables[0].list , 8);
   // append_to_middle_list(m->tables[0].list , 9);
-	// print_middle_list(m->tables[0].list, ff);
+	//print_middle_list(m->tables[0].list, ff);
+
 
   //execute every predicate sequentially
   for(int i = 0; i < q->number_of_predicates; i++)
@@ -167,7 +256,7 @@ int execute_query(query *q, table_index* index)
         //empty list so we need to take the data from the original table
         m->tables[filter->r.table_id].list = create_middle_list();
         //TODO check return
-        filter_original_table(filter, original_table, q->table_ids[filter->r.column_id], m->tables[filter->r.table_id].list);
+        filter_original_table(filter, original_table, m->tables[filter->r.table_id].list);
         print_middle_list(m->tables[filter->r.table_id].list, ff);
       }
       else
@@ -182,7 +271,7 @@ printf("all ok  %d\n", q->table_ids[filter->r.table_id]);
         while(list_temp != NULL)
         {
           //TODO check return
-          filter_middle_bucket(filter, &(list_temp->bucket), original_table, q->table_ids[filter->r.column_id], new_list);
+          filter_middle_bucket(filter, &(list_temp->bucket), original_table, new_list);
           list_temp = list_temp->next;
         }
 
@@ -195,11 +284,298 @@ printf("all ok  %d\n", q->table_ids[filter->r.table_id]);
     else if(q->predicates[i].type == Join)
     {
       predicate_join *join = q->predicates[i].p;
-      //check if table exists in middleman. If yes use it else, if not take if from the original table
+
+      //find original table r
+      table *table_r = get_table(index, q->table_ids[join->r.table_id]);
+      if(table_r == NULL)
+      {
+        printf("not found\n");
+      }
+
+      //find original tables
+      table *table_s = get_table(index, q->table_ids[join->s.table_id]);
+      if(table_s == NULL)
+      {
+        printf("not found\n");
+      }
+
+      //construct relation relR
+      //check if table exists in middleman.
+      //if yes use it else, if not take if from the original table
+      relation *relR;
       if(m->tables[join->r.table_id].list == NULL)
       {
+        printf("COLUMN %d\n", join->r.column_id);
+        relR = construct_relation_from_table(table_r, join->r.column_id);
+        printf("ok ok\n");
+      }
+      else
+      {
+        relR = malloc(sizeof(relation));
+        if(relR == NULL)
+        {
+          //Error
+          return 2;
+        }
+
+        relR->num_tuples = middle_list_get_number_of_records(m->tables[join->r.table_id].list);
+        relR->tuples = malloc((relR->num_tuples)*sizeof(tuple));
+        if(relR == NULL)
+        {
+          //Error
+          free(relR);
+          return 3;
+        }
+
+        uint64_t counter = 0;
+        middle_list_node *list_temp = m->tables[join->r.table_id].list->head;
+        while(list_temp != NULL)
+        {
+          construct_relation_from_middleman(&(list_temp->bucket), table_r, relR, join->r.column_id, &counter);
+          list_temp = list_temp->next;
+        }
+      }
+
+      for(int i=0; i<relR->num_tuples;i++)
+      {
+        printf("%d %d\n", relR->tuples[i].key, relR->tuples[i].row_id);
+      }
+
+
+      //construct relation relS
+      //check if table exists in middleman.
+      //if yes use it else, if not take if from the original table
+      relation *relS;
+      if(m->tables[join->s.table_id].list == NULL)
+      {
+        printf("COLUMN %d\n", join->s.column_id);
+        relS = construct_relation_from_table(table_s, join->s.column_id);
+        printf("ok ok\n");
+      }
+      else
+      {
+        relS = malloc(sizeof(relation));
+        if(relS == NULL)
+        {
+          //Error
+          return 2;
+        }
+
+        relS->num_tuples = middle_list_get_number_of_records(m->tables[join->s.table_id].list);
+        relS->tuples = malloc((relS->num_tuples)*sizeof(tuple));
+        if(relS == NULL)
+        {
+          //Error
+          free(relS);
+          return 3;
+        }
+
+        uint64_t counter = 0;
+        middle_list_node *list_temp = m->tables[join->s.table_id].list->head;
+        while(list_temp != NULL)
+        {
+          construct_relation_from_middleman(&(list_temp->bucket), table_s, relS, join->s.column_id, &counter);
+          list_temp = list_temp->next;
+        }
+      }
+
+      for(int i=0; i<relS->num_tuples;i++)
+      {
+        printf("%d %d\n", relS->tuples[i].key, relS->tuples[i].row_id);
+      }
+
+
+      //relR and RelS ready..check and sort
+      if(sorting[bool_counter] == 1)
+      {
+        if(radix_sort(relR))
+        {
+	         fprintf(stderr, "Error in radix_sort\n");
+	         return 2;
+         }
+      }
+
+      if(sorting[bool_counter+1] == 1)
+      {
+        if(radix_sort(relS))
+        {
+	         fprintf(stderr, "Error in radix_sort\n");
+	         return 2;
+         }
+      }
+
+      //update counter
+      bool_counter += 2;
+
+      //create middle lists
+      middle_list *result_R = create_middle_list();
+      if(result_R == NULL)
+      {
+        fprintf(stderr, "Error in create_result_list\n");
+  	    return 4;
+      }
+
+      middle_list *result_S = create_middle_list();
+      if(result_S == NULL)
+      {
+        fprintf(stderr, "Error in create_result_list\n");
+  	    return 5;
+      }
+
+      printf("\n\n\nBEFORE JOIN\n\n\nTABLE R\n\n");
+      print_middle_list(m->tables[join->r.table_id].list, ff);
+      printf("\n\nTABLE S\n\n");
+      print_middle_list(m->tables[join->s.table_id].list, ff);
+
+      //finally join
+      if(final_join(result_R, result_S, relR, relS))
+      {
+          fprintf(stderr, "Error in final_join\n");
+          return 6;
+      }
+
+      printf("\n\n\AFTER JOIN\n\n\nRESULT R\n\n");
+      print_middle_list(result_R, ff);
+      printf("\n\nRESULT S\n\n");
+      print_middle_list(result_S, ff);
+
+
+      //now go back to middleman
+      if(m->tables[join->r.table_id].list == NULL)
+      {
+        //if empty then rowid are those of the original table..store them
+        m->tables[join->r.table_id].list = result_R;
+      }
+      else
+      {
+          //create new list
+          middle_list *new_list = create_middle_list();
+
+          middle_list_bucket **lookup = construct_lookup_table(m->tables[join->r.table_id].list);
+          //get the new list
+          middle_list_node *list_temp = result_R->head;
+          while(list_temp != NULL)
+          {
+            //TODO check return
+            update_middle_bucket(lookup, &(list_temp->bucket), new_list);
+            list_temp = list_temp->next;
+          }
+
+          print_middle_list(new_list, ff);
+          delete_middle_list(m->tables[join->r.table_id].list);
+          m->tables[join->r.table_id].list = new_list;
+      }
+
+
+      if(m->tables[join->s.table_id].list == NULL)
+      {
+        //if empty then rowid are those of the original table..store them
+        m->tables[join->s.table_id].list = result_S;
+      }
+      else
+      {
+        //create new list
+        middle_list *new_list = create_middle_list();
+
+        middle_list_bucket **lookup = construct_lookup_table(m->tables[join->s.table_id].list);
+        //get the new list
+        middle_list_node *list_temp = result_S->head;
+        while(list_temp != NULL)
+        {
+          //TODO check return
+          update_middle_bucket(lookup, &(list_temp->bucket), new_list);
+          list_temp = list_temp->next;
+        }
+
+        print_middle_list(new_list, ff);
+        delete_middle_list(m->tables[join->s.table_id].list);
+        m->tables[join->s.table_id].list = new_list;
+      }
+
+
+
+      printf("\n\n\nAFTER UPDATE\n\n\nTABLE R\n\n");
+      print_middle_list(m->tables[join->r.table_id].list, ff);
+      printf("\n\nTABLE S\n\n");
+      print_middle_list(m->tables[join->s.table_id].list, ff);
+
+
+
+
+///////////////////STABLE UP TO THIS POINT
+      //now we update the rest of the concatenated lists..3rd code copy paste
+      for(int k = 0; k < q->number_of_predicates; k++)
+      {
+        predicate_join *check = NULL;
+
+        if(q->predicates[k].type == Join)
+          check = q->predicates[k].p;
+        else
+          continue;
+
+        if(check->r.table_id == join->r.table_id || check->s.table_id == join->s.table_id)
+
+        //swipe row - if flag=1 then we found something in this row
+        int flag = 0;
+        for(int l = 0; l < q->number_of_tables; l++)
+        {
+          if(concatenated_tables[k][l] == join->r.table_id || concatenated_tables[k][l] == join->s.table_id)
+          {
+            flag = 1;
+            break;
+          }
+        }
+
+        //if r or s exists then update
+        if(flag){
+
+          for(int l = 0; l < q->number_of_tables; l++)
+          {
+            //update all relations except for the s.table_id
+            if(concatenated_tables[k][l] != join->r.table_id && concatenated_tables[k][l] != join->s.table_id)
+            {
+              //create new list
+              middle_list *new_list = create_middle_list();
+
+              middle_list_bucket **lookup = construct_lookup_table(m->tables[concatenated_tables[k][l]].list);
+              //get the new list
+              middle_list_node *list_temp = result_R->head;
+              while(list_temp != NULL)
+              {
+                //TODO check return
+                update_middle_bucket(lookup, &(list_temp->bucket), new_list);
+                list_temp = list_temp->next;
+              }
+
+              print_middle_list(new_list, ff);
+              delete_middle_list(m->tables[concatenated_tables[k][l]].list);
+              m->tables[concatenated_tables[k][l]].list = new_list;
+            }//endif
+
+          }//endfor
+
+        }//endflag
 
       }
+
+
+
+
+
+      //add the tables so we know they are concatenated
+      if(!check_concatenated_tables(concatenated_tables, concatenated_tables_number, join->r.table_id))
+      {
+        concatenated_tables[concatenated_tables_number] = join->r.table_id;
+        concatenated_tables_number++;
+      }
+
+      if(!check_concatenated_tables(concatenated_tables, concatenated_tables_number, join->s.table_id))
+      {
+        concatenated_tables[concatenated_tables_number] = join->s.table_id;
+        concatenated_tables_number++;
+      }
+
+      //free synolikaa
     }
     else
     {

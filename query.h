@@ -112,6 +112,6 @@ void print_query(query*);
  * Executes a query
  * @param Pointer to the query
  */
-int execute_query(query *, table_index *);
+int execute_query(query *, table_index *, bool *);
 
 #endif /* QUERY_H */

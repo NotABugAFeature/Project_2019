@@ -33,11 +33,17 @@ string_list *string_list_create(void)
  */
 int string_list_insert(string_list *list, char *string)
 {
+	if(list == NULL)
+	{
+		fprintf(stderr, "string_list_insert: list is NULL\n");
+		return -1;
+	}
+
 	string_list_node *node = malloc(sizeof(string_list_node));
 	if(node == NULL)
 	{
 		perror("string_list_insert: malloc error");
-		return -1;
+		return -2;
 	}
 	strcpy(node->string, string);
 	node->next = NULL;
@@ -65,6 +71,12 @@ int string_list_insert(string_list *list, char *string)
  */
 char *string_list_remove(string_list *list)
 {
+	if(list == NULL)
+	{
+		fprintf(stderr, "string_list_remove: list is NULL\n");
+		return NULL;
+	}
+
 	if(list->head == NULL)
 	{
 		return NULL;

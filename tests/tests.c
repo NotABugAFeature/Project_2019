@@ -8,6 +8,7 @@
 #include "../queue.h"
 #include "../result_list.h"
 #include "../table.h"
+#include "../string_list.h"
 
 /*
  * CUnit Test Suite
@@ -1846,6 +1847,176 @@ void testGet_table4()
 	CU_ASSERT_EQUAL(t->table_id, 10);
 }
 
+
+void testString_list_create()
+{
+    string_list *list = string_list_create();
+    CU_ASSERT_EQUAL(list->num_nodes, 0);
+    CU_ASSERT_EQUAL(list->head, NULL);
+    CU_ASSERT_EQUAL(list->tail, NULL);
+    free(list);
+}
+
+/*
+ * Test case 1: list is NULL
+ */
+void testString_list_insert1()
+{
+    string_list *list = NULL;
+    int res = string_list_insert(list, "string1");
+    CU_ASSERT_NOT_EQUAL(res, 0);
+}
+
+/*
+ * Test case 2: insert 3 strings
+ */
+void testString_list_insert2()
+{
+    string_list *list = string_list_create();
+    int n = 3;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        int res = string_list_insert(list, str);
+        CU_ASSERT_EQUAL(res, 0);
+    }
+
+    string_list_node *node = list->head;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        CU_ASSERT_EQUAL(strcmp(node->string, str), 0);
+        node = node->next;
+    }
+
+    node = list->head;
+    while(node != NULL)
+    {
+        string_list_node *temp = node;
+        node = node->next;
+        free(temp);
+    }
+
+    free(list);
+}
+
+/*
+ * Test case 3: insert 100 strings
+ */
+void testString_list_insert3()
+{
+    string_list *list = string_list_create();
+    int n = 100;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        int res = string_list_insert(list, str);
+        CU_ASSERT_EQUAL(res, 0);
+    }
+
+    string_list_node *node = list->head;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        CU_ASSERT_EQUAL(strcmp(node->string, str), 0);
+        node = node->next;
+    }
+
+    node = list->head;
+    while(node != NULL)
+    {
+        string_list_node *temp = node;
+        node = node->next;
+        free(temp);
+    }
+
+    free(list);
+}
+
+/*
+ * Test case 1: list is NULL
+ */
+void testString_list_remove1()
+{
+    string_list *list = NULL;
+    char *str = string_list_remove(list);
+    CU_ASSERT_EQUAL(str, NULL);
+}
+
+/*
+ * Test case 2: list is empty
+ */
+void testString_list_remove2()
+{
+    string_list *list = string_list_create();
+    char *str = string_list_remove(list);
+    CU_ASSERT_EQUAL(str, NULL);
+
+    free(list);
+}
+
+/*
+ * Test case 3: remove 3 of 10 strings
+ */
+void testString_list_remove3()
+{
+    string_list *list = string_list_create();
+    int n = 10;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        string_list_insert(list, str);
+    }
+
+    for(int i=0; i<3; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        char *str2 = string_list_remove(list);
+        CU_ASSERT_EQUAL(strcmp(str, str2), 0);
+    }
+
+    string_list_node *node = list->head;
+    while(node != NULL)
+    {
+        string_list_node *temp = node;
+        node = node->next;
+        free(temp);
+    }
+
+    free(list);
+}
+
+/*
+ * Test case 4: remove 100 of 100 strings
+ */
+void testString_list_remove4()
+{
+    string_list *list = string_list_create();
+    int n = 100;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        string_list_insert(list, str);
+    }
+
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        char *str2 = string_list_remove(list);
+        CU_ASSERT_EQUAL(strcmp(str, str2), 0);
+    }
+
+    free(list);
+}
+
 int main(void)
 {
     CU_pSuite pSuite=NULL;
@@ -1942,7 +2113,16 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testGet_table1", testGet_table1))||
         (NULL==CU_add_test(pSuite, "testGet_table2", testGet_table2))||
         (NULL==CU_add_test(pSuite, "testGet_table3", testGet_table3))||
-        (NULL==CU_add_test(pSuite, "testGet_table4", testGet_table4))
+        (NULL==CU_add_test(pSuite, "testGet_table4", testGet_table4))||
+
+        (NULL==CU_add_test(pSuite, "testString_list_create", testString_list_create))||
+        (NULL==CU_add_test(pSuite, "testString_list_insert1", testString_list_insert1))||
+        (NULL==CU_add_test(pSuite, "testString_list_insert2", testString_list_insert2))||
+        (NULL==CU_add_test(pSuite, "testString_list_insert3", testString_list_insert3))||
+        (NULL==CU_add_test(pSuite, "testString_list_remove1", testString_list_remove1))||
+        (NULL==CU_add_test(pSuite, "testString_list_remove2", testString_list_remove2))||
+        (NULL==CU_add_test(pSuite, "testString_list_remove3", testString_list_remove3))||
+        (NULL==CU_add_test(pSuite, "testString_list_remove4", testString_list_remove4))
 
       )
     {

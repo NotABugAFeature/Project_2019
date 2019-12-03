@@ -15,6 +15,11 @@ string_list *read_batch(void)
 	while(1)
 	{
 		fgets(line, STRING_SIZE, stdin);
+		if(feof(stdin))
+		{
+			printf("End of input\n");
+			return NULL;
+		}
 		if(line == NULL)
 		{
 			return NULL;
@@ -38,7 +43,6 @@ void read_queries(void)
 		list = read_batch();
 		if(list == NULL)
 		{
-			printf("Input ended\n");
 			return;
 		}
 		//Call query analysis, execute queries
@@ -61,5 +65,4 @@ void read_queries(void)
 int main(void)
 {
 	read_queries();
-	printf("Done\n");
 }

@@ -18,7 +18,7 @@ string_list *read_tables(void)
 	{
 		fgets(line, STRING_SIZE, stdin);
 		line[strlen(line) - 1] = '\0';
-		if(strcmp(line, "Done") == 0)
+		if(strcmp(line, "Done") == 0 || feof(stdin))
 		{
 			break;
 		}

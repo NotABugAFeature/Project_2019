@@ -7,6 +7,7 @@
 #include "../sort_merge_join.h"
 #include "../queue.h"
 #include "../result_list.h"
+#include "../table.h"
 
 /*
  * CUnit Test Suite
@@ -1550,7 +1551,7 @@ void testRelation_from_file5()
      {
          CU_ASSERT(0);
      }
-     print_bucket(&bucket,stdout);
+     //print_bucket(&bucket,stdout);
  }
 
  void testCreate_result_list()
@@ -1613,7 +1614,7 @@ void testRelation_from_file5()
      {
          CU_ASSERT(0);
      }
-     print_result_list(list,stdout);
+     //print_result_list(list,stdout);
      delete_result_list(list);
  }
 
@@ -1633,7 +1634,7 @@ void testRelation_from_file5()
      {
          CU_ASSERT(0);
      }
-     print_result_list(list,stdout);
+     //print_result_list(list,stdout);
      delete_result_list(list);
  }
 
@@ -1663,7 +1664,7 @@ void testRelation_from_file5()
      {
          CU_ASSERT(0);
      }
-     print_result_list(list,stdout);
+     //print_result_list(list,stdout);
      delete_result_list(list);
  }
 
@@ -1693,10 +1694,102 @@ void testRelation_from_file5()
      {
          CU_ASSERT(0);
      }
-     print_result_list(list,stdout);
+     //print_result_list(list,stdout);
      delete_result_list(list);
  }
 
+/**
+ * Test case 1: NULL table
+ */
+ void testTable_from_File1()
+ {
+ 	table *t = NULL;
+ 	int res = table_from_file(t, "./test_files/t1");
+ 	printf("res = %d\n", res);
+ 	CU_ASSERT_NOT_EQUAL(res, 0);
+ }
+
+/**
+ * Test case 2: File does not exist
+ */
+ void testTable_from_File2()
+ {
+ 	table *t = malloc(sizeof(table));
+ 	int res = table_from_file(t, "./test_files/doesnt_exist");
+ 	printf("res = %d\n", res);
+ 	CU_ASSERT_NOT_EQUAL(res, 0);
+ 	free(t);
+ }
+
+/**
+ * Test case 3: Empty file
+ */
+
+ void testTable_from_File3()
+ {
+ 	table *t = malloc(sizeof(table));
+ 	int res = table_from_file(t, "./test_files/empty_file.txt");
+ 	printf("res = %d\n", res);
+ 	CU_ASSERT_NOT_EQUAL(res, 0);
+ 	free(t);
+ }
+
+/**
+ * Test case 4: File t1 (1 column, 10 rows)
+ */
+void testTable_from_File4()
+{
+	table *t = malloc(sizeof(table));
+	int res = table_from_file(t, "./test_files/t1");
+	CU_ASSERT_EQUAL(res, 0);
+
+	int columns = 1, rows = 10;
+	for(int i=0; i<columns; i++)
+	{
+		for(int j=0; j<rows; j++)
+		{
+			CU_ASSERT_EQUAL(t->array[i][j], i+j);
+		}
+	}
+}
+
+/**
+ * Test case 5: File t2 (10 columns, 1 row)
+ */
+void testTable_from_File5()
+{
+	table *t = malloc(sizeof(table));
+	int res = table_from_file(t, "./test_files/t2");
+	CU_ASSERT_EQUAL(res, 0);
+
+	int columns = 10, rows = 1;
+	for(int i=0; i<columns; i++)
+	{
+		for(int j=0; j<rows; j++)
+		{
+			CU_ASSERT_EQUAL(t->array[i][j], i+j);
+		}
+	}
+}
+
+/**
+ * Test case 6: File t3 (1000 columns, 1000 rows)
+ */
+void testTable_from_File6()
+{
+	table *t = malloc(sizeof(table));
+	int res = table_from_file(t, "./test_files/t3");
+	CU_ASSERT_EQUAL(res, 0);
+
+	int columns = 1000, rows = 1000;
+	for(int i=0; i<columns; i++)
+	{
+		for(int j=0; j<rows; j++)
+		{
+			CU_ASSERT_EQUAL(t->array[i][j], i+j);
+		}
+	}
+}
 
 int main(void)
 {
@@ -1732,12 +1825,12 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testRadix_sort1", testRadix_sort1))||
         (NULL==CU_add_test(pSuite, "testRadix_sort2", testRadix_sort2))||
 
-        (NULL==CU_add_test(pSuite, "testRead_from_file1", testRead_from_file1))||
-    		(NULL==CU_add_test(pSuite, "testRead_from_file2", testRead_from_file2))||
-    		(NULL==CU_add_test(pSuite, "testRead_from_file3", testRead_from_file3))||
-    		(NULL==CU_add_test(pSuite, "testRead_from_file4", testRead_from_file4))||
-    		(NULL==CU_add_test(pSuite, "testRead_from_file5", testRead_from_file5))||
-    		(NULL==CU_add_test(pSuite, "testRead_from_file6", testRead_from_file6))||
+     //   (NULL==CU_add_test(pSuite, "testRead_from_file1", testRead_from_file1))||
+    //		(NULL==CU_add_test(pSuite, "testRead_from_file2", testRead_from_file2))||
+    //		(NULL==CU_add_test(pSuite, "testRead_from_file3", testRead_from_file3))||
+    //		(NULL==CU_add_test(pSuite, "testRead_from_file4", testRead_from_file4))||
+    //		(NULL==CU_add_test(pSuite, "testRead_from_file5", testRead_from_file5))||
+    //		(NULL==CU_add_test(pSuite, "testRead_from_file6", testRead_from_file6))||
     		(NULL==CU_add_test(pSuite, "testCreate_relation_from_table1", testCreate_relation_from_table1))||
     		(NULL==CU_add_test(pSuite, "testCreate_relation_from_table2", testCreate_relation_from_table2))||
     		(NULL==CU_add_test(pSuite, "testCreate_relation_from_table3", testCreate_relation_from_table3))||
@@ -1783,7 +1876,14 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testAppend_to_list", testAppend_to_list))||
         (NULL==CU_add_test(pSuite, "testIs_result_list_empty", testIs_result_list_empty))||
         (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_buckets", testResult_list_get_number_of_buckets))||
-        (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_records", testResult_list_get_number_of_records))
+        (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_records", testResult_list_get_number_of_records))||
+
+        (NULL==CU_add_test(pSuite, "testTable_from_File1", testTable_from_File1))||
+        (NULL==CU_add_test(pSuite, "testTable_from_File2", testTable_from_File2))||
+        (NULL==CU_add_test(pSuite, "testTable_from_File3", testTable_from_File3))||
+        (NULL==CU_add_test(pSuite, "testTable_from_File4", testTable_from_File4))||
+        (NULL==CU_add_test(pSuite, "testTable_from_File5", testTable_from_File5))||
+        (NULL==CU_add_test(pSuite, "testTable_from_File6", testTable_from_File6))
       )
     {
         CU_cleanup_registry();

@@ -161,14 +161,14 @@ int table_from_file(table *t, char *filename)
         return -2;
     }
 
-    if(fread(&rows, sizeof(uint64_t), 1, fp) < 0)
+    if(fread(&rows, sizeof(uint64_t), 1, fp) < 1)
     {
     	perror("table_from_file: read error");
     	fclose(fp);
     	return -2;
     }
 
-    if(fread(&columns, sizeof(uint64_t), 1, fp) < 0)
+    if(fread(&columns, sizeof(uint64_t), 1, fp) < 1)
     {
     	perror("table_from_file: read error");
     	fclose(fp);
@@ -202,7 +202,7 @@ int table_from_file(table *t, char *filename)
     {
         for(uint64_t j = 0; j < rows; j++)
         {
-            if(fread(&(t->array[i][j]), sizeof(uint64_t), 1, fp) < 0)
+            if(fread(&(t->array[i][j]), sizeof(uint64_t), 1, fp) < 1)
 	    	{
 				fprintf(stderr, "table_from_file: incorrect file format\n");
 				fclose(fp);
@@ -304,7 +304,7 @@ table *read_from_file(char *filename)
 
 
 /**
- * Frees the momory used by the table
+ * Frees the memory used by the table
  * @param table*
  */
 void delete_table(table*table_r)
@@ -324,7 +324,7 @@ void delete_table(table*table_r)
 }
 
 /**
- * Frees the momory used by the contents of a table (doesn't free the table itself)
+ * Frees the memory used by the contents of a table (doesn't free the table itself)
  * @param table*
  */
 void delete_table_contents(table*table_r)

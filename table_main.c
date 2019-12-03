@@ -15,7 +15,7 @@ int main(void)
 	printf("ti->num_tables: %" PRIu64 "\n", ti->num_tables);
 	for(int i=0; i<ti->num_tables; i++)
 	{
-		printf("ti->tables[%d].table_id: %" PRIu32 " - ti->tables[%d].rows: %" PRIu64 "\n", i, ti->tables[i].table_id, i, ti->tables[i].rows);
+		printf("ti->tables[%d].table_id: %" PRIu32 " - ti->tables[%d].columns: %" PRIu64 " - ti->tables[%d].rows: %" PRIu64 "\n", i, ti->tables[i].table_id, i, ti->tables[i].columns, i, ti->tables[i].rows);
 	}
 
 	uint32_t id;

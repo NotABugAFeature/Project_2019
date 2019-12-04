@@ -15,8 +15,8 @@ typedef enum predicate_filter_type
  */
 typedef struct table_column
 {
-    uint32_t table_index;
-    uint64_t column_index;
+    uint32_t table_id;
+    uint64_t column_id;
 } table_column;
 /**
  * The join predicate.
@@ -111,8 +111,15 @@ int optimize_query(query*q,table_index *);
  */
 int create_sort_array(query*q,bool**t_c_to_sort);
 /**
+ * Moves the joins/self joins just before they are needed for best
+ * memory consumption
+ * @param query* Pointer to the query to optimize
+ * @return 0 On succes
+ */
+int optimize_query_memory(query*);
+/**
  * Prints all data of the query
- * @param Pointer to the query to print
+ * @param query* Pointer to the query to print
  */
 void print_query(query*);
 #endif /* QUERY_H */

@@ -150,7 +150,7 @@ int parse_predicate(char* token, predicate*p)
             perror("parse_predicate: predicate join malloc error\n");
             return -5;
         }
-        if(sscanf(token, "%"PRIu32".%"PRIu64"=%"PRIu32".%"PRIu64, &(((predicate_join*) p->p)->r.table_index), &(((predicate_join*) p->p)->r.column_index), &(((predicate_join*) p->p)->s.table_index), &(((predicate_join*) p->p)->s.column_index))!=4)
+        if(sscanf(token, "%"PRIu32".%"PRIu64"=%"PRIu32".%"PRIu64, &(((predicate_join*) p->p)->r.table_id), &(((predicate_join*) p->p)->r.column_id), &(((predicate_join*) p->p)->s.table_id), &(((predicate_join*) p->p)->s.column_id))!=4)
         {
             fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
             return -6;
@@ -168,7 +168,7 @@ int parse_predicate(char* token, predicate*p)
         ((predicate_filter*) p->p)->filter_type=p_f_type;
         if(((predicate_filter*) p->p)->filter_type==Less)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu64"<%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64"<%"PRIu64, &((predicate_filter*) p->p)->r.table_id, &((predicate_filter*) p->p)->r.column_id, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -8;
@@ -176,7 +176,7 @@ int parse_predicate(char* token, predicate*p)
         }
         else if(((predicate_filter*) p->p)->filter_type==Less_Equal)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu64"<=%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64"<=%"PRIu64, &((predicate_filter*) p->p)->r.table_id, &((predicate_filter*) p->p)->r.column_id, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -9;
@@ -184,7 +184,7 @@ int parse_predicate(char* token, predicate*p)
         }
         else if(((predicate_filter*) p->p)->filter_type==Equal)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu64"=%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64"=%"PRIu64, &((predicate_filter*) p->p)->r.table_id, &((predicate_filter*) p->p)->r.column_id, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -10;
@@ -192,7 +192,7 @@ int parse_predicate(char* token, predicate*p)
         }
         else if(((predicate_filter*) p->p)->filter_type==Not_Equal)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu64"<>%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64"<>%"PRIu64, &((predicate_filter*) p->p)->r.table_id, &((predicate_filter*) p->p)->r.column_id, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -11;
@@ -200,7 +200,7 @@ int parse_predicate(char* token, predicate*p)
         }
         else if(((predicate_filter*) p->p)->filter_type==Greater)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu64">%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64">%"PRIu64, &((predicate_filter*) p->p)->r.table_id, &((predicate_filter*) p->p)->r.column_id, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -12;
@@ -208,7 +208,7 @@ int parse_predicate(char* token, predicate*p)
         }
         else if(((predicate_filter*) p->p)->filter_type==Greater_Equal)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu64">=%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64">=%"PRIu64, &((predicate_filter*) p->p)->r.table_id, &((predicate_filter*) p->p)->r.column_id, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -13;
@@ -600,7 +600,7 @@ int analyze_query(char*query_str, query*q)
                 perror("analyze_query: projections malloc error\n");
                 return -24;
             }
-            if(sscanf(token, "%"PRIu32".%"PRIu64"", &q->projections[0].column_to_project.table_index, &q->projections[0].column_to_project.column_index)!=2)
+            if(sscanf(token, "%"PRIu32".%"PRIu64"", &q->projections[0].column_to_project.table_id, &q->projections[0].column_to_project.column_id)!=2)
             {
                 fprintf(stderr, "analyze_query: projections sscanf error %s\n", token);
                 return -25;
@@ -621,7 +621,7 @@ int analyze_query(char*query_str, query*q)
             int j=0;
             while(subtoken!=NULL)
             {
-                if(sscanf(subtoken, "%"PRIu32".%"PRIu64"", &q->projections[j].column_to_project.table_index, &q->projections[j].column_to_project.column_index)!=2)
+                if(sscanf(subtoken, "%"PRIu32".%"PRIu64"", &q->projections[j].column_to_project.table_id, &q->projections[j].column_to_project.column_id)!=2)
                 {
                     fprintf(stderr, "analyze_query: projection sscanf error %s\n", subtoken);
                     return -27;
@@ -647,8 +647,8 @@ void print_table_column(table_column* tc)
 {
     if(tc!=NULL)
     {
-        printf("Table Index: %"PRIu32"\n", tc->table_index);
-        printf("Column Index: %"PRIu64"\n", tc->column_index);
+        printf("Table Index: %"PRIu32"\n", tc->table_id);
+        printf("Column Index: %"PRIu64"\n", tc->column_id);
     }
     else
     {
@@ -845,14 +845,14 @@ bool compare_predicates(predicate* p1, predicate* p2)
     }
     if(p1->type==Join||p1->type==Self_Join)
     {
-        if((((predicate_join*) (p1->p))->r.table_index==((predicate_join*) (p2->p))->r.table_index&&
-                ((predicate_join*) (p1->p))->r.column_index==((predicate_join*) (p2->p))->r.column_index&&
-                ((predicate_join*) (p1->p))->s.table_index==((predicate_join*) (p2->p))->s.table_index&&
-                ((predicate_join*) (p1->p))->s.column_index==((predicate_join*) (p2->p))->s.column_index)||
-                (((predicate_join*) (p1->p))->r.table_index==((predicate_join*) (p2->p))->s.table_index&&
-                ((predicate_join*) (p1->p))->r.column_index==((predicate_join*) (p2->p))->s.column_index&&
-                ((predicate_join*) (p1->p))->s.table_index==((predicate_join*) (p2->p))->r.table_index&&
-                ((predicate_join*) (p1->p))->s.column_index==((predicate_join*) (p2->p))->r.column_index))
+        if((((predicate_join*) (p1->p))->r.table_id==((predicate_join*) (p2->p))->r.table_id&&
+                ((predicate_join*) (p1->p))->r.column_id==((predicate_join*) (p2->p))->r.column_id&&
+                ((predicate_join*) (p1->p))->s.table_id==((predicate_join*) (p2->p))->s.table_id&&
+                ((predicate_join*) (p1->p))->s.column_id==((predicate_join*) (p2->p))->s.column_id)||
+                (((predicate_join*) (p1->p))->r.table_id==((predicate_join*) (p2->p))->s.table_id&&
+                ((predicate_join*) (p1->p))->r.column_id==((predicate_join*) (p2->p))->s.column_id&&
+                ((predicate_join*) (p1->p))->s.table_id==((predicate_join*) (p2->p))->r.table_id&&
+                ((predicate_join*) (p1->p))->s.column_id==((predicate_join*) (p2->p))->r.column_id))
         {
             return true;
         }
@@ -863,8 +863,8 @@ bool compare_predicates(predicate* p1, predicate* p2)
     }
     else
     {
-        if(((predicate_filter*) (p1->p))->r.table_index!=((predicate_filter*) (p2->p))->r.table_index||
-                ((predicate_filter*) (p1->p))->r.column_index!=((predicate_filter*) (p2->p))->r.column_index||
+        if(((predicate_filter*) (p1->p))->r.table_id!=((predicate_filter*) (p2->p))->r.table_id||
+                ((predicate_filter*) (p1->p))->r.column_id!=((predicate_filter*) (p2->p))->r.column_id||
                 ((predicate_filter*) (p1->p))->filter_type!=((predicate_filter*) (p2->p))->filter_type||
                 ((predicate_filter*) (p1->p))->value!=((predicate_filter*) (p2->p))->value)
         {
@@ -940,7 +940,7 @@ int validate_query(query*q, table_index* ti)
         if(q->predicates[i].type==Join)
         {
             //Check if the r table id exists
-            if(q->number_of_tables<=((predicate_join*) q->predicates[i].p)->r.table_index)
+            if(q->number_of_tables<=((predicate_join*) q->predicates[i].p)->r.table_id)
             {
                 free(table_indexes);
                 free(table_used);
@@ -948,13 +948,13 @@ int validate_query(query*q, table_index* ti)
                 return -5;
             }
             //Change the table r index if duplicate
-            if(((predicate_join*) q->predicates[i].p)->r.table_index!=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_index])
+            if(((predicate_join*) q->predicates[i].p)->r.table_id!=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_id])
             {
-                ((predicate_join*) q->predicates[i].p)->r.table_index=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_index];
+                ((predicate_join*) q->predicates[i].p)->r.table_id=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_id];
             }
-            table_used[((predicate_join*) q->predicates[i].p)->r.table_index]=true;
+            table_used[((predicate_join*) q->predicates[i].p)->r.table_id]=true;
             //Check if the r column exists
-            if(((predicate_join*) q->predicates[i].p)->r.column_index>=get_table(ti, q->table_ids[((predicate_join*) q->predicates[i].p)->r.table_index])->columns)
+            if(((predicate_join*) q->predicates[i].p)->r.column_id>=get_table(ti, q->table_ids[((predicate_join*) q->predicates[i].p)->r.table_id])->columns)
             {
                 free(table_indexes);
                 free(table_used);
@@ -962,7 +962,7 @@ int validate_query(query*q, table_index* ti)
                 return -6;
             }
             //Check if the s table id exists
-            if(q->number_of_tables<=((predicate_join*) q->predicates[i].p)->s.table_index)
+            if(q->number_of_tables<=((predicate_join*) q->predicates[i].p)->s.table_id)
             {
                 free(table_indexes);
                 free(table_used);
@@ -970,13 +970,13 @@ int validate_query(query*q, table_index* ti)
                 return -7;
             }
             //Change the table s index if duplicate
-            if(((predicate_join*) q->predicates[i].p)->s.table_index!=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_index])
+            if(((predicate_join*) q->predicates[i].p)->s.table_id!=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_id])
             {
-                ((predicate_join*) q->predicates[i].p)->s.table_index=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_index];
+                ((predicate_join*) q->predicates[i].p)->s.table_id=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_id];
             }
-            table_used[((predicate_join*) q->predicates[i].p)->s.table_index]=true;
+            table_used[((predicate_join*) q->predicates[i].p)->s.table_id]=true;
             //Check if the s column exists
-            if(((predicate_join*) q->predicates[i].p)->s.column_index>=get_table(ti, q->table_ids[((predicate_join*) q->predicates[i].p)->s.table_index])->columns)
+            if(((predicate_join*) q->predicates[i].p)->s.column_id>=get_table(ti, q->table_ids[((predicate_join*) q->predicates[i].p)->s.table_id])->columns)
             {
                 free(table_indexes);
                 free(table_used);
@@ -984,11 +984,11 @@ int validate_query(query*q, table_index* ti)
                 return -8;
             }
             //Check if it is a self join
-            if((((predicate_join*) q->predicates[i].p)->r.table_index)==((predicate_join*) q->predicates[i].p)->s.table_index)
+            if((((predicate_join*) q->predicates[i].p)->r.table_id)==((predicate_join*) q->predicates[i].p)->s.table_id)
             {
                 q->predicates[i].type=Self_Join;
                 //Check if the columns id are equal
-                if((((predicate_join*) q->predicates[i].p)->r.column_index)==((predicate_join*) q->predicates[i].p)->s.column_index)
+                if((((predicate_join*) q->predicates[i].p)->r.column_id)==((predicate_join*) q->predicates[i].p)->s.column_id)
                 {
                     if(i!=q->number_of_predicates)
                     {
@@ -1004,7 +1004,7 @@ int validate_query(query*q, table_index* ti)
         else if(q->predicates[i].type==Filter)
         {
             //Check if the r table id exists
-            if(q->number_of_tables<=((predicate_filter*) q->predicates[i].p)->r.table_index)
+            if(q->number_of_tables<=((predicate_filter*) q->predicates[i].p)->r.table_id)
             {
                 free(table_indexes);
                 free(table_used);
@@ -1012,13 +1012,13 @@ int validate_query(query*q, table_index* ti)
                 return -9;
             }
             //Change the table r index if duplicate
-            if(((predicate_filter*) q->predicates[i].p)->r.table_index!=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_index])
+            if(((predicate_filter*) q->predicates[i].p)->r.table_id!=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_id])
             {
-                ((predicate_filter*) q->predicates[i].p)->r.table_index=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_index];
+                ((predicate_filter*) q->predicates[i].p)->r.table_id=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_id];
             }
-            table_used[((predicate_filter*) q->predicates[i].p)->r.table_index]=true;
+            table_used[((predicate_filter*) q->predicates[i].p)->r.table_id]=true;
             //Check if the r column exists
-            if(((predicate_filter*) q->predicates[i].p)->r.column_index>=get_table(ti, q->table_ids[((predicate_filter*) q->predicates[i].p)->r.table_index])->columns)
+            if(((predicate_filter*) q->predicates[i].p)->r.column_id>=get_table(ti, q->table_ids[((predicate_filter*) q->predicates[i].p)->r.table_id])->columns)
             {
                 free(table_indexes);
                 free(table_used);
@@ -1030,7 +1030,7 @@ int validate_query(query*q, table_index* ti)
     //Verify the projections
     for(uint32_t i=0; i<q->number_of_projections; i++)
     {
-        if(q->number_of_tables<=q->projections[i].column_to_project.table_index)
+        if(q->number_of_tables<=q->projections[i].column_to_project.table_id)
         {
             free(table_indexes);
             free(table_used);
@@ -1038,12 +1038,12 @@ int validate_query(query*q, table_index* ti)
             return -11;
         }
         //Change the table index if duplicate
-        if(q->projections[i].column_to_project.table_index!=table_indexes[q->projections[i].column_to_project.table_index])
+        if(q->projections[i].column_to_project.table_id!=table_indexes[q->projections[i].column_to_project.table_id])
         {
-            q->projections[i].column_to_project.table_index=table_indexes[q->projections[i].column_to_project.table_index];
+            q->projections[i].column_to_project.table_id=table_indexes[q->projections[i].column_to_project.table_id];
         }
-        table_used[q->projections[i].column_to_project.table_index]=true;
-        if(q->projections[i].column_to_project.column_index>=get_table(ti, q->table_ids[q->projections[i].column_to_project.table_index])->columns)
+        table_used[q->projections[i].column_to_project.table_id]=true;
+        if(q->projections[i].column_to_project.column_id>=get_table(ti, q->table_ids[q->projections[i].column_to_project.table_id])->columns)
         {
             free(table_indexes);
             free(table_used);
@@ -1072,31 +1072,31 @@ int validate_query(query*q, table_index* ti)
         if(q->predicates[i].type==Join||q->predicates[i].type==Self_Join)
         {
             //Change the table r index if needed
-            if(((predicate_join*) q->predicates[i].p)->r.table_index!=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_index])
+            if(((predicate_join*) q->predicates[i].p)->r.table_id!=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_id])
             {
-                ((predicate_join*) q->predicates[i].p)->r.table_index=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_index];
+                ((predicate_join*) q->predicates[i].p)->r.table_id=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_id];
             }
             //Change the table s index if needed
-            if(((predicate_join*) q->predicates[i].p)->s.table_index!=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_index])
+            if(((predicate_join*) q->predicates[i].p)->s.table_id!=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_id])
             {
-                ((predicate_join*) q->predicates[i].p)->s.table_index=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_index];
+                ((predicate_join*) q->predicates[i].p)->s.table_id=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_id];
             }
         }
         else if(q->predicates[i].type==Filter)
         {
             //Change the table r index if needed
-            if(((predicate_filter*) q->predicates[i].p)->r.table_index!=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_index])
+            if(((predicate_filter*) q->predicates[i].p)->r.table_id!=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_id])
             {
-                ((predicate_filter*) q->predicates[i].p)->r.table_index=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_index];
+                ((predicate_filter*) q->predicates[i].p)->r.table_id=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_id];
             }
         }
     }
     for(uint32_t i=0; i<q->number_of_projections; i++)
     {
         //Change the table index if needed
-        if(q->projections[i].column_to_project.table_index!=table_indexes[q->projections[i].column_to_project.table_index])
+        if(q->projections[i].column_to_project.table_id!=table_indexes[q->projections[i].column_to_project.table_id])
         {
-            q->projections[i].column_to_project.table_index=table_indexes[q->projections[i].column_to_project.table_index];
+            q->projections[i].column_to_project.table_id=table_indexes[q->projections[i].column_to_project.table_id];
         }
     }
     //Remove duplicate predicates
@@ -1144,12 +1144,12 @@ void swap_tc_in_predicate(predicate* p)
         return;
     }
     table_column temp;
-    temp.table_index=((predicate_join*)p->p)->r.table_index;
-    temp.column_index=((predicate_join*)p->p)->r.column_index;
-    ((predicate_join*)p->p)->r.table_index=((predicate_join*)p->p)->s.table_index;
-    ((predicate_join*)p->p)->r.column_index=((predicate_join*)p->p)->s.column_index;
-    ((predicate_join*)p->p)->s.table_index=temp.table_index;
-    ((predicate_join*)p->p)->s.column_index=temp.column_index;
+    temp.table_id=((predicate_join*)p->p)->r.table_id;
+    temp.column_id=((predicate_join*)p->p)->r.column_id;
+    ((predicate_join*)p->p)->r.table_id=((predicate_join*)p->p)->s.table_id;
+    ((predicate_join*)p->p)->r.column_id=((predicate_join*)p->p)->s.column_id;
+    ((predicate_join*)p->p)->s.table_id=temp.table_id;
+    ((predicate_join*)p->p)->s.column_id=temp.column_id;
 }
 typedef struct counter_node counter_node;
 typedef struct counter_node
@@ -1173,8 +1173,8 @@ counter_node* new_counter_node(void)
     }
     new_node->counter=0;
     new_node->next=NULL;
-    new_node->tc.table_index=0;
-    new_node->tc.column_index=0;
+    new_node->tc.table_id=0;
+    new_node->tc.column_id=0;
     return new_node;
 }
 void print_counter_list(counter_list* cl)
@@ -1189,7 +1189,7 @@ void print_counter_list(counter_list* cl)
     uint32_t counter=0;
     while(temp!=NULL)
     {
-        printf("%"PRIu32": Table Index: %"PRIu32" Column Index: %"PRIu64"\n",counter,temp->tc.table_index,temp->tc.column_index);
+        printf("%"PRIu32": Table Index: %"PRIu32" Column Index: %"PRIu64"\n",counter,temp->tc.table_id,temp->tc.column_id);
         printf("Counter: %"PRIu32"\n",temp->counter);
         temp=temp->next;
         counter++;
@@ -1210,8 +1210,8 @@ int counter_list_append(counter_list*list,table_column* tc/*,predicate_join* p*/
         }
         list->number_of_nodes++;
         list->head->counter++;
-        list->head->tc.table_index=tc->table_index;
-        list->head->tc.column_index=tc->column_index;
+        list->head->tc.table_id=tc->table_id;
+        list->head->tc.column_id=tc->column_id;
         return 0;
     }
     counter_node* temp=list->head;
@@ -1219,7 +1219,7 @@ int counter_list_append(counter_list*list,table_column* tc/*,predicate_join* p*/
     while(temp!=NULL)
     {
         temp_to_add=temp;
-        if(temp->tc.table_index==tc->table_index&&temp->tc.column_index==tc->column_index)
+        if(temp->tc.table_id==tc->table_id&&temp->tc.column_id==tc->column_id)
         {//Already in the list
             temp->counter++;
             return 0;
@@ -1233,8 +1233,8 @@ int counter_list_append(counter_list*list,table_column* tc/*,predicate_join* p*/
     }
     list->number_of_nodes++;
     temp_to_add->next->counter++;
-    temp_to_add->next->tc.table_index=tc->table_index;
-    temp_to_add->next->tc.column_index=tc->column_index;
+    temp_to_add->next->tc.table_id=tc->table_id;
+    temp_to_add->next->tc.column_id=tc->column_id;
     return 0;
 }
 int counter_list_remove(counter_list*list,table_column* tc)
@@ -1245,7 +1245,7 @@ int counter_list_remove(counter_list*list,table_column* tc)
     }
     if(list->head!=NULL)
     {
-        if(list->head->tc.table_index==tc->table_index&&list->head->tc.column_index==tc->column_index)
+        if(list->head->tc.table_id==tc->table_id&&list->head->tc.column_id==tc->column_id)
         {//Found in head
             list->head->counter--;
             if(list->head->counter==0)
@@ -1261,7 +1261,7 @@ int counter_list_remove(counter_list*list,table_column* tc)
     counter_node* temp=list->head;
     while(temp->next!=NULL)
     {
-        if(temp->next->tc.table_index==tc->table_index&&temp->next->tc.column_index==tc->column_index)
+        if(temp->next->tc.table_id==tc->table_id&&temp->next->tc.column_id==tc->column_id)
         {//Found in the list
             temp->next->counter--;
             if(temp->next->counter==0)
@@ -1286,7 +1286,7 @@ uint32_t get_counter(counter_list* list, table_column* tc)
     counter_node* temp=list->head;
     while(temp!=NULL)
     {
-        if(temp->tc.table_index==tc->table_index&&temp->tc.column_index==tc->column_index)
+        if(temp->tc.table_id==tc->table_id&&temp->tc.column_id==tc->column_id)
         {//Found in the list
             return temp->counter;
         }
@@ -1402,16 +1402,16 @@ int optimize_query(query*q,table_index* ti)
         uint32_t max_value=c_list->head->counter;
         if(!next_join||next_tc==NULL)
         {
-            uint64_t lowest_row_count=table_row_count[c_list->head->tc.table_index];
+            uint64_t lowest_row_count=table_row_count[c_list->head->tc.table_id];
             counter_node* temp=c_list->head->next;
             next_tc=&c_list->head->tc;
             for(uint32_t z=1; z<c_list->number_of_nodes; z++)
             {
-                if(max_value<temp->counter||((max_value==temp->counter)&&(lowest_row_count>table_row_count[temp->tc.table_index])))
+                if(max_value<temp->counter||((max_value==temp->counter)&&(lowest_row_count>table_row_count[temp->tc.table_id])))
                 {
                     max_value=temp->counter;
                     next_tc=&temp->tc;
-                    lowest_row_count=table_row_count[temp->tc.table_index];
+                    lowest_row_count=table_row_count[temp->tc.table_id];
                 }
                 temp=temp->next;
             }
@@ -1435,7 +1435,7 @@ int optimize_query(query*q,table_index* ti)
             //Or if counter==1 the greater value
             for(uint32_t i=j; i<q->number_of_predicates; i++)
             {
-                if(((predicate_join*)q->predicates[i].p)->r.table_index==next_tc->table_index&&((predicate_join*)q->predicates[i].p)->r.column_index==next_tc->column_index)
+                if(((predicate_join*)q->predicates[i].p)->r.table_id==next_tc->table_id&&((predicate_join*)q->predicates[i].p)->r.column_id==next_tc->column_id)
                 {//S is different
                     if(get_counter(c_list,&((predicate_join*)q->predicates[i].p)->s)>1)
                     {
@@ -1459,7 +1459,7 @@ int optimize_query(query*q,table_index* ti)
                         p_index_to_swap=i;
                     }
                 }
-                else if(((predicate_join*)q->predicates[i].p)->s.table_index==next_tc->table_index&&((predicate_join*)q->predicates[i].p)->s.column_index==next_tc->column_index)
+                else if(((predicate_join*)q->predicates[i].p)->s.table_id==next_tc->table_id&&((predicate_join*)q->predicates[i].p)->s.column_id==next_tc->column_id)
                 {//R is different
                     if(z!=max_value-1)//Not the last occurance of max
                     {
@@ -1547,34 +1547,34 @@ int create_sort_array(query*q,bool**t_c_to_sort)
         if(q->predicates[i].type==Join)
         {
             //Check if the arrays have been joined
-            if(joined_tables[((predicate_join*)(q->predicates[i].p))->r.table_index][((predicate_join*)(q->predicates[i].p))->s.table_index])
+            if(joined_tables[((predicate_join*)(q->predicates[i].p))->r.table_id][((predicate_join*)(q->predicates[i].p))->s.table_id])
             {//Joined
                 q->predicates[i].type=Self_Join;//Set it as Self Join
             }
             else
             {//Not Joined update the array
                 join_counter++;
-                joined_tables[((predicate_join*)(q->predicates[i].p))->r.table_index][((predicate_join*)(q->predicates[i].p))->s.table_index]=true;
-                joined_tables[((predicate_join*)(q->predicates[i].p))->s.table_index][((predicate_join*)(q->predicates[i].p))->r.table_index]=true;
+                joined_tables[((predicate_join*)(q->predicates[i].p))->r.table_id][((predicate_join*)(q->predicates[i].p))->s.table_id]=true;
+                joined_tables[((predicate_join*)(q->predicates[i].p))->s.table_id][((predicate_join*)(q->predicates[i].p))->r.table_id]=true;
                 for(uint32_t j=0; j<q->number_of_tables; j++)
                 {
-                    if(j!=((predicate_join*)(q->predicates[i].p))->r.table_index)
+                    if(j!=((predicate_join*)(q->predicates[i].p))->r.table_id)
                     {
-                        if(joined_tables[((predicate_join*)(q->predicates[i].p))->r.table_index][j])
+                        if(joined_tables[((predicate_join*)(q->predicates[i].p))->r.table_id][j])
                         {//Old Join found Update
-                            joined_tables[((predicate_join*)(q->predicates[i].p))->s.table_index][j]=true;
-                            joined_tables[j][((predicate_join*)(q->predicates[i].p))->s.table_index]=true;
+                            joined_tables[((predicate_join*)(q->predicates[i].p))->s.table_id][j]=true;
+                            joined_tables[j][((predicate_join*)(q->predicates[i].p))->s.table_id]=true;
                         }
                     }
                 }
                 for(uint32_t j=0; j<q->number_of_tables; j++)
                 {
-                    if(j!=((predicate_join*)(q->predicates[i].p))->s.table_index)
+                    if(j!=((predicate_join*)(q->predicates[i].p))->s.table_id)
                     {
-                        if(joined_tables[((predicate_join*)(q->predicates[i].p))->s.table_index][j])
+                        if(joined_tables[((predicate_join*)(q->predicates[i].p))->s.table_id][j])
                         {//Old Join found Update
-                            joined_tables[((predicate_join*)(q->predicates[i].p))->r.table_index][j]=true;
-                            joined_tables[j][((predicate_join*)(q->predicates[i].p))->r.table_index]=true;
+                            joined_tables[((predicate_join*)(q->predicates[i].p))->r.table_id][j]=true;
+                            joined_tables[j][((predicate_join*)(q->predicates[i].p))->r.table_id]=true;
                         }
                     }
                 }
@@ -1595,15 +1595,15 @@ int create_sort_array(query*q,bool**t_c_to_sort)
         if(q->predicates[i].type==Join)
         {
             bool_array[bool_counter]=true;
-            if(last_sorted!=NULL&&last_sorted->table_index==((predicate_join*)(q->predicates[i].p))->r.table_index&&
-                    last_sorted->column_index==((predicate_join*)(q->predicates[i].p))->r.column_index)
+            if(last_sorted!=NULL&&last_sorted->table_id==((predicate_join*)(q->predicates[i].p))->r.table_id&&
+                    last_sorted->column_id==((predicate_join*)(q->predicates[i].p))->r.column_id)
             {//Already sorted
                 bool_array[bool_counter]=false;
             }
             bool_counter++;
             bool_array[bool_counter]=true;
-            if(last_sorted!=NULL&&last_sorted->table_index==((predicate_join*)(q->predicates[i].p))->s.table_index&&
-                    last_sorted->column_index==((predicate_join*)(q->predicates[i].p))->s.column_index)
+            if(last_sorted!=NULL&&last_sorted->table_id==((predicate_join*)(q->predicates[i].p))->s.table_id&&
+                    last_sorted->column_id==((predicate_join*)(q->predicates[i].p))->s.column_id)
             {//Already sorted
                 bool_array[bool_counter]=false;
             }
@@ -1621,8 +1621,32 @@ int create_sort_array(query*q,bool**t_c_to_sort)
 //    return join_counter*2;
     return 0;
 }
-int optimize_query_after_bool_array(query*q)
+void move_predicate(query*q,uint32_t index_start,u_int32_t index_end)
 {
+    if(q==NULL||q->number_of_predicates==0||q->predicates==NULL||
+       q->number_of_predicates<index_start||q->number_of_predicates<index_end||
+            index_end==index_start)
+    {
+        return;
+    }
+    if(index_start<index_end)
+    {//Move -> in the array
+        for(uint32_t i=index_start;i<index_end;i++)
+        {
+            swap_predicates(&q->predicates[i],&q->predicates[i+1]);
+        }
+    }
+    else
+    {//Move <- in the array
+        for(uint32_t i=index_start;i>index_end;i--)
+        {
+            swap_predicates(&q->predicates[i],&q->predicates[i-1]);
+        }
+    }
+}
+int optimize_query_memory(query*q)
+{
+    //The create bool must be called first
     //Check the parameters
     if(q==NULL||q->number_of_tables==0||q->number_of_predicates==0||
        q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
@@ -1632,24 +1656,104 @@ int optimize_query_after_bool_array(query*q)
         return -1;
     }
     //First move the filters as much to the right as you can before it is needed
-    uint32_t j=0;
     for(uint32_t i=0; i<q->number_of_predicates; i++)
     {
-        //If Filter move to beginning
         if(q->predicates[i].type==Filter)
         {
-            swap_predicates(&q->predicates[j], &q->predicates[i]);
-            j++;
+            //Find the max position the filter is needed before a join/self join
+            uint32_t filter_pos=i;
+            for(uint32_t j=i+1; j<q->number_of_predicates; j++)
+            {
+                if(q->predicates[j].type==Join)
+                {
+                    if((((predicate_join*)(q->predicates[j]).p)->r.table_id==((predicate_filter*)(q->predicates[i].p))->r.table_id)||
+                        (((predicate_join*)(q->predicates[j]).p)->s.table_id==((predicate_filter*)(q->predicates[i].p))->r.table_id))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        filter_pos++;
+                    }
+                }
+                else
+                {
+                    filter_pos++;
+                }
+            }
+            if(filter_pos!=i)
+            {
+                move_predicate(q,i,filter_pos);
+                i--;
+            }
+        }
+    }
+    for(uint32_t i=0; i<q->number_of_predicates; i++)
+    {
+        if(q->predicates[i].type==Self_Join&&((predicate_join*)(q->predicates[i].p))->r.table_id==((predicate_join*)(q->predicates[i].p))->s.table_id)
+        {
+            //Find the max position the self join is needed before a join/self join
+            uint32_t self_join_pos=i;
+            for(uint32_t j=i+1; j<q->number_of_predicates; j++)
+            {
+                if(q->predicates[j].type==Join)
+                {
+                    if((((predicate_join*)(q->predicates[j]).p)->r.table_id==((predicate_join*)(q->predicates[i].p))->r.table_id)||
+                        (((predicate_join*)(q->predicates[j]).p)->s.table_id==((predicate_join*)(q->predicates[i].p))->r.table_id))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        self_join_pos++;
+                    }
+                }
+                else
+                {
+                    self_join_pos++;
+                }
+            }
+            if(self_join_pos!=i)
+            {
+                move_predicate(q,i, self_join_pos);
+                i--;
+            }
         }
     }
     //Then the self joins to the left after the joins
-    for(uint32_t i=j; i<q->number_of_predicates; i++)
+    for(uint32_t i=q->number_of_predicates-1; i>0; i--)
     {
-        //If Filter move to Beginning
-        if(q->predicates[i].type==Self_Join)
+        //If i a hidden self join
+        if(q->predicates[i].type==Self_Join&&((predicate_join*)(q->predicates[i].p))->r.table_id!=((predicate_join*)(q->predicates[i].p))->s.table_id)
         {
-            swap_predicates(&q->predicates[j], &q->predicates[i]);
-            j++;
+            //Find the min position after the join
+            uint32_t self_join_pos=i;
+            for(uint32_t j=i-1; j>0; j--)
+            {
+                if(q->predicates[j].type==Join)
+                {
+                    if((((predicate_join*)(q->predicates[j]).p)->r.table_id==((predicate_join*)(q->predicates[i].p))->r.table_id)||
+                        (((predicate_join*)(q->predicates[j]).p)->s.table_id==((predicate_join*)(q->predicates[i].p))->s.table_id)||
+                        (((predicate_join*)(q->predicates[j]).p)->r.table_id==((predicate_join*)(q->predicates[i].p))->s.table_id)||
+                        (((predicate_join*)(q->predicates[j]).p)->s.table_id==((predicate_join*)(q->predicates[i].p))->r.table_id))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        self_join_pos--;
+                    }
+                }
+                else
+                {
+                    self_join_pos--;
+                }
+            }
+            if(i!=self_join_pos)
+            {
+                move_predicate(q,i, self_join_pos);
+                i++;
+            }
         }
     }
     return 0;

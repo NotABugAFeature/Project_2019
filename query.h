@@ -16,7 +16,7 @@ typedef enum predicate_filter_type
 typedef struct table_column
 {
     uint32_t table_index;
-    uint32_t column_index;
+    uint64_t column_index;
 } table_column;
 /**
  * The join predicate.

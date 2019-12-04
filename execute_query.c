@@ -81,7 +81,7 @@ int filter_original_table(predicate_filter *filter,
                           middle_list *new_list)
 {
 
-  for(unsigned int i = 0; i < table->columns; i++)
+  for(unsigned int i = 0; i < table->rows; i++)
   {
     if( (filter->filter_type == Less && table->array[filter->r.column_id][i] < filter->value)||
         (filter->filter_type == Less_Equal && table->array[filter->r.column_id][i] <= filter->value)||
@@ -108,7 +108,7 @@ relation *construct_relation_from_table(table * table, uint64_t column_id)
     return NULL;
   }
 
-  rel->num_tuples = table->columns;
+  rel->num_tuples = table->rows;
   rel->tuples = malloc((rel->num_tuples)*sizeof(tuple));
   if(rel == NULL)
   {
@@ -157,7 +157,7 @@ int update_middle_bucket(middle_list_bucket **lookup, middle_list_bucket *bucket
 
 int self_join_table(predicate_join *join, table* table, middle_list *list)
 {
-	for(unsigned int i = 0; i < table->columns; i++)
+	for(unsigned int i = 0; i < table->rows; i++)
 	{
 		if(table->array[join->r.column_id][i] == table->array[join->s.column_id][i])
 		{

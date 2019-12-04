@@ -12,8 +12,8 @@ string_list *read_tables(void);
 
 /** 
  * Type definition for a table as read from a file
- * rows - the number of initial table's columns 
- * columns - the number of initial table's rows
+ * columns - the number of initial table's columns 
+ * rows - the number of initial table's rows
  * array - an rows x columns array
  */
 typedef struct
@@ -22,7 +22,6 @@ typedef struct
     uint64_t rows;
     uint64_t columns;
     uint64_t **array;
-    //uint64_t *data;
 }table;
 
 

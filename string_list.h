@@ -23,7 +23,7 @@ typedef struct string_list_node
  */
 typedef struct
 {
-	int num_nodes;
+	uint32_t num_nodes;
 	string_list_node *head;
 	string_list_node *tail;
 } string_list;

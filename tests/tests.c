@@ -1745,9 +1745,9 @@ void testTable_from_File4()
 	CU_ASSERT_EQUAL(res, 0);
 
 	int columns = 1, rows = 10;
-	for(int i=0; i<columns; i++)
+	for(uint64_t i=0; i<columns; i++)
 	{
-		for(int j=0; j<rows; j++)
+		for(uint64_t j=0; j<rows; j++)
 		{
 			CU_ASSERT_EQUAL(t->array[i][j], i+j);
 		}
@@ -1764,9 +1764,9 @@ void testTable_from_File5()
 	CU_ASSERT_EQUAL(res, 0);
 
 	int columns = 10, rows = 1;
-	for(int i=0; i<columns; i++)
+	for(uint64_t i=0; i<columns; i++)
 	{
-		for(int j=0; j<rows; j++)
+		for(uint64_t j=0; j<rows; j++)
 		{
 			CU_ASSERT_EQUAL(t->array[i][j], i+j);
 		}
@@ -1783,9 +1783,9 @@ void testTable_from_File6()
 	CU_ASSERT_EQUAL(res, 0);
 
 	int columns = 1000, rows = 1000;
-	for(int i=0; i<columns; i++)
+	for(uint64_t i=0; i<columns; i++)
 	{
-		for(int j=0; j<rows; j++)
+		for(uint64_t j=0; j<rows; j++)
 		{
 			CU_ASSERT_EQUAL(t->array[i][j], i+j);
 		}
@@ -1821,7 +1821,7 @@ void testGet_table3()
 	table_index *ti = malloc(sizeof(table_index));
 	ti->num_tables = 5;
 	ti->tables = malloc(ti->num_tables*sizeof(table));
-	for(int i=0; i<ti->num_tables; i++)
+	for(uint32_t i=0; i<ti->num_tables; i++)
 	{
 		ti->tables[i].table_id = i;
 	}
@@ -1838,7 +1838,7 @@ void testGet_table4()
 	table_index *ti = malloc(sizeof(table_index));
 	ti->num_tables = 100;
 	ti->tables = malloc(ti->num_tables*sizeof(table));
-	for(int i=0; i<ti->num_tables; i++)
+	for(uint32_t i=0; i<ti->num_tables; i++)
 	{
 		ti->tables[i].table_id = i;
 	}

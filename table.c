@@ -259,7 +259,7 @@ table_index *insert_tables_from_list(string_list *list)
 	}
 
 	char *filename;
-	for(int i=0; i<ti->num_tables; i++)
+	for(uint32_t i=0; i<ti->num_tables; i++)
 	{
 		filename = string_list_remove(list);
 		if(table_from_file(&(ti->tables[i]), filename) < 0)
@@ -297,7 +297,7 @@ table *get_table(table_index *ti, uint32_t id)
 		return NULL;
 	}
 
-	for(int i=0; i<ti->num_tables; i++)
+	for(uint32_t i=0; i<ti->num_tables; i++)
 	{
 		if(ti->tables[i].table_id == id)
 		{
@@ -313,7 +313,7 @@ table *get_table(table_index *ti, uint32_t id)
  */
 void delete_table_index(table_index *ti)
 {
-	for(int i=0; i<ti->num_tables; i++)
+	for(uint32_t i=0; i<ti->num_tables; i++)
 	{
 		delete_table_contents(&(ti->tables[i]));
 	}

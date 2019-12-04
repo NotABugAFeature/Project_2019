@@ -58,27 +58,16 @@ int filter_middle_bucket(predicate_filter *filter,
                          table* table,
                          middle_list *new_list)
 {
-  // printf("rows %d cols %d\n", table->rows, table->columns);
-  // for(int i=0;i<table->rows;i++)
-  // {
-  //   for(int j=0; j<table->columns;j++)
-  //     printf("%d  ", table->array[i][j]);
-  //   printf("\n");
-  // }
-printf("value: %d , filter %d, COLUMN: %d\n", filter->value, filter->filter_type, filter->r.column_id);
-
   for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
   {
-printf("bucket->row_ids[i]: %d\n", bucket->row_ids[i]);
-printf("PROCESSING: %d\n", table->array[bucket->row_ids[i]][filter->r.column_id]);
-    if( (filter->filter_type == Less && table->array[bucket->row_ids[i]][filter->r.column_id] < filter->value)||
-        (filter->filter_type == Less_Equal && table->array[bucket->row_ids[i]][filter->r.column_id] <= filter->value)||
-        (filter->filter_type == Equal && table->array[bucket->row_ids[i]][filter->r.column_id] == filter->value)||
-        (filter->filter_type == Greater && table->array[bucket->row_ids[i]][filter->r.column_id] > filter->value)||
-        (filter->filter_type == Greater_Equal && table->array[bucket->row_ids[i]][filter->r.column_id] >= filter->value)||
-        (filter->filter_type == Not_Equal && table->array[bucket->row_ids[i]][filter->r.column_id] != filter->value)
+    if( (filter->filter_type == Less && table->array[filter->r.column_id][bucket->row_ids[i]] < filter->value)||
+        (filter->filter_type == Less_Equal && table->array[filter->r.column_id][bucket->row_ids[i]] <= filter->value)||
+        (filter->filter_type == Equal && table->array[filter->r.column_id][bucket->row_ids[i]] == filter->value)||
+        (filter->filter_type == Greater && table->array[filter->r.column_id][bucket->row_ids[i]] > filter->value)||
+        (filter->filter_type == Greater_Equal && table->array[filter->r.column_id][bucket->row_ids[i]] >= filter->value)||
+        (filter->filter_type == Not_Equal && table->array[filter->r.column_id][bucket->row_ids[i]] != filter->value)
       )
-    { printf("appending %d \n", bucket->row_ids[i]);
+    {
       if(append_to_middle_list(new_list, bucket->row_ids[i]))
         return 1;
     }
@@ -92,14 +81,14 @@ int filter_original_table(predicate_filter *filter,
                           middle_list *new_list)
 {
 
-  for(unsigned int i = 0; i < table->rows; i++)
+  for(unsigned int i = 0; i < table->columns; i++)
   {
-    if( (filter->filter_type == Less && table->array[i][filter->r.column_id] < filter->value)||
-        (filter->filter_type == Less_Equal && table->array[i][filter->r.column_id] <= filter->value)||
-        (filter->filter_type == Equal && table->array[i][filter->r.column_id] == filter->value)||
-        (filter->filter_type == Greater && table->array[i][filter->r.column_id] > filter->value)||
-        (filter->filter_type == Greater_Equal && table->array[i][filter->r.column_id] >= filter->value)||
-        (filter->filter_type == Not_Equal && table->array[i][filter->r.column_id] != filter->value)
+    if( (filter->filter_type == Less && table->array[filter->r.column_id][i] < filter->value)||
+        (filter->filter_type == Less_Equal && table->array[filter->r.column_id][i] <= filter->value)||
+        (filter->filter_type == Equal && table->array[filter->r.column_id][i] == filter->value)||
+        (filter->filter_type == Greater && table->array[filter->r.column_id][i] > filter->value)||
+        (filter->filter_type == Greater_Equal && table->array[filter->r.column_id][i] >= filter->value)||
+        (filter->filter_type == Not_Equal && table->array[filter->r.column_id][i] != filter->value)
       )
     {
       if(append_to_middle_list(new_list, i))
@@ -115,23 +104,22 @@ relation *construct_relation_from_table(table * table, uint64_t column_id)
   relation *rel = malloc(sizeof(relation));
   if(rel == NULL)
   {
-    //Error
+    fprintf(stderr, "construct_relation_from_table: Cannot allocate memory for middle_tables\n");
     return NULL;
   }
 
-  rel->num_tuples = table->rows;
-  rel->tuples = malloc(table->rows*sizeof(tuple));
+  rel->num_tuples = table->columns;
+  rel->tuples = malloc((rel->num_tuples)*sizeof(tuple));
   if(rel == NULL)
   {
-    //Error
+    fprintf(stderr, "construct_relation_from_table: Cannot allocate memory for middle_tables\n");
     free(rel);
     return NULL;
   }
 
-  for(unsigned int i = 0; i < table->rows; i++)
+  for(unsigned int i = 0; i < rel->num_tuples; i++)
   {
-  //  printf("%d\n", table->array[i][column_id]);
-    rel->tuples[i].key = table->array[i][column_id];
+    rel->tuples[i].key = table->array[column_id][i];
     rel->tuples[i].row_id = i;
   }
 
@@ -147,7 +135,7 @@ void construct_relation_from_middleman(middle_list_bucket *bucket,
 {
   for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
   {
-    rel->tuples[*counter].key = table->array[bucket->row_ids[i]][column_id];
+    rel->tuples[*counter].key = table->array[column_id][bucket->row_ids[i]];
     rel->tuples[*counter].row_id = i;
 
     (*counter)++;
@@ -169,9 +157,9 @@ int update_middle_bucket(middle_list_bucket **lookup, middle_list_bucket *bucket
 
 int self_join_table(predicate_join *join, table* table, middle_list *list)
 {
-	for(unsigned int i = 0; i < table->rows; i++)
+	for(unsigned int i = 0; i < table->columns; i++)
 	{
-		if(table->array[i][join->r.column_id] == table->array[i][join->s.column_id])
+		if(table->array[join->r.column_id][i] == table->array[join->s.column_id][i])
 		{
 			if(append_to_middle_list(list, i))
 				return 1;
@@ -192,8 +180,8 @@ int self_join_middle_bucket(predicate_join *join,
 {
 	for(unsigned int i = 0; i < bucket_r->index_to_add_next; i++)
   {
-		if(table_r->array[bucket_r->row_ids[i]][join->r.column_id] ==
-					table_s->array[bucket_s->row_ids[i]][join->s.column_id])
+		if(table_r->array[join->r.column_id][bucket_r->row_ids[i]] ==
+					table_s->array[join->s.column_id][bucket_s->row_ids[i]])
 		{
 			//check
 			if(append_to_middle_list(list_r, bucket_r->row_ids[i]) ||
@@ -216,9 +204,9 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 			concatenated_tables[i][0] = 0;
 
   //check for argument format
-  if(q == NULL /*|| tables == NULL*/)
+  if(q == NULL || index == NULL || sorting == NULL)
   {
-    fprintf(stderr, "Null parameters\n");
+    fprintf(stderr, "Execute query: Null parameters\n");
     return NULL;
   }
 
@@ -226,32 +214,6 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
   middleman *m = initialize_middleman(q->number_of_tables);
 
   FILE *ff = stdout;
-	// m->tables[0].list = create_middle_list();
-	// append_to_middle_list(m->tables[0].list , 0);
-	// append_to_middle_list(m->tables[0].list , 1);
-	// append_to_middle_list(m->tables[0].list , 2);
-  // append_to_middle_list(m->tables[0].list , 3);
-  // append_to_middle_list(m->tables[0].list , 4);
-  // append_to_middle_list(m->tables[0].list , 5);
-  // append_to_middle_list(m->tables[0].list , 6);
-  // append_to_middle_list(m->tables[0].list , 7);
-  // append_to_middle_list(m->tables[0].list , 8);
-  // append_to_middle_list(m->tables[0].list , 9);
-	//
-	//
-  // m->tables[1].list = create_middle_list();
-	// append_to_middle_list(m->tables[1].list , 0);
-	// append_to_middle_list(m->tables[1].list , 1);
-	// append_to_middle_list(m->tables[1].list , 2);
-  // append_to_middle_list(m->tables[1].list , 3);
-  // append_to_middle_list(m->tables[1].list , 4);
-  // append_to_middle_list(m->tables[1].list , 5);
-  // append_to_middle_list(m->tables[1].list , 6);
-  // append_to_middle_list(m->tables[1].list , 7);
-  // append_to_middle_list(m->tables[1].list , 8);
-  // append_to_middle_list(m->tables[1].list , 9);
-	//print_middle_list(m->tables[0].list, ff);
-printf("ALL OK\n");
 
   //execute every predicate sequentially
   for(int i = 0; i < q->number_of_predicates; i++)
@@ -265,16 +227,16 @@ printf("ALL OK\n");
       table *original_table = get_table(index, q->table_ids[filter->r.table_id]);
       if(original_table == NULL)
       {
-        printf("not found\n");
+        fprintf(stderr, "Execute query: Table not found\n");
+				return NULL;
       }
 
       if(m->tables[filter->r.table_id].list == NULL)
-      { printf("null\n");
+      {
         //empty list so we need to take the data from the original table
         m->tables[filter->r.table_id].list = create_middle_list();
         //TODO check return
         filter_original_table(filter, original_table, m->tables[filter->r.table_id].list);
-        print_middle_list(m->tables[filter->r.table_id].list, ff);
       }
       else
       {
@@ -283,7 +245,6 @@ printf("ALL OK\n");
         //create new list
         middle_list *new_list = create_middle_list();
 
-printf("all ok  %d\n", q->table_ids[filter->r.table_id]);
         middle_list_node *list_temp = m->tables[filter->r.table_id].list->head;
         while(list_temp != NULL)
         {
@@ -292,8 +253,6 @@ printf("all ok  %d\n", q->table_ids[filter->r.table_id]);
           list_temp = list_temp->next;
         }
 
-        printf("\n\n\n\n");
-        print_middle_list(new_list, ff);
         delete_middle_list(m->tables[filter->r.table_id].list);
         m->tables[filter->r.table_id].list = new_list;
       }
@@ -302,8 +261,6 @@ printf("all ok  %d\n", q->table_ids[filter->r.table_id]);
 				(((predicate_join *)q->predicates[i].p)->r.table_id != ((predicate_join *)q->predicates[i].p)->s.table_id)))
     {
       predicate_join *join = q->predicates[i].p;
-
-printf("SELF JOIN !=\n");
 
 			//create middle lists
 			middle_list *result_R = create_middle_list();
@@ -325,34 +282,34 @@ printf("SELF JOIN !=\n");
 			table *table_r = get_table(index, q->table_ids[join->r.table_id]);
 			if(table_r == NULL)
 			{
-				printf("not found\n");
+				fprintf(stderr, "Execute query: Null parameters\n");
+		    return NULL;
 			}
 
 			//find original tables
 			table *table_s = get_table(index, q->table_ids[join->s.table_id]);
 			if(table_s == NULL)
 			{
-				printf("not found\n");
+				fprintf(stderr, "Execute query: Null parameters\n");
+		    return NULL;
 			}
 
 			if(q->predicates[i].type == Join)
-			{printf("HHHHH\n");
+			{
 	      //construct relation relR
 	      //check if table exists in middleman.
 	      //if yes use it else, if not take if from the original table
 	      relation *relR;
 	      if(m->tables[join->r.table_id].list == NULL)
 	      {
-	        printf("COLUMN %d\n", join->r.column_id);
 	        relR = construct_relation_from_table(table_r, join->r.column_id);
-	        printf("ok ok\n");
 	      }
 	      else
 	      {
 	        relR = malloc(sizeof(relation));
 	        if(relR == NULL)
 	        {
-	          //Error
+	          fprintf(stderr, "Execute query: Cannot allocate memory\n");
 	          return NULL;
 	        }
 
@@ -360,7 +317,7 @@ printf("SELF JOIN !=\n");
 	        relR->tuples = malloc((relR->num_tuples)*sizeof(tuple));
 	        if(relR == NULL)
 	        {
-	          //Error
+	          fprintf(stderr, "Execute query: Cannot allocate memory\n");
 	          free(relR);
 	          return NULL;
 	        }
@@ -374,6 +331,7 @@ printf("SELF JOIN !=\n");
 	        }
 	      }
 
+				printf("\n relR\n");
 	      for(int i=0; i<relR->num_tuples;i++)
 	      {
 	        printf("%d %d\n", relR->tuples[i].key, relR->tuples[i].row_id);
@@ -386,16 +344,14 @@ printf("SELF JOIN !=\n");
 	      relation *relS;
 	      if(m->tables[join->s.table_id].list == NULL)
 	      {
-	        printf("COLUMN %d\n", join->s.column_id);
 	        relS = construct_relation_from_table(table_s, join->s.column_id);
-	        printf("ok ok\n");
 	      }
 	      else
 	      {
 	        relS = malloc(sizeof(relation));
 	        if(relS == NULL)
 	        {
-	          //Error
+	          fprintf(stderr, "Execute query: Cannot allocate memory\n");
 	          return NULL;
 	        }
 
@@ -403,7 +359,7 @@ printf("SELF JOIN !=\n");
 	        relS->tuples = malloc((relS->num_tuples)*sizeof(tuple));
 	        if(relS == NULL)
 	        {
-	          //Error
+	          fprintf(stderr, "Execute query: Cannot allocate memory\n");
 	          free(relS);
 	          return NULL;
 	        }
@@ -417,6 +373,7 @@ printf("SELF JOIN !=\n");
 	        }
 	      }
 
+				printf("\n relS\n");
 	      for(int i=0; i<relS->num_tuples;i++)
 	      {
 	        printf("%d %d\n", relS->tuples[i].key, relS->tuples[i].row_id);
@@ -428,7 +385,7 @@ printf("SELF JOIN !=\n");
 	      {
 	        if(radix_sort(relR))
 	        {
-		         fprintf(stderr, "Error in radix_sort\n");
+		         fprintf(stderr, "Execute query: Error in radix_sort\n");
 		         return NULL;
 	         }
 	      }
@@ -437,7 +394,7 @@ printf("SELF JOIN !=\n");
 	      {
 	        if(radix_sort(relS))
 	        {
-		         fprintf(stderr, "Error in radix_sort\n");
+		         fprintf(stderr, "Execute query: Error in radix_sort\n");
 		         return NULL;
 	         }
 	      }
@@ -445,7 +402,7 @@ printf("SELF JOIN !=\n");
 	      //update counter
 	      bool_counter += 2;
 
-	      printf("\n\n\nBEFORE JOIN\n\n\nTABLE R\n\n");
+	      printf("\n\n\nBEFORE JOIN\n\nTABLE R\n\n");
 	      print_middle_list(m->tables[join->r.table_id].list, ff);
 	      printf("\n\nTABLE S\n\n");
 	      print_middle_list(m->tables[join->s.table_id].list, ff);
@@ -453,18 +410,18 @@ printf("SELF JOIN !=\n");
 	      //finally join
 	      if(final_join(result_R, result_S, relR, relS))
 	      {
-	          fprintf(stderr, "Error in final_join\n");
+	          fprintf(stderr, "Execute query: Error in final_join\n");
 	          return NULL;
 	      }
 
-	      printf("\n\n\nAFTER JOIN\n\n\nRESULT R\n\n");
+	      printf("\n\n\nAFTER JOIN\n\nRESULT R\n\n");
 	      print_middle_list(result_R, ff);
 	      printf("\n\nRESULT S\n\n");
 	      print_middle_list(result_S, ff);
 
 				//now go back to middleman
 				if(m->tables[join->r.table_id].list == NULL)
-				{printf("EMPTY1\n" );
+				{
 					//if empty then rowid are those of the original table..store them
 					m->tables[join->r.table_id].list = result_R;
 				}
@@ -483,14 +440,14 @@ printf("SELF JOIN !=\n");
 							list_temp = list_temp->next;
 						}
 
-						print_middle_list(new_list, ff);
+						//print_middle_list(new_list, ff);
 						delete_middle_list(m->tables[join->r.table_id].list);
 						m->tables[join->r.table_id].list = new_list;
 				}
 
 
 				if(m->tables[join->s.table_id].list == NULL)
-				{printf("EMPTY2\n" );
+				{
 					//if empty then rowid are those of the original table..store them
 					m->tables[join->s.table_id].list = result_S;
 				}
@@ -509,14 +466,14 @@ printf("SELF JOIN !=\n");
 						list_temp = list_temp->next;
 					}
 
-					print_middle_list(new_list, ff);
+					//print_middle_list(new_list, ff);
 					delete_middle_list(m->tables[join->s.table_id].list);
 					m->tables[join->s.table_id].list = new_list;
 				}
 
 
 
-				printf("\n\n\nAFTER UPDATE\n\n\nTABLE R\n\n");
+				printf("\n\n\nAFTER UPDATE\n\nTABLE R\n\n");
 				print_middle_list(m->tables[join->r.table_id].list, ff);
 				printf("\n\nTABLE S\n\n");
 				print_middle_list(m->tables[join->s.table_id].list, ff);
@@ -524,20 +481,20 @@ printf("SELF JOIN !=\n");
 			}
 			else
 			{
-printf("SELF JOIN PROCESS: %d %d\n", join->r.table_id, join->s.table_id);
-print_middle_list(m->tables[join->r.table_id].list, ff);
-print_middle_list(m->tables[join->s.table_id].list, ff);
-printf("\n\n\n");
+// printf("SELF JOIN PROCESS: %d %d\n", join->r.table_id, join->s.table_id);
+// print_middle_list(m->tables[join->r.table_id].list, ff);
+// print_middle_list(m->tables[join->s.table_id].list, ff);
+// printf("\n\n\n");
 				if(m->tables[join->r.table_id].list == NULL || m->tables[join->s.table_id].list == NULL)
 				{
-					fprintf(stderr, "Indirect self-join failed\n");
+					fprintf(stderr, "Execute query: Indirect self-join failed\n");
 					return NULL;
 				}
 
         middle_list_node *list_temp_r = m->tables[join->r.table_id].list->head;
 				middle_list_node *list_temp_s = m->tables[join->s.table_id].list->head;
         while(list_temp_r != NULL)
-        {printf("hello\n");
+        {
           //TODO check return
           self_join_middle_bucket(join, table_r, table_s, &(list_temp_r->bucket), &(list_temp_s->bucket), result_R, result_S);
           list_temp_r = list_temp_r->next;
@@ -556,7 +513,7 @@ printf("\n\n\n");
 			}
 /****************************************************************************************************/
 
-///////////////////STABLE UP TO THIS POINT
+
       //now we update the rest of the concatenated lists..3rd code copy paste
       for(int k = 0; k < q->number_of_predicates; k++)
       {
@@ -630,7 +587,6 @@ printf("\n\n\n");
 						s_position = k;
         }
 			}
-			printf("\n\nposition r %d, position s  %d\n", r_position, s_position);
 
 
 			//neither of them exist
@@ -684,36 +640,32 @@ printf("\n\n\n");
     }
 		else if(q->predicates[i].type == Self_Join &&
 				(((predicate_join *)q->predicates[i].p)->r.table_id == ((predicate_join *)q->predicates[i].p)->s.table_id))
-		{ printf("SELF JOIN\n");
+		{
 			predicate_join *join = q->predicates[i].p;
 
       //find original tables
 			table *table = get_table(index, q->table_ids[join->r.table_id]);
       if(table == NULL)
       {
-        printf("not found\n");
+				fprintf(stderr, "Execute query: Table not found\n");
+				return NULL;
       }
 
 			if(m->tables[join->r.table_id].list != NULL)
 			{
-				fprintf(stderr, "Direct self-join failed\n");
+				fprintf(stderr, "Execute query: Direct self-join failed\n");
 				return NULL;
 			}
 
 			m->tables[join->r.table_id].list = create_middle_list();
 			//check
 			self_join_table(join, table, m->tables[join->r.table_id].list);
-			//hope the optimization works and we have no memory leaks
-
-			print_middle_list(m->tables[join->r.table_id].list, ff);
 		}
     else
     {
-      fprintf(stderr, "Undefined predicate type\n");
+      fprintf(stderr, "Execute query: Undefined predicate type\n");
       return NULL;
     }
-
-
   }
 
   return m;
@@ -726,7 +678,7 @@ void calculate_sum(projection p, middle_list_bucket *bucket, table *table, uint6
 {
   for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
   {
-		*sum += table->array[bucket->row_ids[i]][p.column_to_project.column_id];
+		*sum += table->array[p.column_to_project.column_id][bucket->row_ids[i]];
 	}
 }
 
@@ -745,9 +697,10 @@ void calculate_projections(query *q, table_index* index, middleman *m)
 		table *original_table = get_table(index, q->table_ids[p.column_to_project.table_id]);
 		if(original_table == NULL)
 		{
-			printf("not found\n");
+			fprintf(stderr, "calculate_projections: Undefined predicate type\n");
+			return;
 		}
-printf("ALL SET\n");
+
 		uint64_t sum = 0;
 		middle_list_node *list_temp = m->tables[p.column_to_project.table_id].list->head;
 		while(list_temp != NULL)

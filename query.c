@@ -150,7 +150,7 @@ int parse_predicate(char* token, predicate*p)
             perror("parse_predicate: predicate join malloc error\n");
             return -5;
         }
-        if(sscanf(token, "%"PRIu32".%"PRIu32"=%"PRIu32".%"PRIu32, &(((predicate_join*) p->p)->r.table_index), &(((predicate_join*) p->p)->r.column_index), &(((predicate_join*) p->p)->s.table_index), &(((predicate_join*) p->p)->s.column_index))!=4)
+        if(sscanf(token, "%"PRIu32".%"PRIu64"=%"PRIu32".%"PRIu64, &(((predicate_join*) p->p)->r.table_index), &(((predicate_join*) p->p)->r.column_index), &(((predicate_join*) p->p)->s.table_index), &(((predicate_join*) p->p)->s.column_index))!=4)
         {
             fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
             return -6;
@@ -168,7 +168,7 @@ int parse_predicate(char* token, predicate*p)
         ((predicate_filter*) p->p)->filter_type=p_f_type;
         if(((predicate_filter*) p->p)->filter_type==Less)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu32"<%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64"<%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -8;
@@ -176,7 +176,7 @@ int parse_predicate(char* token, predicate*p)
         }
         else if(((predicate_filter*) p->p)->filter_type==Less_Equal)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu32"<=%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64"<=%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -9;
@@ -184,7 +184,7 @@ int parse_predicate(char* token, predicate*p)
         }
         else if(((predicate_filter*) p->p)->filter_type==Equal)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu32"=%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64"=%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -10;
@@ -192,7 +192,7 @@ int parse_predicate(char* token, predicate*p)
         }
         else if(((predicate_filter*) p->p)->filter_type==Not_Equal)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu32"<>%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64"<>%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -11;
@@ -200,7 +200,7 @@ int parse_predicate(char* token, predicate*p)
         }
         else if(((predicate_filter*) p->p)->filter_type==Greater)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu32">%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64">%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -12;
@@ -208,7 +208,7 @@ int parse_predicate(char* token, predicate*p)
         }
         else if(((predicate_filter*) p->p)->filter_type==Greater_Equal)
         {
-            if(sscanf(token, "%"PRIu32".%"PRIu32">=%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
+            if(sscanf(token, "%"PRIu32".%"PRIu64">=%"PRIu64, &((predicate_filter*) p->p)->r.table_index, &((predicate_filter*) p->p)->r.column_index, &((predicate_filter*) p->p)->value)!=3)
             {
                 fprintf(stderr, "parse_predicate: predicate join sscanf error %s\n", token);
                 return -13;
@@ -600,7 +600,7 @@ int analyze_query(char*query_str, query*q)
                 perror("analyze_query: projections malloc error\n");
                 return -24;
             }
-            if(sscanf(token, "%"PRIu32".%"PRIu32"", &q->projections[0].column_to_project.table_index, &q->projections[0].column_to_project.column_index)!=2)
+            if(sscanf(token, "%"PRIu32".%"PRIu64"", &q->projections[0].column_to_project.table_index, &q->projections[0].column_to_project.column_index)!=2)
             {
                 fprintf(stderr, "analyze_query: projections sscanf error %s\n", token);
                 return -25;
@@ -621,7 +621,7 @@ int analyze_query(char*query_str, query*q)
             int j=0;
             while(subtoken!=NULL)
             {
-                if(sscanf(subtoken, "%"PRIu32".%"PRIu32"", &q->projections[j].column_to_project.table_index, &q->projections[j].column_to_project.column_index)!=2)
+                if(sscanf(subtoken, "%"PRIu32".%"PRIu64"", &q->projections[j].column_to_project.table_index, &q->projections[j].column_to_project.column_index)!=2)
                 {
                     fprintf(stderr, "analyze_query: projection sscanf error %s\n", subtoken);
                     return -27;
@@ -648,7 +648,7 @@ void print_table_column(table_column* tc)
     if(tc!=NULL)
     {
         printf("Table Index: %"PRIu32"\n", tc->table_index);
-        printf("Column Index: %"PRIu32"\n", tc->column_index);
+        printf("Column Index: %"PRIu64"\n", tc->column_index);
     }
     else
     {
@@ -1189,7 +1189,7 @@ void print_counter_list(counter_list* cl)
     uint32_t counter=0;
     while(temp!=NULL)
     {
-        printf("%"PRIu32": Table Index: %"PRIu32" Column Index: %"PRIu32"\n",counter,temp->tc.table_index,temp->tc.column_index);
+        printf("%"PRIu32": Table Index: %"PRIu32" Column Index: %"PRIu64"\n",counter,temp->tc.table_index,temp->tc.column_index);
         printf("Counter: %"PRIu32"\n",temp->counter);
         temp=temp->next;
         counter++;

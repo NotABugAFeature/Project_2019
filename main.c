@@ -74,7 +74,13 @@ for (int i=0 ; i < N ; i++)
 	table.tables[1].array[i][0]=i;
 	table.tables[1].array[i][1]=i+1;
 }
-
+printf("\n\n\n");
+for (int i=0 ; i < N ; i++)
+{
+	for (int j=0 ; j < M ; j++)
+		 printf("%d  ", table.tables[1].array[i][j]);
+	 printf("\n");
+}
 /****************/
 
 
@@ -97,13 +103,13 @@ for (int i=0 ; i < N ; i++)
 		//
 		// q.predicates[0].p = &f;
 
-		q.predicates[0].type = Join;
+		q.predicates[0].type = Self_Join;
 		predicate_join j;
 		j.r.table_id = 0;
 		j.r.column_id = 1;
 
-		j.s.table_id = 1;
-		j.s.column_id = 0;
+		j.s.table_id = 0;
+		j.s.column_id = 1;
 		q.predicates[0].p = &j;
 
 		bool b[2]={1,1};

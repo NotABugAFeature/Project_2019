@@ -1,7 +1,7 @@
 #ifndef QUERY_H
 #define QUERY_H
 #include "table.h"
-
+#include <stdbool.h>
 typedef enum predicate_type
 {
     Join, Self_Join, Filter
@@ -11,7 +11,7 @@ typedef enum predicate_filter_type
     Not_Specified, Less, Less_Equal, Equal, Greater, Greater_Equal, Not_Equal
 } predicate_filter_type;
 /**
- * Contains a table id and a row id.
+ * Contains a table index and a row index.
  */
 typedef struct table_column
 {
@@ -73,7 +73,7 @@ typedef struct query
  * Creates and initializes an empty query.
  * @return query* A pointer to the created query
  */
-query* create_query();
+query* create_query(void);
 /**
  * Deletes a query.
  * @param query* A pointer to the query
@@ -88,26 +88,44 @@ void delete_query(query*);
 int analyze_query(char*, query*);
 /**
  * Accepts a query and checks if it is valid with the tables.
- * @param query*
- * @param
+ * @param query* The query to validate
+ * @param table_index* The tables
  * @return 0 On succes
  */
-//int validate_query(query*,);
-
+int validate_query(query*, table_index*);
 /**
  * Optimizes a query by rearranging the predicates
  * @param query* The query to optimize
- * @param
+ * @param tale_index* The tables
  * @return 0 On succes
  */
-//int optimize_query(query*,);
+int optimize_query(query*q,table_index *);
 
 /**
+ * Creates an array of bool that show which tables in a predicate must be sorted
+ * @param query* The query
+ * @param bool** A pointer to create an array of bools that show which
+ * table.column in the join predicates need to be sorted
+ * @return 0 On succes
+ */
+int create_sort_array(query*q,bool**t_c_to_sort);
+/**
+ * Moves the joins/self joins just before they are needed for best
+ * memory consumption
+ * @param query* Pointer to the query to optimize
+ * @return 0 On succes
+ */
+int optimize_query_memory(query*);
+/**
  * Prints all data of the query
- * @param Pointer to the query to print
+ * @param query* Pointer to the query to print
  */
 void print_query(query*);
-
+/**
+ * Prints all data of the query as the str given
+ * @param query* Pointer to the query to print
+ */
+void print_query_like_an_str(query* q);
 
 typedef struct{
   middle_list *list;

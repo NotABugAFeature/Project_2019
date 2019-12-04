@@ -122,4 +122,9 @@ int optimize_query_memory(query*);
  * @param query* Pointer to the query to print
  */
 void print_query(query*);
+/**
+ * Prints all data of the query as the str given
+ * @param query* Pointer to the query to print
+ */
+void print_query_like_an_str(query* q);
 #endif /* QUERY_H */

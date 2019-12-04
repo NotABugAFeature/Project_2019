@@ -7,6 +7,8 @@
 #include "../sort_merge_join.h"
 #include "../queue.h"
 #include "../result_list.h"
+#include "../table.h"
+#include "../string_list.h"
 
 /*
  * CUnit Test Suite
@@ -1550,7 +1552,7 @@ void testRelation_from_file5()
      {
          CU_ASSERT(0);
      }
-     print_bucket(&bucket,stdout);
+     //print_bucket(&bucket,stdout);
  }
 
  void testCreate_result_list()
@@ -1613,7 +1615,7 @@ void testRelation_from_file5()
      {
          CU_ASSERT(0);
      }
-     print_result_list(list,stdout);
+     //print_result_list(list,stdout);
      delete_result_list(list);
  }
 
@@ -1633,7 +1635,7 @@ void testRelation_from_file5()
      {
          CU_ASSERT(0);
      }
-     print_result_list(list,stdout);
+     //print_result_list(list,stdout);
      delete_result_list(list);
  }
 
@@ -1663,7 +1665,7 @@ void testRelation_from_file5()
      {
          CU_ASSERT(0);
      }
-     print_result_list(list,stdout);
+     //print_result_list(list,stdout);
      delete_result_list(list);
  }
 
@@ -1693,10 +1695,327 @@ void testRelation_from_file5()
      {
          CU_ASSERT(0);
      }
-     print_result_list(list,stdout);
+     //print_result_list(list,stdout);
      delete_result_list(list);
  }
 
+/**
+ * Test case 1: NULL table
+ */
+ void testTable_from_File1()
+ {
+ 	table *t = NULL;
+ 	int res = table_from_file(t, "./test_files/t1");
+ 	printf("res = %d\n", res);
+ 	CU_ASSERT_NOT_EQUAL(res, 0);
+ }
+
+/**
+ * Test case 2: File does not exist
+ */
+ void testTable_from_File2()
+ {
+ 	table *t = malloc(sizeof(table));
+ 	int res = table_from_file(t, "./test_files/doesnt_exist");
+ 	printf("res = %d\n", res);
+ 	CU_ASSERT_NOT_EQUAL(res, 0);
+ 	free(t);
+ }
+
+/**
+ * Test case 3: Empty file
+ */
+
+ void testTable_from_File3()
+ {
+ 	table *t = malloc(sizeof(table));
+ 	int res = table_from_file(t, "./test_files/empty_file.txt");
+ 	printf("res = %d\n", res);
+ 	CU_ASSERT_NOT_EQUAL(res, 0);
+ 	free(t);
+ }
+
+/**
+ * Test case 4: File t1 (1 column, 10 rows)
+ */
+void testTable_from_File4()
+{
+	table *t = malloc(sizeof(table));
+	int res = table_from_file(t, "./test_files/t1");
+	CU_ASSERT_EQUAL(res, 0);
+
+	int columns = 1, rows = 10;
+	for(int i=0; i<columns; i++)
+	{
+		for(int j=0; j<rows; j++)
+		{
+			CU_ASSERT_EQUAL(t->array[i][j], i+j);
+		}
+	}
+}
+
+/**
+ * Test case 5: File t2 (10 columns, 1 row)
+ */
+void testTable_from_File5()
+{
+	table *t = malloc(sizeof(table));
+	int res = table_from_file(t, "./test_files/t2");
+	CU_ASSERT_EQUAL(res, 0);
+
+	int columns = 10, rows = 1;
+	for(int i=0; i<columns; i++)
+	{
+		for(int j=0; j<rows; j++)
+		{
+			CU_ASSERT_EQUAL(t->array[i][j], i+j);
+		}
+	}
+}
+
+/**
+ * Test case 6: File t3 (1000 columns, 1000 rows)
+ */
+void testTable_from_File6()
+{
+	table *t = malloc(sizeof(table));
+	int res = table_from_file(t, "./test_files/t3");
+	CU_ASSERT_EQUAL(res, 0);
+
+	int columns = 1000, rows = 1000;
+	for(int i=0; i<columns; i++)
+	{
+		for(int j=0; j<rows; j++)
+		{
+			CU_ASSERT_EQUAL(t->array[i][j], i+j);
+		}
+	}
+}
+
+/*
+ * Test case 1: Table index is NULL
+ */
+void testGet_table1()
+{
+	table_index *ti = NULL;
+	table *t = get_table(ti, 1);
+	CU_ASSERT_EQUAL(t, NULL);
+}
+
+/*
+ * Test case 2: Tables of table index is NULL
+ */
+void testGet_table2()
+{
+	table_index *ti = malloc(sizeof(table_index));
+	ti->tables = NULL;
+	table *t = get_table(ti, 1);
+	CU_ASSERT_EQUAL(t, NULL);
+}
+
+/*
+ * Test case 3: Table does not exist
+ */
+void testGet_table3()
+{
+	table_index *ti = malloc(sizeof(table_index));
+	ti->num_tables = 5;
+	ti->tables = malloc(ti->num_tables*sizeof(table));
+	for(int i=0; i<ti->num_tables; i++)
+	{
+		ti->tables[i].table_id = i;
+	}
+
+	table *t = get_table(ti, 10);
+	CU_ASSERT_EQUAL(t, NULL);
+}
+
+/*
+ * Test case 3: Table exists
+ */
+void testGet_table4()
+{
+	table_index *ti = malloc(sizeof(table_index));
+	ti->num_tables = 100;
+	ti->tables = malloc(ti->num_tables*sizeof(table));
+	for(int i=0; i<ti->num_tables; i++)
+	{
+		ti->tables[i].table_id = i;
+	}
+
+	table *t = get_table(ti, 10);
+	CU_ASSERT_EQUAL(t->table_id, 10);
+}
+
+
+void testString_list_create()
+{
+    string_list *list = string_list_create();
+    CU_ASSERT_EQUAL(list->num_nodes, 0);
+    CU_ASSERT_EQUAL(list->head, NULL);
+    CU_ASSERT_EQUAL(list->tail, NULL);
+    free(list);
+}
+
+/*
+ * Test case 1: list is NULL
+ */
+void testString_list_insert1()
+{
+    string_list *list = NULL;
+    int res = string_list_insert(list, "string1");
+    CU_ASSERT_NOT_EQUAL(res, 0);
+}
+
+/*
+ * Test case 2: insert 3 strings
+ */
+void testString_list_insert2()
+{
+    string_list *list = string_list_create();
+    int n = 3;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        int res = string_list_insert(list, str);
+        CU_ASSERT_EQUAL(res, 0);
+    }
+
+    string_list_node *node = list->head;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        CU_ASSERT_EQUAL(strcmp(node->string, str), 0);
+        node = node->next;
+    }
+
+    node = list->head;
+    while(node != NULL)
+    {
+        string_list_node *temp = node;
+        node = node->next;
+        free(temp);
+    }
+
+    free(list);
+}
+
+/*
+ * Test case 3: insert 100 strings
+ */
+void testString_list_insert3()
+{
+    string_list *list = string_list_create();
+    int n = 100;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        int res = string_list_insert(list, str);
+        CU_ASSERT_EQUAL(res, 0);
+    }
+
+    string_list_node *node = list->head;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        CU_ASSERT_EQUAL(strcmp(node->string, str), 0);
+        node = node->next;
+    }
+
+    node = list->head;
+    while(node != NULL)
+    {
+        string_list_node *temp = node;
+        node = node->next;
+        free(temp);
+    }
+
+    free(list);
+}
+
+/*
+ * Test case 1: list is NULL
+ */
+void testString_list_remove1()
+{
+    string_list *list = NULL;
+    char *str = string_list_remove(list);
+    CU_ASSERT_EQUAL(str, NULL);
+}
+
+/*
+ * Test case 2: list is empty
+ */
+void testString_list_remove2()
+{
+    string_list *list = string_list_create();
+    char *str = string_list_remove(list);
+    CU_ASSERT_EQUAL(str, NULL);
+
+    free(list);
+}
+
+/*
+ * Test case 3: remove 3 of 10 strings
+ */
+void testString_list_remove3()
+{
+    string_list *list = string_list_create();
+    int n = 10;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        string_list_insert(list, str);
+    }
+
+    for(int i=0; i<3; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        char *str2 = string_list_remove(list);
+        CU_ASSERT_EQUAL(strcmp(str, str2), 0);
+    }
+
+    string_list_node *node = list->head;
+    while(node != NULL)
+    {
+        string_list_node *temp = node;
+        node = node->next;
+        free(temp);
+    }
+
+    free(list);
+}
+
+/*
+ * Test case 4: remove 100 of 100 strings
+ */
+void testString_list_remove4()
+{
+    string_list *list = string_list_create();
+    int n = 100;
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        string_list_insert(list, str);
+    }
+
+    for(int i=0; i<n; i++)
+    {
+        char str[20];
+        sprintf(str, "string%d", i);
+        char *str2 = string_list_remove(list);
+        CU_ASSERT_EQUAL(strcmp(str, str2), 0);
+    }
+
+    free(list);
+}
 
 int main(void)
 {
@@ -1732,12 +2051,12 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testRadix_sort1", testRadix_sort1))||
         (NULL==CU_add_test(pSuite, "testRadix_sort2", testRadix_sort2))||
 
-        (NULL==CU_add_test(pSuite, "testRead_from_file1", testRead_from_file1))||
-    		(NULL==CU_add_test(pSuite, "testRead_from_file2", testRead_from_file2))||
-    		(NULL==CU_add_test(pSuite, "testRead_from_file3", testRead_from_file3))||
-    		(NULL==CU_add_test(pSuite, "testRead_from_file4", testRead_from_file4))||
-    		(NULL==CU_add_test(pSuite, "testRead_from_file5", testRead_from_file5))||
-    		(NULL==CU_add_test(pSuite, "testRead_from_file6", testRead_from_file6))||
+     //   (NULL==CU_add_test(pSuite, "testRead_from_file1", testRead_from_file1))||
+    //		(NULL==CU_add_test(pSuite, "testRead_from_file2", testRead_from_file2))||
+    //		(NULL==CU_add_test(pSuite, "testRead_from_file3", testRead_from_file3))||
+    //		(NULL==CU_add_test(pSuite, "testRead_from_file4", testRead_from_file4))||
+    //		(NULL==CU_add_test(pSuite, "testRead_from_file5", testRead_from_file5))||
+    //		(NULL==CU_add_test(pSuite, "testRead_from_file6", testRead_from_file6))||
     		(NULL==CU_add_test(pSuite, "testCreate_relation_from_table1", testCreate_relation_from_table1))||
     		(NULL==CU_add_test(pSuite, "testCreate_relation_from_table2", testCreate_relation_from_table2))||
     		(NULL==CU_add_test(pSuite, "testCreate_relation_from_table3", testCreate_relation_from_table3))||
@@ -1783,7 +2102,28 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testAppend_to_list", testAppend_to_list))||
         (NULL==CU_add_test(pSuite, "testIs_result_list_empty", testIs_result_list_empty))||
         (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_buckets", testResult_list_get_number_of_buckets))||
-        (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_records", testResult_list_get_number_of_records))
+        (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_records", testResult_list_get_number_of_records))||
+
+        (NULL==CU_add_test(pSuite, "testTable_from_File1", testTable_from_File1))||
+        (NULL==CU_add_test(pSuite, "testTable_from_File2", testTable_from_File2))||
+        (NULL==CU_add_test(pSuite, "testTable_from_File3", testTable_from_File3))||
+        (NULL==CU_add_test(pSuite, "testTable_from_File4", testTable_from_File4))||
+        (NULL==CU_add_test(pSuite, "testTable_from_File5", testTable_from_File5))||
+        (NULL==CU_add_test(pSuite, "testTable_from_File6", testTable_from_File6))||
+        (NULL==CU_add_test(pSuite, "testGet_table1", testGet_table1))||
+        (NULL==CU_add_test(pSuite, "testGet_table2", testGet_table2))||
+        (NULL==CU_add_test(pSuite, "testGet_table3", testGet_table3))||
+        (NULL==CU_add_test(pSuite, "testGet_table4", testGet_table4))||
+
+        (NULL==CU_add_test(pSuite, "testString_list_create", testString_list_create))||
+        (NULL==CU_add_test(pSuite, "testString_list_insert1", testString_list_insert1))||
+        (NULL==CU_add_test(pSuite, "testString_list_insert2", testString_list_insert2))||
+        (NULL==CU_add_test(pSuite, "testString_list_insert3", testString_list_insert3))||
+        (NULL==CU_add_test(pSuite, "testString_list_remove1", testString_list_remove1))||
+        (NULL==CU_add_test(pSuite, "testString_list_remove2", testString_list_remove2))||
+        (NULL==CU_add_test(pSuite, "testString_list_remove3", testString_list_remove3))||
+        (NULL==CU_add_test(pSuite, "testString_list_remove4", testString_list_remove4))
+
       )
     {
         CU_cleanup_registry();

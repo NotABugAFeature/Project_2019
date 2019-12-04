@@ -108,10 +108,24 @@ int analyze_query(char*, query*);
  */
 void print_query(query*);
 
+
+typedef struct{
+  middle_list *list;
+}middle_table;
+
+typedef struct{
+  uint32_t number_of_tables;
+  middle_table *tables;
+}middleman;
+
+
+
 /**
  * Executes a query
  * @param Pointer to the query
  */
-int execute_query(query *, table_index *, bool *);
+middleman *execute_query(query *, table_index *, bool *);
+
+void calculate_projections(query *, table_index* , middleman *);
 
 #endif /* QUERY_H */

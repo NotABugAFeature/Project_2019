@@ -103,18 +103,26 @@ for (int i=0 ; i < N ; i++)
 		//
 		// q.predicates[0].p = &f;
 
-		q.predicates[0].type = Self_Join;
+		q.predicates[0].type = Join;
 		predicate_join j;
 		j.r.table_id = 0;
-		j.r.column_id = 1;
+		j.r.column_id = 0;
 
-		j.s.table_id = 0;
+		j.s.table_id = 1;
 		j.s.column_id = 1;
 		q.predicates[0].p = &j;
 
+		q.number_of_projections = 1;
+		q.projections = malloc((q.number_of_projections) * sizeof(projection));
+		q.projections[0].column_to_project.table_id = 0;
+		q.projections[0].column_to_project.column_id = 0;
+
+
 		bool b[2]={1,1};
 
-		execute_query(&q, &table, b);
+		middleman *m = execute_query(&q, &table, b);
+
+		calculate_projections(&q, &table, m);
 
 		free(q.predicates);
 

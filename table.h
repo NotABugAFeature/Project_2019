@@ -73,6 +73,7 @@ void delete_table_contents(table*);
  */
 table_index *insert_tables_from_list(string_list *);
 
+
 /**
  * Finds a table based on its id
  * @param table_index - a table_index struct that holds the tables

@@ -93,7 +93,6 @@ int analyze_query(char*, query*);
  * @return 0 On succes
  */
 int validate_query(query*, table_index*);
-
 /**
  * Optimizes a query by rearranging the predicates
  * @param query* The query to optimize
@@ -127,4 +126,24 @@ void print_query(query*);
  * @param query* Pointer to the query to print
  */
 void print_query_like_an_str(query* q);
+
+typedef struct{
+  middle_list *list;
+}middle_table;
+
+typedef struct{
+  uint32_t number_of_tables;
+  middle_table *tables;
+}middleman;
+
+
+
+/**
+ * Executes a query
+ * @param Pointer to the query
+ */
+middleman *execute_query(query *, table_index *, bool *);
+
+void calculate_projections(query *, table_index* , middleman *);
+
 #endif /* QUERY_H */

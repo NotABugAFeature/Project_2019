@@ -241,7 +241,6 @@ void remove_extra_chars(char* str, char delimiter)
     {
         return;
     }
-    //    printf("Before|%s|\n", str);
     size_t i=0;
     size_t j=0;
     //Remove leading spaces
@@ -255,7 +254,6 @@ void remove_extra_chars(char* str, char delimiter)
         j++;
     }
     str[j]=str[j+i];
-    //    printf("|%s|\n",str);
     //Remove trailing spaces
     i=0;
     j=0;
@@ -273,14 +271,12 @@ void remove_extra_chars(char* str, char delimiter)
         }
         str[end_index-i+1]='\0';
     }
-    //    printf("|%s|\n",str);
     //Remove duplicate spaces
     i=0;
     j=0;
     int space=0;
     while(str[i]!='\0')
     {
-        //        printf("%zu %zu |%s|\n",i,j,str);
         if(str[i]!=delimiter)
         {
             str[j]=str[i];
@@ -300,7 +296,6 @@ void remove_extra_chars(char* str, char delimiter)
         i++;
     }
     str[j]='\0';
-    //    printf("After|%s|\n", str);
 }
 
 int analyze_query(char*query_str, query*q)
@@ -323,7 +318,6 @@ int analyze_query(char*query_str, query*q)
     }
     //Check for illegal characters and for 2 |
     short pipe_counter=0;
-//    printf("|%s|\n", query_str);
     for(uint32_t i=0; query_str[i]!='\0'; i++)
     {
         if(query_str[i]<'0'||query_str[i]>'9')//Not a digit
@@ -359,12 +353,10 @@ int analyze_query(char*query_str, query*q)
     else
     {
         //Parse tables
-        //        printf("%d: %s\n", i, token);
         uint32_t spaces=0;
         //Remove the extra spaces
         remove_extra_chars(token, ' ');
         //Check for illegal characters in the table token
-        //    printf("|%s|\n",token);
         for(uint32_t i=0; token[i]!='\0'; i++)
         {
             if(token[i]<'0'||token[i]>'9')
@@ -415,7 +407,6 @@ int analyze_query(char*query_str, query*q)
             int j=0;
             while(subtoken!=NULL)
             {
-                //                printf("%d: %s\n", j, subtoken);
                 if(sscanf(subtoken, "%"PRIu32"", &q->table_ids[j])!=1)
                 {
                     fprintf(stderr, "analyze_query: tables sscanf error %s\n", subtoken);
@@ -437,7 +428,6 @@ int analyze_query(char*query_str, query*q)
     else
     {
         //Parse predicates
-        //        printf("%d: %s\n", i, token);
         //Remove the extra spaces
         remove_extra_chars(token, ' ');
         size_t token_size=strlen(token)+1;
@@ -449,10 +439,10 @@ int analyze_query(char*query_str, query*q)
         }
         strncpy(token_copy, token, token_size);
         remove_extra_chars(token_copy, '&');
-        //        printf("%d: %s\n", i, token_copy);
         if(strncmp(token_copy, token, token_size)!=0)
         {
             fprintf(stderr, "analyze_query: predicate error with & %s\n", token);
+            free(token_copy);
             return -13;
         }
         free(token_copy);
@@ -525,7 +515,6 @@ int analyze_query(char*query_str, query*q)
                 int j=0;
                 while(subtoken!=NULL)
                 {
-                    //                    printf("%d: %s\n", j, subtoken);
                     if(parse_predicate(subtoken, &q->predicates[j])!=0)
                     {
                         return -17;
@@ -568,14 +557,12 @@ int analyze_query(char*query_str, query*q)
     else
     {
         //Parse projections
-        //        printf("%d: %s\n", i, token);
         uint32_t spaces=0;
         uint32_t dots=0;
         uint32_t numbers=0;
         //Remove the extra spaces
         remove_extra_chars(token, ' ');
         //Check for illegal characters in the table token
-        //    printf("|%s|\n",token);
         for(uint32_t i=0; token[i]!='\0'; i++)
         {
             if(token[i]<'0'||token[i]>'9')
@@ -634,7 +621,6 @@ int analyze_query(char*query_str, query*q)
             int j=0;
             while(subtoken!=NULL)
             {
-                //                printf("%d: %s\n", j, subtoken);
                 if(sscanf(subtoken, "%"PRIu32".%"PRIu32"", &q->projections[j].column_to_project.table_index, &q->projections[j].column_to_project.column_index)!=2)
                 {
                     fprintf(stderr, "analyze_query: projection sscanf error %s\n", subtoken);
@@ -906,8 +892,6 @@ int validate_query(query*q, table_index* ti)
         fprintf(stderr, "validate_query: Error with the parameters\n");
         return -1;
     }
-    ////////////////////////////////////////////////Add 2 2 3|0.1=1.1 -> 2 3|0.0=0.1
-    ////////////////////////////////////////////////Add table -> check inside predicate
     //Add two arrays one uint32_t and one bool
     uint32_t* table_indexes=malloc(sizeof(uint32_t)*q->number_of_tables);
     if(table_indexes==NULL)
@@ -950,24 +934,12 @@ int validate_query(query*q, table_index* ti)
             }
         }
     }
-//    for(uint32_t i=0; i<q->number_of_tables; i++)
-//    {
-//        printf("%d ", table_used[i]);
-//    }
-//    printf("\n");
-//    for(uint32_t i=0; i<q->number_of_tables; i++)
-//    {
-//        printf("%u ", table_indexes[i]);
-//    }
-//    printf("\n");
     //Verify the predicates
     for(uint32_t i=0; i<q->number_of_predicates; i++)
     {
         if(q->predicates[i].type==Join)
         {
             //Check if the r table id exists
-            //            if(!check_table_array(q->table_ids,q->number_of_tables,((predicate_join*)q->predicates[i].p)->r.table_id))
-            //            printf("rt%"PRIu32" %"PRIu32"\n", q->number_of_tables, ((predicate_join*) q->predicates[i].p)->r.table_index);
             if(q->number_of_tables<=((predicate_join*) q->predicates[i].p)->r.table_index)
             {
                 free(table_indexes);
@@ -975,15 +947,12 @@ int validate_query(query*q, table_index* ti)
                 fprintf(stderr, "validate_query: Table r id in predicate join not in the table array\n");
                 return -5;
             }
-            //            table_used[((predicate_join*) q->predicates[i].p)->r.table_index]=true;
             //Change the table r index if duplicate
             if(((predicate_join*) q->predicates[i].p)->r.table_index!=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_index])
             {
                 ((predicate_join*) q->predicates[i].p)->r.table_index=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_index];
-                //                table_used[((predicate_join*) q->predicates[i].p)->r.table_index]=true;
             }
             table_used[((predicate_join*) q->predicates[i].p)->r.table_index]=true;
-            //            printf("rc%"PRIu32" %"PRIu32"\n", ((predicate_join*) q->predicates[i].p)->r.column_index, get_table(ti, q->table_ids[((predicate_join*) q->predicates[i].p)->r.table_index])->columns);
             //Check if the r column exists
             if(((predicate_join*) q->predicates[i].p)->r.column_index>=get_table(ti, q->table_ids[((predicate_join*) q->predicates[i].p)->r.table_index])->columns)
             {
@@ -993,8 +962,6 @@ int validate_query(query*q, table_index* ti)
                 return -6;
             }
             //Check if the s table id exists
-            //            printf("st%"PRIu32" %"PRIu32"\n", q->number_of_tables, ((predicate_join*) q->predicates[i].p)->s.table_index);
-            //            if(!check_table_array(q->table_ids,q->number_of_tables,((predicate_join*)q->predicates[i].p)->s.table_id))
             if(q->number_of_tables<=((predicate_join*) q->predicates[i].p)->s.table_index)
             {
                 free(table_indexes);
@@ -1002,15 +969,12 @@ int validate_query(query*q, table_index* ti)
                 fprintf(stderr, "validate_query: Table s id in predicate join not in the table array\n");
                 return -7;
             }
-            //            table_used[((predicate_join*) q->predicates[i].p)->s.table_index]=true;
             //Change the table s index if duplicate
             if(((predicate_join*) q->predicates[i].p)->s.table_index!=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_index])
             {
                 ((predicate_join*) q->predicates[i].p)->s.table_index=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_index];
-                //                table_used[((predicate_join*) q->predicates[i].p)->s.table_index]=true;
             }
             table_used[((predicate_join*) q->predicates[i].p)->s.table_index]=true;
-            //            printf("sc%"PRIu32" %"PRIu32"\n", ((predicate_join*) q->predicates[i].p)->s.column_index, get_table(ti, q->table_ids[((predicate_join*) q->predicates[i].p)->s.table_index])->columns);
             //Check if the s column exists
             if(((predicate_join*) q->predicates[i].p)->s.column_index>=get_table(ti, q->table_ids[((predicate_join*) q->predicates[i].p)->s.table_index])->columns)
             {
@@ -1040,7 +1004,6 @@ int validate_query(query*q, table_index* ti)
         else if(q->predicates[i].type==Filter)
         {
             //Check if the r table id exists
-            //            if(!check_table_array(q->table_ids,q->number_of_tables,((predicate_filter*)q->predicates[i].p)->r.table_id))
             if(q->number_of_tables<=((predicate_filter*) q->predicates[i].p)->r.table_index)
             {
                 free(table_indexes);
@@ -1048,12 +1011,10 @@ int validate_query(query*q, table_index* ti)
                 fprintf(stderr, "validate_query: Table r id in predicate filter not in the table array\n");
                 return -9;
             }
-            //            table_used[((predicate_filter*) q->predicates[i].p)->r.table_index]=true;
             //Change the table r index if duplicate
             if(((predicate_filter*) q->predicates[i].p)->r.table_index!=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_index])
             {
                 ((predicate_filter*) q->predicates[i].p)->r.table_index=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_index];
-                //                table_used[((predicate_filter*) q->predicates[i].p)->r.table_index]=true;
             }
             table_used[((predicate_filter*) q->predicates[i].p)->r.table_index]=true;
             //Check if the r column exists
@@ -1069,8 +1030,6 @@ int validate_query(query*q, table_index* ti)
     //Verify the projections
     for(uint32_t i=0; i<q->number_of_projections; i++)
     {
-        //        print_projection(&q->projections[i]);
-        //        if(!check_table_array(q->table_ids,q->number_of_tables,q->projections[i]->column_to_project->table_id))
         if(q->number_of_tables<=q->projections[i].column_to_project.table_index)
         {
             free(table_indexes);
@@ -1092,20 +1051,12 @@ int validate_query(query*q, table_index* ti)
             return -12;
         }
     }
-//    printf("Check\n");
     //Check if all the tables are used
     //If not remove them and change the indexes in the predicates and projections if needed
     for(uint32_t i=0; i<q->number_of_tables; i++)
     {
-//        for(uint32_t j=0; j<q->number_of_tables; j++)
-//        {
-//            printf("%u ", table_indexes[j]);
-//        }
-//        printf("\n");
         if(table_used[i]==false)//Table not used
         {
-//            printf("Not Used %"PRIu32"\n", i);
-            //            not_used++;
             for(uint32_t j=i+1; j<q->number_of_tables; j++)
             {
                 if(table_indexes[i]<=table_indexes[j]&&table_indexes[j]>0)
@@ -1115,24 +1066,19 @@ int validate_query(query*q, table_index* ti)
             }
         }
     }
-    //    for(uint32_t i=0; i<q->number_of_tables; i++)
-    //    {
     //Change the predicates and the projections
     for(uint32_t i=0; i<q->number_of_predicates; i++)
     {
-//        print_predicate(&q->predicates[i]);
         if(q->predicates[i].type==Join||q->predicates[i].type==Self_Join)
         {
             //Change the table r index if needed
             if(((predicate_join*) q->predicates[i].p)->r.table_index!=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_index])
             {
-//                printf("Old: %u New: %u\n", ((predicate_join*) q->predicates[i].p)->r.table_index, table_indexes[((predicate_join*) q->predicates[i].p)->r.table_index]);
                 ((predicate_join*) q->predicates[i].p)->r.table_index=table_indexes[((predicate_join*) q->predicates[i].p)->r.table_index];
             }
             //Change the table s index if needed
             if(((predicate_join*) q->predicates[i].p)->s.table_index!=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_index])
             {
-//                printf("Old: %u New: %u\n", ((predicate_join*) q->predicates[i].p)->s.table_index, table_indexes[((predicate_join*) q->predicates[i].p)->s.table_index]);
                 ((predicate_join*) q->predicates[i].p)->s.table_index=table_indexes[((predicate_join*) q->predicates[i].p)->s.table_index];
             }
         }
@@ -1141,7 +1087,6 @@ int validate_query(query*q, table_index* ti)
             //Change the table r index if needed
             if(((predicate_filter*) q->predicates[i].p)->r.table_index!=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_index])
             {
-//                printf("Old: %u New: %u\n", ((predicate_filter*) q->predicates[i].p)->r.table_index, table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_index]);
                 ((predicate_filter*) q->predicates[i].p)->r.table_index=table_indexes[((predicate_filter*) q->predicates[i].p)->r.table_index];
             }
         }
@@ -1154,7 +1099,6 @@ int validate_query(query*q, table_index* ti)
             q->projections[i].column_to_project.table_index=table_indexes[q->projections[i].column_to_project.table_index];
         }
     }
-    //    }
     //Remove duplicate predicates
     for(uint32_t i=0; i<q->number_of_predicates; i++)
     {
@@ -1173,24 +1117,11 @@ int validate_query(query*q, table_index* ti)
             }
         }
     }
-//    for(uint32_t i=0; i<q->number_of_tables; i++)
-//    {
-////        printf("%d ", table_used[i]);
-//    }
-//    printf("\n");
-//    for(uint32_t i=0; i<q->number_of_tables; i++)
-//    {
-//        printf("%u ", table_indexes[i]);
-//    }
-//    printf("\n");
-
     uint32_t removed=0;
     for(uint32_t i=0; i<q->number_of_tables; i++)
     {
         if(table_used[i+removed]==false)//Table not used
         {
-//            printf("%u %u\n", i, q->number_of_tables);
-            //            print_query(q);
             uint32_t z=i;
             for(uint32_t j=z+1; j<q->number_of_tables; j++, z++)
             {
@@ -1248,7 +1179,6 @@ counter_node* new_counter_node(void)
 }
 void print_counter_list(counter_list* cl)
 {
-//    printf("\t\tprint_counter_list:\n");
     if(cl==NULL)
     {
         printf("NULL Parameter\n");
@@ -1396,7 +1326,6 @@ void delete_counter_list(counter_list* list)
         list->number_of_nodes--;
     }
     free(list);
-//    printf("List Deleted\n");
 }
 int optimize_query(query*q,table_index* ti)
 {
@@ -1471,7 +1400,6 @@ int optimize_query(query*q,table_index* ti)
     {
         //Find the pair that is used most often
         uint32_t max_value=c_list->head->counter;
-        uint32_t max_index=0;
         if(!next_join||next_tc==NULL)
         {
             uint64_t lowest_row_count=table_row_count[c_list->head->tc.table_index];
@@ -1483,7 +1411,6 @@ int optimize_query(query*q,table_index* ti)
                 {
                     max_value=temp->counter;
                     next_tc=&temp->tc;
-                    max_index=z;
                     lowest_row_count=table_row_count[temp->tc.table_index];
                 }
                 temp=temp->next;
@@ -1492,7 +1419,6 @@ int optimize_query(query*q,table_index* ti)
         else
         {
             max_value=get_counter(c_list,next_tc);
-//            print_table_column(next_tc);
             if(max_value==0)
             {
                 delete_counter_list(c_list);
@@ -1501,13 +1427,10 @@ int optimize_query(query*q,table_index* ti)
                 return -7;
             }
         }
-//        printf("Max value %u index %u\n",max_value,max_index);
-//        print_table_column(next_tc);
         uint32_t p_index_to_swap=j;
         //Add all the predicates in the beginning
         for(uint32_t z=0;z<max_value;z++)
         {
-//            print_query(q);
             //Find the predicate that has a tc that is used the least ammount of times
             //Or if counter==1 the greater value
             for(uint32_t i=j; i<q->number_of_predicates; i++)
@@ -1555,14 +1478,14 @@ int optimize_query(query*q,table_index* ti)
                 {
                     delete_counter_list(c_list);
                     free(table_row_count);
-                    printf("optimize_query: counter_list_remove error");
+                    fprintf(stderr,"optimize_query: counter_list_remove error");
                     return -7;
                 }
                 if(counter_list_remove(c_list,&((predicate_join*)q->predicates[p_index_to_swap].p)->s)!=0)
                 {
                     delete_counter_list(c_list);
                     free(table_row_count);
-                    printf("optimize_query: counter_list_remove error");
+                    fprintf(stderr,"optimize_query: counter_list_remove error");
                     return -7;
                 }
                 swap_predicates(&q->predicates[j], &q->predicates[p_index_to_swap]);
@@ -1657,15 +1580,6 @@ int create_sort_array(query*q,bool**t_c_to_sort)
                 }
             }
         }
-//        for(uint32_t i=0;i<q->number_of_tables;i++)
-//        {
-//            for(uint32_t j=0;j<q->number_of_tables;j++)
-//            {
-//                printf("%d",joined_tables[i][j]);
-//            }
-//            printf("\n");
-//        }
-//        printf("%u\n",join_counter);
     }
     //Create the bool table
     bool* bool_array=malloc(sizeof(bool)*join_counter*2);

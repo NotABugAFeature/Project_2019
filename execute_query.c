@@ -7,25 +7,7 @@
 #include "query.h"
 #include "middle_list.h"
 #include "table.h"
-
-
-/**
- * Finds a table based on its id
- * @param table_index - a table_index struct that holds the tables
- * @param id - id of the table to find
- # @return pointer to the table, NULL if not found
- */
-table *get_table(table_index *ti, uint32_t id)
-{
-	for(int i=0; i<ti->num_tables; i++)
-	{
-		if(ti->tables[i].table_id == id)
-		{
-			return &(ti->tables[i]);
-		}
-	}
-	return NULL;
-}
+#include "execute_query.h"
 
 
 middleman *initialize_middleman(uint32_t number_of_tables)
@@ -334,7 +316,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 				printf("\n relR\n");
 	      for(int i=0; i<relR->num_tuples;i++)
 	      {
-	        printf("%d %d\n", relR->tuples[i].key, relR->tuples[i].row_id);
+	        printf("%" PRIu64 " %" PRIu64 "\n", relR->tuples[i].key, relR->tuples[i].row_id);
 	      }
 
 
@@ -376,7 +358,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 				printf("\n relS\n");
 	      for(int i=0; i<relS->num_tuples;i++)
 	      {
-	        printf("%d %d\n", relS->tuples[i].key, relS->tuples[i].row_id);
+	        printf("%" PRIu64 " %" PRIu64 "\n", relS->tuples[i].key, relS->tuples[i].row_id);
 	      }
 
 
@@ -567,7 +549,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 			for(int k = 0; k < q->number_of_predicates; k++)
 			{
 				for(int l = 0; l < q->number_of_tables+1; l++)
-					printf("%d ", concatenated_tables[k][l]);
+					printf("%" PRIu32 " ", concatenated_tables[k][l]);
 				printf("\n");
 			}
 
@@ -631,7 +613,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 			for(int k = 0; k < q->number_of_predicates; k++)
 			{
 				for(int l = 0; l < q->number_of_tables+1; l++)
-					printf("%d ", concatenated_tables[k][l]);
+					printf("%" PRIu32 " ", concatenated_tables[k][l]);
 				printf("\n");
 			}
 
@@ -691,7 +673,8 @@ void calculate_projections(query *q, table_index* index, middleman *m)
 
 		if(m->tables[p.column_to_project.table_id].list == NULL)
 		{
-			printf("NULL\n");
+			//TODO: Back to printf
+			fprintf(stderr, "\e[1;33mproj: NULL\e[0m\n");
 		}
 
 		table *original_table = get_table(index, q->table_ids[p.column_to_project.table_id]);
@@ -710,7 +693,8 @@ void calculate_projections(query *q, table_index* index, middleman *m)
 			list_temp = list_temp->next;
 		}
 
-		printf("%d\n", sum);
+		//TODO: Back to printf
+		fprintf(stderr, "\e[1;33mproj: %" PRIu64 "\e[0m\n", sum);
 	}
 
 }

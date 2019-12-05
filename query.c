@@ -1706,7 +1706,7 @@ int create_sort_array(query*q, bool**t_c_to_sort)
     return 0;
 }
 
-void move_predicate(query*q, uint32_t index_start, u_int32_t index_end)
+void move_predicate(query*q, uint32_t index_start, uint32_t index_end)
 {
     if(q==NULL||q->number_of_predicates==0||q->predicates==NULL||
             q->number_of_predicates<index_start||q->number_of_predicates<index_end||

@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include "query.h"
 #include "string_list.h"
+#include "execute_query.h"
 
 /**
  * Reads queries from stdin and returns them in a list
@@ -113,6 +114,10 @@ int main(void)
             t = clock() - t; 
             double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
             printf("Optimization took %f seconds to execute \n", time_taken); 
+
+            middleman *middle = execute_query(q, ti, bool_array);
+            calculate_projections(q, ti, middle);
+
             //Execute
             free(bool_array);
         }

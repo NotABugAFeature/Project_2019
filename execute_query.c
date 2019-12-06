@@ -178,6 +178,25 @@ int self_join_middle_bucket(predicate_join *join,
 }
 
 
+
+int original_self_join_middle_bucket(predicate_join *join,
+                         middle_list_bucket *bucket,
+                         table* table,
+                         middle_list *new_list)
+{
+  for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
+  {
+    if(table->array[join->r.column_id][bucket->row_ids[i]] == table->array[join->s.column_id][bucket->row_ids[i]])
+    {
+      if(append_to_middle_list(new_list, bucket->row_ids[i]))
+        return 1;
+    }
+  }
+  return 0;
+}
+
+
+
 middleman *execute_query(query *q, table_index* index, bool *sorting)
 {
   int bool_counter = 0;
@@ -633,15 +652,27 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 				return NULL;
       }
 
-			if(m->tables[join->r.table_id].list != NULL)
+			if(m->tables[join->r.table_id].list == NULL)
 			{
-				fprintf(stderr, "Execute query: Direct self-join failed\n");
-				return NULL;
-			}
+  			m->tables[join->r.table_id].list = create_middle_list();
+  			//check
+  			self_join_table(join, table, m->tables[join->r.table_id].list);
+      }
+      else
+      {
+        middle_list *new_list = create_middle_list();
 
-			m->tables[join->r.table_id].list = create_middle_list();
-			//check
-			self_join_table(join, table, m->tables[join->r.table_id].list);
+        middle_list_node *list_temp = m->tables[join->r.table_id].list->head;
+        while(list_temp != NULL)
+        {
+          //TODO check return
+          original_self_join_middle_bucket(join, &(list_temp->bucket), table, new_list);
+          list_temp = list_temp->next;
+        }
+
+        delete_middle_list(m->tables[join->r.table_id].list);
+        m->tables[join->r.table_id].list = new_list;
+      }
 		}
     else
     {

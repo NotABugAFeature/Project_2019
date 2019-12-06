@@ -17,9 +17,17 @@ string_list *read_tables(void)
 	while(1)
 	{
 		fgets(line, STRING_SIZE, stdin);
-		line[strlen(line) - 1] = '\0';
+		if(line[strlen(line) - 1] == '\n')
+		{
+			line[strlen(line) - 1] = '\0';
+			if(line[strlen(line) - 1] == '\r')
+			{
+				line[strlen(line) - 1] = '\0';
+			}
+		}
 		if(strcmp(line, "Done") == 0 || feof(stdin))
 		{
+			fprintf(stderr, "YES\n");
 			break;
 		}
 		string_list_insert(list, line);

@@ -28,7 +28,15 @@ string_list *read_batch(void)
         {
             return NULL;
         }
-        line[strlen(line)-1]='\0';
+        if(line[strlen(line) - 1] == '\n')
+        {
+            line[strlen(line) - 1] = '\0';
+            if(line[strlen(line) - 1] == '\r')
+            {
+                line[strlen(line) - 1] = '\0';
+            }
+        }
+
         if(strcmp(line, "F")==0||strcmp(line, "f")==0)
         {
             break;

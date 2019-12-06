@@ -28,8 +28,10 @@ middleman *initialize_middleman(uint32_t number_of_tables)
     return NULL;
   }
 
-  for(int i = 0; i < m->number_of_tables; i++)
+  for(uint32_t i= 0; i < m->number_of_tables; i++)
+  {
     m->tables[i].list = NULL;
+  }
 
   return m;
 }
@@ -40,7 +42,7 @@ int filter_middle_bucket(predicate_filter *filter,
                          table* table,
                          middle_list *new_list)
 {
-  for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
+  for(uint32_t i = 0; i < bucket->index_to_add_next; i++)
   {
     if( (filter->filter_type == Less && table->array[filter->r.column_id][bucket->row_ids[i]] < filter->value)||
         (filter->filter_type == Less_Equal && table->array[filter->r.column_id][bucket->row_ids[i]] <= filter->value)||
@@ -63,7 +65,7 @@ int filter_original_table(predicate_filter *filter,
                           middle_list *new_list)
 {
 
-  for(unsigned int i = 0; i < table->rows; i++)
+  for(uint64_t i = 0; i < table->rows; i++)
   {
     if( (filter->filter_type == Less && table->array[filter->r.column_id][i] < filter->value)||
         (filter->filter_type == Less_Equal && table->array[filter->r.column_id][i] <= filter->value)||
@@ -99,7 +101,7 @@ relation *construct_relation_from_table(table * table, uint64_t column_id)
     return NULL;
   }
 
-  for(unsigned int i = 0; i < rel->num_tuples; i++)
+  for(uint64_t i = 0; i < rel->num_tuples; i++)
   {
     rel->tuples[i].key = table->array[column_id][i];
     rel->tuples[i].row_id = i;
@@ -115,7 +117,7 @@ void construct_relation_from_middleman(middle_list_bucket *bucket,
                                        uint64_t column_id,
                                        uint64_t *counter)
 {
-  for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
+  for(uint32_t i = 0; i < bucket->index_to_add_next; i++)
   {
     rel->tuples[*counter].key = table->array[column_id][bucket->row_ids[i]];
     rel->tuples[*counter].row_id = i;
@@ -127,7 +129,7 @@ void construct_relation_from_middleman(middle_list_bucket *bucket,
 /* TODO : not sure if this is correct */
 int update_middle_bucket(middle_list_bucket **lookup, middle_list_bucket *bucket, middle_list *updated_list)
 {
-  for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
+  for(uint32_t i = 0; i < bucket->index_to_add_next; i++)
   {
     middle_list_bucket *target = lookup[(bucket->row_ids[i])/middle_LIST_BUCKET_SIZE];
     //check append
@@ -139,7 +141,7 @@ int update_middle_bucket(middle_list_bucket **lookup, middle_list_bucket *bucket
 
 int self_join_table(predicate_join *join, table* table, middle_list *list)
 {
-	for(unsigned int i = 0; i < table->rows; i++)
+	for(uint64_t i = 0; i < table->rows; i++)
 	{
 		if(table->array[join->r.column_id][i] == table->array[join->s.column_id][i])
 		{
@@ -160,7 +162,7 @@ int self_join_middle_bucket(predicate_join *join,
 														middle_list *list_r,
 														middle_list *list_s)
 {
-	for(unsigned int i = 0; i < bucket_r->index_to_add_next; i++)
+	for(uint32_t i = 0; i < bucket_r->index_to_add_next; i++)
   {
 		if(table_r->array[join->r.column_id][bucket_r->row_ids[i]] ==
 					table_s->array[join->s.column_id][bucket_s->row_ids[i]])
@@ -199,17 +201,17 @@ int original_self_join_middle_bucket(predicate_join *join,
 
 middleman *execute_query(query *q, table_index* index, bool *sorting)
 {
+    //check for argument format
+  if(q==NULL||index==NULL||sorting==NULL)
+  {
+        fprintf(stderr, "Execute query: Null parameters\n");
+        return NULL;
+  }
   int bool_counter = 0;
 	uint32_t concatenated_tables[q->number_of_predicates][q->number_of_tables+1];
-	for(int i = 0; i < q->number_of_predicates; i++)
+	for(uint32_t i = 0; i < q->number_of_predicates; i++)
 			concatenated_tables[i][0] = 0;
-
-  //check for argument format
-  if(q == NULL || index == NULL || sorting == NULL)
-  {
-    fprintf(stderr, "Execute query: Null parameters\n");
-    return NULL;
-  }
+ 
 
   //initialize middleman
   middleman *m = initialize_middleman(q->number_of_tables);
@@ -217,7 +219,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
   FILE *ff = stdout;
 
   //execute every predicate sequentially
-  for(int i = 0; i < q->number_of_predicates; i++)
+  for(uint32_t i = 0; i < q->number_of_predicates; i++)
   {
     //filter
     if(q->predicates[i].type == Filter)
@@ -237,10 +239,16 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         //empty list so we need to take the data from the original table
         m->tables[filter->r.table_id].list = create_middle_list();
         //TODO check return
-        filter_original_table(filter, original_table, m->tables[filter->r.table_id].list);
+        if(filter_original_table(filter, original_table, m->tables[filter->r.table_id].list))
+                {
+                    fprintf(stderr, "Execute filter_original_table: Error\n");
+                    return NULL;
+                }
       }
       else
       {
+	      if(m->tables[filter->r.table_id].list->number_of_nodes>0)
+                {
         //list not empty so we modify it
 
         //create new list
@@ -250,12 +258,17 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         while(list_temp != NULL)
         {
           //TODO check return
-          filter_middle_bucket(filter, &(list_temp->bucket), original_table, new_list);
+          if(filter_middle_bucket(filter, &(list_temp->bucket), original_table, new_list))
+                        {
+                            fprintf(stderr, "Execute filter_middle_bucket: Error\n");
+                            return NULL;
+                        }
           list_temp = list_temp->next;
         }
 
         delete_middle_list(m->tables[filter->r.table_id].list);
         m->tables[filter->r.table_id].list = new_list;
+	      }
       }
     }
     else if(q->predicates[i].type == Join || (q->predicates[i].type == Self_Join &&
@@ -315,6 +328,8 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 	        }
 
 	        relR->num_tuples = middle_list_get_number_of_records(m->tables[join->r.table_id].list);
+		      if(relR->num_tuples>0)
+                    {
 	        relR->tuples = malloc((relR->num_tuples)*sizeof(tuple));
 	        if(relR == NULL)
 	        {
@@ -330,6 +345,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 	          construct_relation_from_middleman(&(list_temp->bucket), table_r, relR, join->r.column_id, &counter);
 	          list_temp = list_temp->next;
 	        }
+		      }
 	      }
 
 				printf("\n relR\n");
@@ -357,6 +373,8 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 	        }
 
 	        relS->num_tuples = middle_list_get_number_of_records(m->tables[join->s.table_id].list);
+		      if(relS->num_tuples>0)
+                    {
 	        relS->tuples = malloc((relS->num_tuples)*sizeof(tuple));
 	        if(relS == NULL)
 	        {
@@ -372,6 +390,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 	          construct_relation_from_middleman(&(list_temp->bucket), table_s, relS, join->s.column_id, &counter);
 	          list_temp = list_temp->next;
 	        }
+		      }
 	      }
 
 				printf("\n relS\n");
@@ -430,7 +449,8 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 				{
 						//create new list
 						middle_list *new_list = create_middle_list();
-
+						if(result_R->number_of_nodes>0)
+                    				{
 						middle_list_bucket **lookup = construct_lookup_table(m->tables[join->r.table_id].list);
 						//get the new list
 						middle_list_node *list_temp = result_R->head;
@@ -440,7 +460,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 							update_middle_bucket(lookup, &(list_temp->bucket), new_list);
 							list_temp = list_temp->next;
 						}
-
+						}
 						//print_middle_list(new_list, ff);
 						delete_middle_list(m->tables[join->r.table_id].list);
 						m->tables[join->r.table_id].list = new_list;
@@ -456,7 +476,8 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 				{
 					//create new list
 					middle_list *new_list = create_middle_list();
-
+					if(result_R->number_of_nodes>0)
+                    			{
 					middle_list_bucket **lookup = construct_lookup_table(m->tables[join->s.table_id].list);
 					//get the new list
 					middle_list_node *list_temp = result_S->head;
@@ -466,7 +487,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 						update_middle_bucket(lookup, &(list_temp->bucket), new_list);
 						list_temp = list_temp->next;
 					}
-
+					}
 					//print_middle_list(new_list, ff);
 					delete_middle_list(m->tables[join->s.table_id].list);
 					m->tables[join->s.table_id].list = new_list;
@@ -702,10 +723,11 @@ void calculate_projections(query *q, table_index* index, middleman *m)
 	{
 		projection p = q->projections[i];
 
-		if(m->tables[p.column_to_project.table_id].list == NULL)
+		if(m->tables[p.column_to_project.table_id].list==NULL||m->tables[p.column_to_project.table_id].list->number_of_nodes==0)
 		{
 			//TODO: Back to printf
 			fprintf(stderr, "\e[1;33mproj: NULL\e[0m\n");
+			continue;
 		}
 
 		table *original_table = get_table(index, q->table_ids[p.column_to_project.table_id]);

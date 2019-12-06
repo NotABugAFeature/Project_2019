@@ -144,6 +144,14 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
  */
 int radix_sort(relation *array)
 {
+	if(array==NULL)
+    	{
+        	return -1;
+    	}
+	if(array->num_tuples==0)
+    	{
+        	return 0;
+    	}
 	//Create array to help with the sorting
 	relation *auxiliary = malloc(sizeof(relation));
 	if(auxiliary == NULL)

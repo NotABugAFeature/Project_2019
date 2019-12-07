@@ -1,38 +1,29 @@
 #Makefile for Project_2019_1
 
-CC=gcc -std=c11
+CC=gcc -std=gnu11
 
-FLAGS= -Wall
+FLAGS= -Wall -g
 TESTFLAGS= -Wall -lcunit
 
 ifeq ($(IO),true) 
 
-FLAGS=$(CFLAGS) -D_SORTEDTOFILE_
+FLAGS+= -D_SORTEDTOFILE_
 
 endif
 
 all: join
 	@echo "Use (-f) ./join path_to_relR path_to_relS  To Start!"
 
-tests: quicksort_test radix_sort_test relation_test result_list_test sort_merge_join_test
+tests: query_test test
 
-quicksort_test: quicksort_test.o quicksort.o relation.o
-	$(CC) $(TESTFLAGS) -o quicksort_test quicksort_test.o quicksort.o relation.o
-    
-radix_sort_test: radix_sort_test.o radix_sort.o quicksort.o
-	$(CC) $(TESTFLAGS) -o radix_sort_test radix_sort_test.o radix_sort.o quicksort.o
+test: tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o result_list.o table.o string_list.o
+	$(CC) -o test tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o result_list.o table.o string_list.o $(TESTFLAGS)
 
-relation_test: relation_test.o relation.o
-	$(CC) $(TESTFLAGS) -o relation_test relation_test.o relation.o
-    
-result_list_test: result_list_test.o result_list.o
-	$(CC) $(TESTFLAGS) -o result_list_test result_list_test.o result_list.o
-    
-sort_merge_join_test: sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o result_list.o relation.o
-	$(CC) $(TESTFLAGS) -o sort_merge_join_test sort_merge_join_test.o sort_merge_join.o radix_sort.o quicksort.o result_list.o relation.o
+query_test: query_test.o query.o table.o
+	$(CC) $(TESTFLAGS) -o query_test query_test.o query.o table.o
 
-join: main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o
-	$(CC) $(FLAGS) -o join main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o
+join: main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o queue.o query.o
+	$(CC) $(FLAGS) -o join main.o sort_merge_join.o radix_sort.o quicksort.o relation.o result_list.o queue.o query.o
 
 main.o: main.c
 	$(CC) $(FLAGS) -c main.c
@@ -40,7 +31,7 @@ main.o: main.c
 sort_merge_join.o: sort_merge_join.c sort_merge_join.h
 	$(CC) $(FLAGS) -c sort_merge_join.c
 
-radix_sort.o: radix_sort.c radix_sort.h quicksort.h relation.h
+radix_sort.o: radix_sort.c radix_sort.h quicksort.h queue.h relation.h
 	$(CC) $(FLAGS) -c radix_sort.c
 
 quicksort.o: quicksort.c quicksort.h relation.h
@@ -52,20 +43,20 @@ relation.o: relation.c relation.h
 result_list.o: result_list.c result_list.h
 	$(CC) $(FLAGS) -c result_list.c
 
-quicksort_test.o: ./tests/quicksort_test.c 
-	$(CC) $(FLAGS) -c ./tests/quicksort_test.c
-    
-radix_sort_test.o: ./tests/radix_sort_test.c
-	$(CC) $(FLAGS) -c ./tests/radix_sort_test.c
+queue.o: queue.c queue.h
+	$(CC) $(FLAGS) -c queue.c
 
-relation_test.o: ./tests/relation_test.c
-	$(CC) $(FLAGS) -c ./tests/relation_test.c
-    
-result_list_test.o: ./tests/result_list_test.c
-	$(CC) $(FLAGS) -c ./tests/result_list_test.c
-    
-sort_merge_join_test.o: ./tests/sort_merge_join_test.c
-	$(CC) $(FLAGS) -c ./tests/sort_merge_join_test.c
+table.o: table.c table.h
+	$(CC) $(FLAGS) -c table.c
+
+query_test.o: ./tests/query_test.c
+	$(CC) $(FLAGS) -c ./tests/query_test.c
+
+string_list.o: string_list.c string_list.h
+	$(CC) $(FLAGS) -c string_list.c
+
+tests.o: ./tests/tests.c
+	$(CC) $(FLAGS) -c ./tests/tests.c
 
 clean:
-	rm -f *.o join quicksort_test radix_sort_test relation_test result_list_test sort_merge_join_test
+	rm -f *.o join test query_test

@@ -2,112 +2,129 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "sort_merge_join.h"
+#include "middle_list.h"
+#include "table.h"
+#include "query.h"
 
-int main(int argc, char **argv)
+int main(void)
 {
-	char *file1 = NULL, *file2 = NULL;
-	bool result_in_file = false;
-	if(argc != 3 && argc != 4)
-	{
-		fprintf(stderr, "Usage: %s (-f) <table1_file> <table2_file>\n", argv[0]);
-		return -1;
-	}
 
-	for(int i=1; i<argc; i++)
-	{
-		if(strcmp(argv[i], "-f") == 0)
-		{
-			result_in_file = true;
-		}
-		else
-		{
-			if(file1 != NULL)
-			{
-				file2 = argv[i];
-				continue;
-			}
-			file1 = argv[i];
-		}
-	}
+	// FILE *ff = stdout;
+	// middle_list* dd = create_middle_list();
+	// append_to_middle_list(dd, 2);
+	// append_to_middle_list(dd, 3);
+	// append_to_middle_list(dd, 4);
+	// append_to_middle_list(dd, 5);
+	// append_to_middle_list(dd, 6);
+	// print_middle_list(dd, ff);
 
-	if(file1 == NULL || file2 == NULL)
-	{
-		fprintf(stderr, "Usage: %s (-f) <table1_file> <table2_file>\n", argv[0]);
-		return -1;
-	}
-/*
-	table *r_table = read_from_file(argv[1]);
-	relation *r = malloc(sizeof(relation));
-	if(r == NULL)
-	{
-		perror("main: malloc error");
-		return -2;
-	}
-	r->tuples = NULL; r->num_tuples = 0;
-    create_relation_from_table(&r_table->array[0][0], r_table->columns, r);
+	table_index table;
+	table.num_tables = 3;
+	table.tables = malloc(3*sizeof(table));
 
-    table *s_table = read_from_file(argv[2]);
-    relation *s = malloc(sizeof(relation));
-    if(s == NULL)
-    {
-    	perror("main: malloc error");
-    	return -2;
-    }
-    s->tuples = NULL; s->num_tuples = 0;
-    create_relation_from_table(&s_table->array[0][0], s_table->columns, s);
-*/
-	relation *r = relation_from_file(file1);
-	if(r == NULL)
-	{
-		fprintf(stderr, "Error in relation_from_file\n");
-		return -2;
-	}
+	table.tables[0].table_id = 0;
+	table.tables[0].rows = 10;
+	table.tables[0].columns = 2;
 
-	relation *s = relation_from_file(file2);
-	if(s == NULL)
-	{
-		fprintf(stderr, "Error in relation_from_file\n");
-		return -2;
-	}
+		int N = 10, M = 2;
+	table.tables[0].array  = (uint64_t **)malloc(N * sizeof(uint64_t *));
+   for (int i=0 ; i < N ; i++)
+	 {
+		 *(table.tables[0].array+i) = malloc(M * sizeof(uint64_t));
+	 }
 
-    result_list *results = sort_merge_join(r, s);
-    if(results == NULL)
-    {
-    	fprintf(stderr, "Error in sort_merge_join\n");
-    	return -3;
-    }
+	 // for (int i=0 ; i < N ; i++)
+	 // {
+		//  for (int j=0 ; j < M ; j++)
+		//  		table.tables[0].array[i][j]=i;
+	 // }
 
-    if(result_in_file)
-    {
-	printf("\nWriting results to file: join_result.txt\n");
-	FILE *fp = fopen("join_result.txt", "w");
-	if(fp == NULL)
-	{
-	    perror("main: fopen error");
-	    return -4;
-	}
-	print_result_list(results, fp);
-	fclose(fp);
-    }
-    else
-    {
-	printf("\nResults:\n");
-	print_result_list(results, stdout);
-	//printf("Number Of Records: %"PRIu64"\n",result_list_get_number_of_records(results));
-	//printf("Number Of Buckets: %u\n",result_list_get_number_of_buckets(results));
-    }
-    printf("\n");
+	 for (int i=0 ; i < N ; i++)
+	 {
+		 	table.tables[0].array[i][0]=i;
+			table.tables[0].array[i][1]=i+1;
+	 }
 
-    delete_result_list(results);
-    //free(r_table);
-    //free(s_table);
+	 for (int i=0 ; i < N ; i++)
+	 {
+		 for (int j=0 ; j < M ; j++)
+		 		printf("%d  ", table.tables[0].array[i][j]);
+			printf("\n");
+	 }
+/*************************/
+table.tables[1].table_id = 1;
+table.tables[1].rows = 10;
+table.tables[1].columns = 2;
 
-    free(r->tuples);
-    free(r);
 
-    free(s->tuples);
-    free(s);
+table.tables[1].array  = (uint64_t **)malloc(N * sizeof(uint64_t *));
+for (int i=0 ; i < N ; i++)
+{
+ *(table.tables[1].array+i) = malloc(M * sizeof(uint64_t));
+}
+
+// for (int i=0 ; i < N ; i++)
+// {
+//  for (int j=0 ; j < M ; j++)
+//  		table.tables[0].array[i][j]=i;
+// }
+
+for (int i=0 ; i < N ; i++)
+{
+	table.tables[1].array[i][0]=i;
+	table.tables[1].array[i][1]=i+1;
+}
+printf("\n\n\n");
+for (int i=0 ; i < N ; i++)
+{
+	for (int j=0 ; j < M ; j++)
+		 printf("%d  ", table.tables[1].array[i][j]);
+	 printf("\n");
+}
+/****************/
+
+
+		query q;
+		q.number_of_tables = 2;
+		q.table_ids = malloc((q.number_of_tables)*sizeof(uint32_t));
+		q.table_ids[0] = 0;
+		q.table_ids[1] = 1;
+		q.number_of_predicates = 1;
+		q.predicates = malloc((q.number_of_predicates) * sizeof(predicate));
+
+		//filter
+
+		// q.predicates[0].type = Filter;
+		// predicate_filter f;
+		// f.filter_type = Greater_Equal;
+		// f.value = 5;
+		// f.r.table_id = 0;
+		// f.r.column_id = 1;
+		//
+		// q.predicates[0].p = &f;
+
+		q.predicates[0].type = Join;
+		predicate_join j;
+		j.r.table_id = 0;
+		j.r.column_id = 0;
+
+		j.s.table_id = 1;
+		j.s.column_id = 1;
+		q.predicates[0].p = &j;
+
+		q.number_of_projections = 1;
+		q.projections = malloc((q.number_of_projections) * sizeof(projection));
+		q.projections[0].column_to_project.table_id = 0;
+		q.projections[0].column_to_project.column_id = 0;
+
+
+		bool b[2]={1,1};
+
+		middleman *m = execute_query(&q, &table, b);
+
+		calculate_projections(&q, &table, m);
+
+		free(q.predicates);
 
     return 0;
 }

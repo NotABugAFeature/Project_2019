@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include "radix_sort.h"
+#include "queue.h"
 
 
 //----Histogram----
@@ -133,14 +134,171 @@ int copy_relation_with_psum(relation* source, relation* target,uint64_t index_st
 }
 
 
+
+
 /**
  * Implements radix sort
+ * in bfs order, using a queue
+ * @param relation *array The array to be sorted
+ * @return 0 for success, <0 for error
+ */
+int radix_sort(relation *array)
+{
+	if(array==NULL)
+    	{
+        	return -1;
+    	}
+	if(array->num_tuples==0)
+    	{
+        	return 0;
+    	}
+	//Create array to help with the sorting
+	relation *auxiliary = malloc(sizeof(relation));
+	if(auxiliary == NULL)
+	{
+		perror("radix_sort: malloc error");
+		return -1;
+	}
+	auxiliary->num_tuples = array->num_tuples;
+	auxiliary->tuples = malloc(array->num_tuples*sizeof(tuple));
+	if(auxiliary->tuples == NULL)
+	{
+		perror("radix_sort: malloc error");
+		return -1;
+	}
+
+	window *win, *new_win;
+	queue *q = create_queue();
+	if(q == NULL)
+	{
+		fprintf(stderr, "radix_sort: create_queue error\n");
+		return -2;
+	}
+
+	win = malloc(sizeof(window));
+	if(win == NULL)
+	{
+		perror("radix_sort: malloc error");
+		return -1;
+	}
+	win->start = 0;
+	win->end = array->num_tuples;
+	win->byte = 1;
+	push(q, win);
+
+	while(!is_empty(q))
+	{
+		new_win = pop(q);
+		if(new_win == NULL)
+		{
+			fprintf(stderr, "radix_sort: pop error\n");
+			return -2;
+		}
+
+		//Change of level, swap relations
+		if(new_win->byte > win->byte)
+		{
+			relation *temp = array;
+			array = auxiliary;
+			auxiliary = temp;
+		}
+
+		if(win != new_win)
+		{
+			free(win);
+			win = new_win;
+		}
+
+		//Check if less than 64KB
+		if((win->end - win->start)*sizeof(tuple) < 64*1024 || win->byte > 8)
+		{
+			//Choose whether to place result in array or auxiliary array
+			if(win->byte % 2 == 0)
+			{
+				quicksort(array->tuples, win->start, win->end-1);
+				copy_relation(array, auxiliary, win->start, win->end);
+			}
+			else
+			{
+				quicksort(array->tuples, win->start, win->end-1);
+			}
+		}
+		else
+		{
+			uint64_t *hist = malloc(HIST_SIZE*sizeof(uint64_t));
+			if(hist == NULL)
+			{
+				perror("radix_sort: malloc error");
+				return -1;
+			}
+			
+			for(uint64_t i=0; i<HIST_SIZE; i++)
+			{
+				hist[i] = 0;
+			}
+			
+			int res = create_histogram(array, win->start, win->end, hist, win->byte);
+			if(res)
+				return -3;
+			
+			res = transform_to_psum(hist);
+			if(res)
+				return -4;
+			
+			copy_relation_with_psum(array, auxiliary, win->start, win->end, hist, win->byte);
+			
+			//Recursively sort every part of the array
+			uint64_t start = win->start;
+			for(uint64_t i=0; i<HIST_SIZE; i++)
+			{
+				if(start < win->start+hist[i])
+				{
+					new_win = malloc(sizeof(window));
+					if(new_win == NULL)
+					{
+						perror("radix_sort: malloc error");
+						return -1;
+					}
+					new_win->start = start;
+					new_win->end = win->start + hist[i];
+					new_win->byte = win->byte + 1;
+					push(q, new_win);
+				}
+				if(hist[i]+win->start > win->end)
+				{
+					break;
+				}
+				start = win->start + hist[i];
+			}
+			free(hist);
+		}
+	}
+	
+	if(win->byte % 2 == 0)
+	{
+		relation *temp = array;
+		array = auxiliary;
+		auxiliary = temp;
+	}
+
+	free(win);
+
+	free(q);
+	free(auxiliary->tuples);
+	free(auxiliary);
+	return 0;
+}
+
+
+/**
+ * Implements radix sort in recursive way
  * @param unsigned short byte Which byte is used to create the histogram
  * @param relation *array The array to be sorted
  * @param relation *auxiliary Auxiliary array for the sorting, same size as array
  * @param uint64_t start_index The starting index of the relation
  * @param uint64_t end_index The ending index of the relation
  * @return 0 for success, <0 for error
+ * Not used
  */
 int radix_sort_recursive(unsigned short byte, relation *array, relation *auxiliary, uint64_t start_index, uint64_t end_index)
 {
@@ -211,8 +369,9 @@ int radix_sort_recursive(unsigned short byte, relation *array, relation *auxilia
  * Sets up and executes the recursive radix sort
  * @param relation *array The array to be sorted
  * @return 0 for success, <0 for error
+ * Not used
  */
-int radix_sort(relation *array)
+int radix_sort_recursive_setup(relation *array)
 {
 	//Create array to help with the sorting
 	relation *auxiliary = malloc(sizeof(relation));

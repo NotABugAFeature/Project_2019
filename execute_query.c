@@ -621,6 +621,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 						concatenated_tables[m][1] = join->r.table_id;
 						concatenated_tables[m][2] = join->s.table_id;
 						concatenated_tables[m][0] = 2;
+						break;
 					}
 				}
 			}

@@ -102,7 +102,7 @@ void delete_middle_list(middle_list* list)
         //printf("Node Deleted\n");
     }
     free(list);
-    printf("List Deleted\n");
+    //printf("List Deleted\n");
 }
 
 void print_middle_list(middle_list* list,FILE*output)

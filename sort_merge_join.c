@@ -56,7 +56,7 @@ int final_join(middle_list* list_t, middle_list* list_s, relation *t, relation *
  * @param relation *relR The first relation
  * @param relation *relS The second relation
  * @return Resulting table in result_list format
- */ /*
+ */
 result_list *sort_merge_join(relation *relR, relation *relS)
 {
     if(relR==NULL||relS==NULL||relR->tuples==NULL||relS->tuples==NULL)
@@ -100,4 +100,3 @@ result_list *sort_merge_join(relation *relR, relation *relS)
 
     return results;
 }
-*/

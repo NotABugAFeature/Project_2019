@@ -19,13 +19,17 @@ void construct_relation_from_middleman(middle_list_bucket *bucket,
                                        uint64_t *counter);
 int update_middle_bucket(middle_list_bucket **lookup, middle_list_bucket *bucket, middle_list *updated_list);
 int self_join_table(predicate_join *join, table* table, middle_list *list);
-int self_join_middle_bucket(predicate_join *join,
-													  table *table_r,
-	 													table *table_s,
-														middle_list_bucket *bucket_r,
-														middle_list_bucket *bucket_s,
-														middle_list *list_r,
-														middle_list *list_s);
+
+int self_join_middle_bucket(predicate_join *,
+													  table *,
+	 													table *,
+														middle_list_bucket *,
+														middle_list_bucket *,
+														middle_list *,
+														middle_list *,
+                            middle_list *,
+                            uint32_t *);
+
 middleman *execute_query(query *q, table_index* index, bool *sorting);
 void calculate_sum(projection p, middle_list_bucket *bucket, table *table, uint64_t *sum);
 void calculate_projections(query *q, table_index* index, middleman *m);

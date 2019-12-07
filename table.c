@@ -27,6 +27,7 @@ string_list *read_tables(void)
 		}
 		if(strcmp(line, "Done") == 0 || feof(stdin))
 		{
+			fprintf(stderr, "YES\n");
 			break;
 		}
 		string_list_insert(list, line);

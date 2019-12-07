@@ -124,6 +124,12 @@ int main(void)
             printf("Optimization took %f seconds to execute \n", time_taken); 
 
             middleman *middle = execute_query(q, ti, bool_array);
+
+            for(int i=0; i<middle->number_of_tables; i++)
+            {
+                printf("i=%d : %d\n", i, middle_list_get_number_of_records(middle->tables[i].list));
+            }
+            
             calculate_projections(q, ti, middle);
 
             //Execute

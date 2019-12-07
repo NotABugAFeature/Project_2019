@@ -1,6 +1,6 @@
 #ifndef SORT_MERGE_JOIN_H
 #define SORT_MERGE_JOIN_H
-//#include "result_list.h"
+#include "result_list.h"
 #include "middle_list.h"
 #include "radix_sort.h"
 
@@ -22,6 +22,6 @@ int final_join(middle_list*, middle_list*, relation *, relation *);
  * @param relation *relR The first relation
  * @param relation *relS The second relation
  * @return Resulting table in result_list format
- */ /*
-result_list *sort_merge_join(relation *relR, relation *relS); */
+ */
+result_list *sort_merge_join(relation *relR, relation *relS);
 #endif	// SORT_MERGE_JOIN_H

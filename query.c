@@ -995,17 +995,17 @@ int validate_query(query*q, table_index* ti)
             return -4;
         }
         //Check for duplicates
-        if(table_indexes[i]==i)//Not a duplicate
-        {
-            for(uint32_t j=i+1; j<q->number_of_tables; j++)
-            {
-                if(q->table_ids[i]==q->table_ids[j])
-                {//Duplicate table Ids
-                    printf("Duplicate table ids\n");
-                    table_indexes[j]=i;
-                }
-            }
-        }
+//        if(table_indexes[i]==i)//Not a duplicate
+//        {
+//            for(uint32_t j=i+1; j<q->number_of_tables; j++)
+//            {
+//                if(q->table_ids[i]==q->table_ids[j])
+//                {//Duplicate table Ids
+//                    printf("Duplicate table ids\n");
+//                    table_indexes[j]=i;
+//                }
+//            }
+//        }
     }
     //Verify the predicates
     for(uint32_t i=0; i<q->number_of_predicates; i++)
@@ -1540,6 +1540,7 @@ int optimize_query(query*q, table_index* ti)
                     {
                         next_join=false;
                         p_index_to_swap=i;
+                        break;
                     }
                 }
                 else if(((predicate_join*) q->predicates[i].p)->s.table_id==next_tc->table_id&&((predicate_join*) q->predicates[i].p)->s.column_id==next_tc->column_id)
@@ -1552,28 +1553,27 @@ int optimize_query(query*q, table_index* ti)
                     {
                         p_index_to_swap=i;
                         next_join=false;
+                        break;
                     }
                 }
             }
+            //Remove from list
+            if(counter_list_remove(c_list, &((predicate_join*) q->predicates[p_index_to_swap].p)->r)!=0)
             {
-                //Remove from list
-                if(counter_list_remove(c_list, &((predicate_join*) q->predicates[p_index_to_swap].p)->r)!=0)
-                {
-                    delete_counter_list(c_list);
-                    free(table_row_count);
-                    fprintf(stderr, "optimize_query: counter_list_remove error");
-                    return -7;
-                }
-                if(counter_list_remove(c_list, &((predicate_join*) q->predicates[p_index_to_swap].p)->s)!=0)
-                {
-                    delete_counter_list(c_list);
-                    free(table_row_count);
-                    fprintf(stderr, "optimize_query: counter_list_remove error");
-                    return -7;
-                }
-                swap_predicates(&q->predicates[j], &q->predicates[p_index_to_swap]);
-                j++;
+                delete_counter_list(c_list);
+                free(table_row_count);
+                fprintf(stderr, "optimize_query: counter_list_remove error");
+                return -7;
             }
+            if(counter_list_remove(c_list, &((predicate_join*) q->predicates[p_index_to_swap].p)->s)!=0)
+            {
+                delete_counter_list(c_list);
+                free(table_row_count);
+                fprintf(stderr, "optimize_query: counter_list_remove error");
+                return -7;
+            }
+            swap_predicates(&q->predicates[j], &q->predicates[p_index_to_swap]);
+            j++;
         }
     }
     //Create the bool table

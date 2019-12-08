@@ -56,4 +56,10 @@ char *string_list_remove(string_list *);
  */
 void string_list_print(string_list *);
 
+/**
+ * Deletes a string_list
+ * @param list - list to delete
+ */
+void string_list_delete(string_list *);
+
 #endif // STRING_LIST_H

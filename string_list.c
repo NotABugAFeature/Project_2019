@@ -116,3 +116,20 @@ void string_list_print(string_list *list)
 		node = node->next;
 	}
 }
+
+/**
+ * Deletes a string_list
+ * @param list - list to delete
+ */
+void string_list_delete(string_list *list)
+{
+	string_list_node *node = list->head;
+	while(node != NULL)
+	{
+		string_list_node *temp = node;
+		node = node->next;
+		free(temp);
+	}
+
+	free(list);
+}

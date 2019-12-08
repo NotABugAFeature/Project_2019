@@ -68,7 +68,7 @@ int main(void)
         list=read_batch();
         if(list==NULL)
         {
-            return 0;
+            break;
         }
 
         //Call query analysis, execute queries
@@ -137,11 +137,13 @@ int main(void)
             printf("After optimizing memory: ");
             print_query_like_an_str(q);
 
+            /*
             for(uint32_t i=0; i<q->number_of_predicates*2; i++)
             {
                 printf("%d", bool_array[i]);
             }
 	    	printf("\n");
+	    	*/
 
 			//Execute
             middleman *middle = execute_query(q, ti, bool_array);

@@ -18,7 +18,9 @@ end=$(date +%s.%N);
 dur=$(echo $end - $start | bc);
 echo "Execution time: $dur seconds";
 
-sed -r "s/\x1B\[(1;33|0)m//g" colored_result > result;
+#sed -r "s/\x1B\[(1;33|0)m//g" colored_result > result;
+sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" colored_result > result;
+
 diff -Z -s result "$size.result";
 
 

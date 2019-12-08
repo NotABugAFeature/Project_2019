@@ -21,10 +21,12 @@ string_list *read_batch(void)
         if(feof(stdin))
         {
             printf("End of input\n");
+            string_list_delete(list);
             return NULL;
         }
         if(line==NULL)
         {
+        	string_list_delete(list);
             return NULL;
         }
         if(line[strlen(line) - 1] == '\n')
@@ -68,27 +70,31 @@ int main(void)
         {
             return 0;
         }
+
         //Call query analysis, execute queries
         char *query_str;
-        for(;list->num_nodes>0;)
+        while(list->num_nodes>0)
         {
             query_str=string_list_remove(list);
             printf("The query to analyze: %s\n", query_str);
             query* q=create_query();
+
             if(q==NULL)
             {
                 delete_table_index(ti);
                 free(query_str);
-                //Delete string list
+                string_list_delete(list);
                 return -3;
             }
+
             if(analyze_query(query_str, q)!=0)
             {
                 delete_query(q);
                 free(query_str);
                 continue;
             }
-	    free(query_str);
+	    	free(query_str);
+
             //printf("After analyzing: ");
             //print_query_like_an_str(q);
             if(validate_query(q,ti)!=0)
@@ -96,6 +102,7 @@ int main(void)
                 delete_query(q);
                 continue;
             }
+
             //printf("After validation: ");
             //print_query_like_an_str(q);
             if(validate_query(q,ti)!=0)
@@ -103,11 +110,13 @@ int main(void)
                 delete_query(q);
                 continue;
             }
+
             if(optimize_query(q,ti)!=0)
             {
                 delete_query(q);
                 continue;
             }
+
             //printf("After optimizing: ");
             //print_query_like_an_str(q);
             bool* bool_array=NULL;
@@ -116,6 +125,7 @@ int main(void)
                 delete_query(q);
                 continue;
             }
+
             //printf("After creating bool array: ");
             //print_query_like_an_str(q);
             if(optimize_query_memory(q)!=0)
@@ -123,17 +133,21 @@ int main(void)
                 delete_query(q);
                 continue;
             }
+
             printf("After optimizing memory: ");
             print_query_like_an_str(q);
+
             for(uint32_t i=0; i<q->number_of_predicates*2; i++)
             {
                 printf("%d", bool_array[i]);
             }
-	    printf("\n");
-		//Execute
+	    	printf("\n");
+
+			//Execute
             middleman *middle = execute_query(q, ti, bool_array);
             calculate_projections(q, ti, middle);
-		//Free memory
+
+			//Free memory
             for(uint32_t i = 0; i < middle->number_of_tables; i++)
             {
                 if(middle->tables[i].list != NULL)
@@ -144,8 +158,10 @@ int main(void)
             free(middle);
 
             free(bool_array);
-	    delete_query(q);
+	    	delete_query(q);
         }
+
+        string_list_delete(list);
     }
     delete_table_index(ti);
     return 0;

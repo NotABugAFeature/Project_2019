@@ -501,6 +501,8 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
               }
               list_temp = list_temp->next;
             }
+
+            free(lookup);
           }
 
           delete_middle_list(m->tables[join->r.table_id].list);
@@ -531,6 +533,8 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
               }
               list_temp = list_temp->next;
             }
+
+            free(lookup);
           }
 
           delete_middle_list(m->tables[join->s.table_id].list);
@@ -790,7 +794,7 @@ void calculate_projections(query *q, table_index* index, middleman *m)
 
     if(m->tables[p.column_to_project.table_id].list==NULL||m->tables[p.column_to_project.table_id].list->number_of_nodes==0)
     {
-      printf("NULL ");
+      printf("\e[1;33mNULL \e[0m ");
       continue;
     }
 
@@ -809,7 +813,7 @@ void calculate_projections(query *q, table_index* index, middleman *m)
       list_temp = list_temp->next;
     }
 
-    printf("%" PRIu64 " ", sum);
+    printf("\e[1;33m%" PRIu64 "\e[0m ", sum);
   }
   printf("\n");
 }

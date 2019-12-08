@@ -37,6 +37,11 @@ string_list *read_batch(void)
             }
         }
 
+	if(strlen(line) < 1)
+	{
+		continue;
+	}
+
         if(strcmp(line, "F")==0||strcmp(line, "f")==0)
         {
             break;

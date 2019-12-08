@@ -260,26 +260,26 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
   for(uint32_t i = 0; i < q->number_of_predicates; i++)
     concatenated_tables[i][0] = 0;
 
-  //check for argument format
+  //Check for proper argument format
   if(q == NULL || index == NULL || sorting == NULL)
   {
     fprintf(stderr, "execute_query: Null parameters\n");
     return NULL;
   }
 
-  //initialize middleman
+  //Initialize middleman
   middleman *m = initialize_middleman(q->number_of_tables);
 
 
-  //execute every predicate sequentially
+  //Execute every predicate sequentially
   for(uint32_t i = 0; i < q->number_of_predicates; i++)
   {
-    //filter
+    //Case A. filter
     if(q->predicates[i].type == Filter)
     {
       predicate_filter *filter = q->predicates[i].p;
 
-      //find original table
+      //A.1 Find original table
       table *original_table = get_table(index, q->table_ids[filter->r.table_id]);
       if(original_table == NULL)
       {
@@ -287,9 +287,10 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         return NULL;
       }
 
+      //A.2 Check if there is a middleman list
       if(m->tables[filter->r.table_id].list == NULL)
       {
-        //empty list so we need to take the data from the original table
+        //A.2.1 If it is empty we need to filter the data of the original table..
         m->tables[filter->r.table_id].list = create_middle_list();
         if(filter_original_table(filter, original_table, m->tables[filter->r.table_id].list))
         {
@@ -299,13 +300,13 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
       }
       else
       {
+        //A.2.2 ..else we filter the data of the middleman's list
         if(m->tables[filter->r.table_id].list->number_of_nodes > 0)
         {
-          //list not empty so we modify it
 
-          //create new list
           middle_list *new_list = create_middle_list();
 
+          //traverse existing list and store the new results in 'new_list'
           middle_list_node *list_temp = m->tables[filter->r.table_id].list->head;
           while(list_temp != NULL)
           {
@@ -317,18 +318,21 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
             list_temp = list_temp->next;
           }
 
+          //delete old list and put the new one in its place
           delete_middle_list(m->tables[filter->r.table_id].list);
           m->tables[filter->r.table_id].list = new_list;
         }
       }
     }
+    //Case B. Original Join or Indirect Self-Join
     else if(q->predicates[i].type == Join || (q->predicates[i].type == Self_Join &&
         (((predicate_join *)q->predicates[i].p)->r.table_id != ((predicate_join *)q->predicates[i].p)->s.table_id)))
     {
       predicate_join *join = q->predicates[i].p;
 
-      //create middle lists
       middle_list *index_list = NULL;
+
+      //B.1 Create middle lists in which we are going to store the join results
       middle_list *result_R = create_middle_list();
       if(result_R == NULL)
       {
@@ -344,7 +348,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
       }
 
 
-      //find original table r
+      //B.2 Find original tables
       table *table_r = get_table(index, q->table_ids[join->r.table_id]);
       if(table_r == NULL)
       {
@@ -352,7 +356,6 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         return NULL;
       }
 
-      //find original tables
       table *table_s = get_table(index, q->table_ids[join->s.table_id]);
       if(table_s == NULL)
       {
@@ -360,11 +363,13 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         return NULL;
       }
 
+
+      //B.3 If type = Join..
       if(q->predicates[i].type == Join)
       {
-        //construct relation relR
-        //check if table exists in middleman.
-        //if yes use it else, if not take if from the original table
+        //B.3.1 Construct relation relR
+        //Check if table exists in middleman
+        //If yes use it else, if not take if from the original table
         relation *relR;
         if(m->tables[join->r.table_id].list == NULL)
         {
@@ -372,6 +377,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         }
         else
         {
+          //relR memory allocation
           relR = malloc(sizeof(relation));
           if(relR == NULL)
           {
@@ -389,6 +395,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
               return NULL;
             }
 
+            //Construct relation from middleman
             uint64_t counter = 0;
             middle_list_node *list_temp = m->tables[join->r.table_id].list->head;
             while(list_temp != NULL)
@@ -399,9 +406,9 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
           }
         }
 
-        //construct relation relS
-        //check if table exists in middleman.
-        //if yes use it else, if not take if from the original table
+        //B.3.2 Construct relation relS
+        //Check if table exists in middleman
+        //If yes use it else, if not take if from the original table
         relation *relS;
         if(m->tables[join->s.table_id].list == NULL)
         {
@@ -436,7 +443,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
           }
         }
 
-        //relR and RelS ready..check and sort
+        //B.3.3 relR and RelS are ready..Sort if necessary
         if(sorting[bool_counter] == 1)
         {
           if(radix_sort(relR))
@@ -455,31 +462,35 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
           }
         }
 
-        //update counter
+        //Update counter
         bool_counter += 2;
 
-        //finally join
+        //B.3.4 Join
         if(final_join(result_R, result_S, relR, relS))
         {
           fprintf(stderr, "execute_query: Error in final_join\n");
           return NULL;
         }
 
-        //now go back to middleman
+        //B.3.5 Now go back to middleman
+        //If the list exists then update it
+        //If not then put the result lisr (result_R, result_S) in its place
         if(m->tables[join->r.table_id].list == NULL)
         {
-          //if empty then rowid are those of the original table..store them
           m->tables[join->r.table_id].list = result_R;
           delete_r = 0;
         }
         else
         {
-          //create new list
+
           middle_list *new_list = create_middle_list();
           if(result_R->number_of_nodes > 0)
           {
+            //Construct lookup table of the existing (old) list
             middle_list_bucket **lookup = construct_lookup_table(m->tables[join->r.table_id].list);
-            //get the new list
+
+            //Traverse result list and for every rowId find it in the old list and put
+            //the result in the new_list
             middle_list_node *list_temp = result_R->head;
             while(list_temp != NULL)
             {
@@ -497,20 +508,19 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         }
 
 
+        //Same procedure for S as above
         if(m->tables[join->s.table_id].list == NULL)
         {
-          //if empty then rowid are those of the original table..store them
           m->tables[join->s.table_id].list = result_S;
           delete_s = 0;
         }
         else
         {
-          //create new list
           middle_list *new_list = create_middle_list();
           if(result_S->number_of_nodes > 0)
           {
             middle_list_bucket **lookup = construct_lookup_table(m->tables[join->s.table_id].list);
-            //get the new list
+
             middle_list_node *list_temp = result_S->head;
             while(list_temp != NULL)
             {
@@ -527,12 +537,17 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
           m->tables[join->s.table_id].list = new_list;
         }
 
-        free(relR->tuples);
+        //B.3.6 Free relations
+        if(relR->num_tuples > 0)
+          free(relR->tuples);
         free(relR);
 
-        free(relS->tuples);
+        if(relS->num_tuples > 0)
+          free(relS->tuples);
         free(relS);
       }
+      //B.4 If type = (Indirect) Self-Join..
+      //The indirect self-join is performed when both join members (r,s) are in the middleman
       else
       { 
         if(m->tables[join->r.table_id].list == NULL || m->tables[join->s.table_id].list == NULL)
@@ -546,6 +561,8 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         middle_list_node *list_temp_r = m->tables[join->r.table_id].list->head;
         middle_list_node *list_temp_s = m->tables[join->s.table_id].list->head;
 
+        //Traverse the two lists simultaneously and keep only the rowIds 
+        //with the same content in the original tables
         uint32_t counter = 0;
         while(list_temp_r != NULL)
         {
@@ -558,6 +575,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
           list_temp_s = list_temp_s->next;
         }
 
+        //Update the lists and delete the old ones
         delete_middle_list(m->tables[join->r.table_id].list);
         m->tables[join->r.table_id].list = result_R;
         delete_r = 0;
@@ -565,17 +583,17 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         delete_middle_list(m->tables[join->s.table_id].list);
         m->tables[join->s.table_id].list = result_S;
         delete_s = 0;
-
+//TODO check
        //delete_middle_list(index_list);
       }
 
-      //now we update the rest of the concatenated lists..3rd code copy paste
+      //B.5 Now we update the rest of the concatenated lists in the middleman
       for(int k = 0; k < q->number_of_predicates; k++)
       {
         if(concatenated_tables[k][0] == 0)
           continue;
 
-        //swipe row - if flag=1 then we found something in this row
+        //Swipe row - if flag = 1 or flag = 2 then we found something in this row
         int flag = 0;
         for(int l = 1; l <= concatenated_tables[k][0]; l++)
         {
@@ -591,22 +609,23 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
           }
         }
 
-        //if r or s exists then update
+        //If r or s exists then update
         if(flag){
 
           for(int l = 1; l <= concatenated_tables[k][0]; l++)
           {
-            //update all relations except for the s.table_id
+            //Update all relations except for r or s
             if(concatenated_tables[k][l] == join->r.table_id || concatenated_tables[k][l] == join->s.table_id)
               continue;
 
-            //create new list
             middle_list *new_list = create_middle_list();
 
+            //Create lookup table for the old list
             middle_list_bucket **lookup = construct_lookup_table(m->tables[concatenated_tables[k][l]].list);
-            //get the new list
+
             middle_list_node *list_temp;
 
+            //Select which list to traverse
             if(q->predicates[i].type == Join)
             {
               if(flag == 1)
@@ -629,18 +648,21 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 
             delete_middle_list(m->tables[concatenated_tables[k][l]].list);
             m->tables[concatenated_tables[k][l]].list = new_list;
+
+            free(lookup);
           }
         }
       }
 
-      //find place of r and s
+      //B.6 Now we update the concatenated_tables
+      //B.6.1 Find place of r and s
       int r_position = -1, s_position = -1;
       for(int k = 0; k < q->number_of_predicates; k++)
       {
         if(concatenated_tables[k][0] == 0)
           continue;
 
-        //swipe row - if flag=1 then we found something in this row
+        //Swipe row and try to locate the row of r and s
         for(int l = 1; l <= concatenated_tables[k][0]; l++)
         {
           if(concatenated_tables[k][l] == join->r.table_id)
@@ -651,8 +673,8 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
       }
 
 
-      //neither of them exist
-      if(r_position == -1 && s_position == -1)
+      //B.6.2 Update table
+      if(r_position == -1 && s_position == -1)//Neither r nor s exist..add them
       {
         for(int m = 0; m < q->number_of_predicates; m++)
         {
@@ -665,17 +687,17 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
           }
         }
       }
-      else if(r_position == -1 && s_position != -1)
+      else if(r_position == -1 && s_position != -1)//s exists while r does not..add r in the row of s
       {
         concatenated_tables[s_position][0]++;
         concatenated_tables[s_position][concatenated_tables[s_position][0]] = join->r.table_id;
       }
-      else if(r_position != -1 && s_position == -1)
+      else if(r_position != -1 && s_position == -1)//r exists while d does not..add s in the row of r
       {
         concatenated_tables[r_position][0]++;
         concatenated_tables[r_position][concatenated_tables[r_position][0]] = join->s.table_id;
       }
-      else if(r_position != s_position)
+      else if(r_position != s_position)//r and s are in different rows..merge them
       {
         int length = concatenated_tables[s_position][0];
         for(int m = 1; m <= length; m++)
@@ -689,7 +711,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         }
       }
 
-
+      //Delete result_R and result_S if necessary
       if(delete_r)
         delete_middle_list(result_R);
 
@@ -789,6 +811,7 @@ void calculate_projections(query *q, table_index* index, middleman *m)
 
     printf("%" PRIu64 " ", sum);
   }
+  printf("\n");
 }
 
 

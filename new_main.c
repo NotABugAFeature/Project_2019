@@ -37,11 +37,6 @@ string_list *read_batch(void)
             }
         }
 
-	if(strlen(line) < 1)
-	{
-		continue;
-	}
-
         if(strcmp(line, "F")==0||strcmp(line, "f")==0)
         {
             break;
@@ -133,6 +128,11 @@ int main(void)
             calculate_projections(q, ti, middle);
 
             //Execute
+            for(uint32_t i = 0; i < middle->number_of_tables; i++)
+            {
+                if(middle->tables[i].list != NULL)
+                    delete_middle_list(middle->tables[i].list);
+            }
 
             free(middle->tables);
             free(middle);

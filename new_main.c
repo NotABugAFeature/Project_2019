@@ -134,6 +134,7 @@ int main(void)
 
             //Execute
             free(bool_array);
+            delete_query(q);
         }
     }
     delete_table_index(ti);

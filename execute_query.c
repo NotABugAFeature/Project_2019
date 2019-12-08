@@ -255,7 +255,7 @@ int original_self_join_middle_bucket(predicate_join *join,
 
 middleman *execute_query(query *q, table_index* index, bool *sorting)
 {
-  int bool_counter = 0, delete_r = 1, delete_s = 1;
+  int bool_counter = 0;
   uint32_t concatenated_tables[q->number_of_predicates][q->number_of_tables+1];
   for(uint32_t i = 0; i < q->number_of_predicates; i++)
     concatenated_tables[i][0] = 0;
@@ -331,6 +331,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
       predicate_join *join = q->predicates[i].p;
 
       middle_list *index_list = NULL;
+      int delete_r = 1, delete_s = 1;
 
       //B.1 Create middle lists in which we are going to store the join results
       middle_list *result_R = create_middle_list();
@@ -587,8 +588,6 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         delete_middle_list(m->tables[join->s.table_id].list);
         m->tables[join->s.table_id].list = result_S;
         delete_s = 0;
-//TODO check
-       //delete_middle_list(index_list);
       }
 
       //B.5 Now we update the rest of the concatenated lists in the middleman
@@ -721,6 +720,9 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 
       if(delete_s)
         delete_middle_list(result_S);
+
+      if(index_list != NULL)
+        delete_middle_list(index_list);
 
     }
     else if(q->predicates[i].type == Self_Join &&

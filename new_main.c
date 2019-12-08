@@ -37,17 +37,10 @@ string_list *read_batch(void)
             }
         }
 
-        if(strlen(line) < 1)
-        {
-        	continue;
-        }
-
         if(strcmp(line, "F")==0||strcmp(line, "f")==0)
         {
             break;
         }
-
-        
         string_list_insert(list, line);
     }
     return list;
@@ -73,49 +66,52 @@ int main(void)
         }
         //Call query analysis, execute queries
         char *query_str;
-        for(; list->num_nodes>0;)
+        for(;list->num_nodes>0;)
         {
             query_str=string_list_remove(list);
-            printf("The query to analyze: %s\n", query_str);
+            clock_t t; 
+            t = clock(); 
+            printf("The query to analyze: %s\n",query_str);
             query* q=create_query();
             if(q==NULL)
             {
                 delete_table_index(ti);
-                free(query_str);
-                //Delete string list
                 return -3;
             }
-            if(analyze_query(query_str, q)!=0)
-            {
-                delete_query(q);
-                free(query_str);
-                continue;
-            }
-            free(query_str);
-            //            printf("After analyzing: ");
-            //            print_query_like_an_str(q);
-            if(validate_query(q, ti)!=0)
+            if(analyze_query(query_str,q)!=0)
             {
                 delete_query(q);
                 continue;
             }
-            //            printf("After validation: ");
-            //            print_query_like_an_str(q);
-            if(optimize_query(q, ti)!=0)
+            printf("After analyzing: ");
+            print_query_like_an_str(q);
+            if(validate_query(q,ti)!=0)
             {
                 delete_query(q);
                 continue;
             }
-            //            printf("After optimizing: ");
-            //            print_query_like_an_str(q);
+            printf("After validation: ");
+            print_query_like_an_str(q);
+            if(validate_query(q,ti)!=0)
+            {
+                delete_query(q);
+                continue;
+            }
+            if(optimize_query(q,ti)!=0)
+            {
+                delete_query(q);
+                continue;
+            }
+            printf("After optimizing: ");
+            print_query_like_an_str(q);
             bool* bool_array=NULL;
-            if(create_sort_array(q, &bool_array)!=0)
+            if(create_sort_array(q,&bool_array)!=0)
             {
                 delete_query(q);
                 continue;
             }
-            //            printf("After creating bool array: ");
-            //            print_query_like_an_str(q);
+            printf("After creating bool array: ");
+            print_query_like_an_str(q);
             if(optimize_query_memory(q)!=0)
             {
                 delete_query(q);
@@ -123,17 +119,20 @@ int main(void)
             }
             printf("After optimizing memory: ");
             print_query_like_an_str(q);
-            for(uint32_t i=0; i<q->number_of_predicates*2; i++)
-            {
-                printf("%d", bool_array[i]);
-            }
-            printf("\n");
-            //Execute
+            t = clock() - t; 
+            double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
+            printf("Optimization took %f seconds to execute \n", time_taken); 
+
             middleman *middle = execute_query(q, ti, bool_array);
+            
             calculate_projections(q, ti, middle);
-            //free middle
+
+            //Execute
+
+            free(middle->tables);
+            free(middle);
+
             free(bool_array);
-            delete_query(q);
         }
     }
     delete_table_index(ti);

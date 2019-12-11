@@ -16,11 +16,11 @@ query_test: query_test.o query.o table.o
 	$(CC) $(TESTFLAGS) -o query_test query_test.o query.o table.o
 
 
-queries: execute_query.o middle_list.o new_main.o query.o queue.o quicksort.o radix_sort.o relation.o sort_merge_join.o string_list.o table.o
-	$(CC) $(FLAGS) -o queries execute_query.o middle_list.o new_main.o query.o queue.o quicksort.o radix_sort.o relation.o sort_merge_join.o string_list.o table.o
+queries: execute_query.o middle_list.o main.o query.o queue.o quicksort.o radix_sort.o relation.o sort_merge_join.o string_list.o table.o
+	$(CC) $(FLAGS) -o queries execute_query.o middle_list.o main.o query.o queue.o quicksort.o radix_sort.o relation.o sort_merge_join.o string_list.o table.o
 
-new_main.o: new_main.c
-	$(CC) $(FLAGS) -c new_main.c
+main.o: main.c
+	$(CC) $(FLAGS) -c main.c
 
 sort_merge_join.o: sort_merge_join.c sort_merge_join.h
 	$(CC) $(FLAGS) -c sort_merge_join.c

@@ -1460,7 +1460,7 @@ void testRelation_from_file5()
   *//*
  typedef struct result_list_bucket
  {
-     uint64_t row_ids[RESULT_LIST_BUCKET_SIZE][2];
+     uint64_t row_ids[middle_LIST_BUCKET_SIZE][2];
      unsigned int index_to_add_next;
  } result_list_bucket;
 
@@ -1495,72 +1495,70 @@ void testRelation_from_file5()
  //void print_bucket(result_list_bucket* bucket);
  //void print_result_list(result_list*);
  //void delete_result_list(result_list*);
-/*
- void testCreate_result_list_node()
+
+ void testCreate_middle_list_node()
  {
-     result_list_node* list_node=create_result_list_node();
-     //Check if the result list node is created and initialized correctly
+     middle_list_node* list_node=create_middle_list_node();
+     //Check if the middle list node is created and initialized correctly
      if(list_node==NULL||list_node->next!=NULL||list_node->bucket.index_to_add_next!=0)
      {
          CU_ASSERT(0);
          return;
      }
      //Check if the bucket size is correct
-     if(sizeof(list_node->bucket.row_ids)!=RESULT_LIST_BUCKET_SIZE*(2*sizeof(uint64_t)))
+     if(sizeof(list_node->bucket.row_ids)!=middle_LIST_BUCKET_SIZE*sizeof(uint64_t))
      {
          CU_ASSERT(0);
      }
      free(list_node);
  }
 
- void testIs_result_list_bucket_full()
+ void testIs_middle_list_bucket_full()
  {
-     //Create a result bucket
-     result_list_bucket bucket;
+     //Create a middle bucket
+     middle_list_bucket bucket;
      bucket.index_to_add_next=0;
      //Check the index when empty
-     if(is_result_list_bucket_full(&bucket))
+     if(is_middle_list_bucket_full(&bucket))
      {
          CU_ASSERT(0);
      }
-     bucket.index_to_add_next=RESULT_LIST_BUCKET_SIZE;
+     bucket.index_to_add_next=middle_LIST_BUCKET_SIZE;
      //Check the index when full
-     if(!is_result_list_bucket_full(&bucket))
+     if(!is_middle_list_bucket_full(&bucket))
      {
          CU_ASSERT(0);
      }
  }
 
- void testAppend_to_bucket()
+ void testAppend_to_middle_bucket()
  {
      //Initialize the testing variables
-     result_list_bucket bucket;
+     middle_list_bucket bucket;
      bucket.index_to_add_next=0;
      uint64_t r_row_id=1;
-     uint64_t s_row_id=2;
      //Check the append operation
      unsigned int i=0;
-     for(;i<RESULT_LIST_BUCKET_SIZE;i++)
+     for(;i<middle_LIST_BUCKET_SIZE;i++)
      {
-         if(append_to_bucket(&bucket, r_row_id, s_row_id)!=0||bucket.row_ids[i][ROWID_R_INDEX]!=r_row_id||bucket.row_ids[i][ROWID_S_INDEX]!=s_row_id)
+         if(append_to_middle_bucket(&bucket, r_row_id)!=0||bucket.row_ids[i]!=r_row_id)
          {
              CU_ASSERT(0);
          }
          r_row_id+=2;
-         s_row_id+=2;
      }
      //Test if bucket is full (append to bucket must fail)
-     if(append_to_bucket(&bucket, r_row_id, s_row_id)!=1&&bucket.index_to_add_next!=i)
+     if(append_to_middle_bucket(&bucket, r_row_id)!=1&&bucket.index_to_add_next!=i)
      {
          CU_ASSERT(0);
      }
-     //print_bucket(&bucket,stdout);
+     //print_middle_bucket(&bucket,stdout);
  }
 
- void testCreate_result_list()
+ void testCreate_middle_list()
  {
-     //Create a result list
-     result_list* list=create_result_list();
+     //Create a middle list
+     middle_list* list=create_middle_list();
      //Check if the list is initialized correctly
      if(list==NULL||list->head!=NULL||list->number_of_nodes!=0||list->tail!=NULL)
      {
@@ -1569,136 +1567,125 @@ void testRelation_from_file5()
      free(list);
  }
 
- void testAppend_to_list()
+ void testAppend_to_middle_list()
  {
-     //Create a result list
-     result_list* list=create_result_list();
+     //Create a middle list
+     middle_list* list=create_middle_list();
      if(list==NULL)//Check if it was created
      {
          CU_ASSERT(0);
          return;
      }
      uint64_t r_row_id=1;
-     uint64_t s_row_id=2;
      unsigned int i=0;
      //Append the maximum records of one node in the list
-     for(;i<RESULT_LIST_BUCKET_SIZE;i++)
+     for(;i<middle_LIST_BUCKET_SIZE;i++)
      {
          //Check if the items were added correctly in head and tail nodes
-         if(append_to_list(list, r_row_id, s_row_id)!=0||
-                 list->head->bucket.row_ids[i][ROWID_R_INDEX]!=r_row_id||
-                 list->head->bucket.row_ids[i][ROWID_S_INDEX]!=s_row_id||
-                 list->tail->bucket.row_ids[i][ROWID_R_INDEX]!=r_row_id||
-                 list->tail->bucket.row_ids[i][ROWID_S_INDEX]!=s_row_id)
+         if(append_to_middle_list(list, r_row_id)!=0||
+                 list->head->bucket.row_ids[i]!=r_row_id||
+                 list->tail->bucket.row_ids[i]!=r_row_id)
          {
              CU_ASSERT(0);
          }
          r_row_id+=2;
-         s_row_id+=2;
      }
      //Check if only one node exists and it is full
-     if(list->number_of_nodes!=1||is_result_list_bucket_full(&list->head->bucket)!=1||list->head->bucket.index_to_add_next!=i||list->head!=list->tail)
+     if(list->number_of_nodes!=1||is_middle_list_bucket_full(&list->head->bucket)!=1||list->head->bucket.index_to_add_next!=i||list->head!=list->tail)
      {
          CU_ASSERT(0);
      }
      //Append the maximum records of one node in the list
-     for(i=0;i<RESULT_LIST_BUCKET_SIZE;i++)
+     for(i=0;i<middle_LIST_BUCKET_SIZE;i++)
      {
          //Check if the items were added correctly in tail node
-         if(append_to_list(list, r_row_id, s_row_id)!=0||list->tail->bucket.row_ids[i][ROWID_R_INDEX]!=r_row_id||list->tail->bucket.row_ids[i][ROWID_S_INDEX]!=s_row_id)
+         if(append_to_middle_list(list, r_row_id)!=0||list->tail->bucket.row_ids[i]!=r_row_id)
          {
              CU_ASSERT(0);
          }
          r_row_id+=2;
-         s_row_id+=2;
      }
      //Check if two nodes exists and are both full
-     if(list->number_of_nodes!=2||is_result_list_bucket_full(&list->head->bucket)!=1||is_result_list_bucket_full(&list->tail->bucket)!=1||list->head->bucket.index_to_add_next!=i||list->tail->bucket.index_to_add_next!=i||list->head==list->tail)
+     if(list->number_of_nodes!=2||is_middle_list_bucket_full(&list->head->bucket)!=1||is_middle_list_bucket_full(&list->tail->bucket)!=1||list->head->bucket.index_to_add_next!=i||list->tail->bucket.index_to_add_next!=i||list->head==list->tail)
      {
          CU_ASSERT(0);
      }
-     //print_result_list(list,stdout);
-     delete_result_list(list);
+     //print_middle_list(list,stdout);
+     delete_middle_list(list);
  }
 
- void testIs_result_list_empty()
+ void testIs_middle_list_empty()
  {
-     result_list* list=create_result_list();
+     middle_list* list=create_middle_list();
      if(list==NULL)
      {
          CU_ASSERT(0);
          return;
      }
-     if(is_result_list_empty(list)!=1)
+     if(is_middle_list_empty(list)!=1)
      {
          CU_ASSERT(0);
      }
-     if(append_to_list(list, 1, 2)!=0||is_result_list_empty(list)!=0)
+     if(append_to_middle_list(list, 1)!=0||is_middle_list_empty(list)!=0)
      {
          CU_ASSERT(0);
      }
-     //print_result_list(list,stdout);
-     delete_result_list(list);
+     //print_middle_list(list,stdout);
+     delete_middle_list(list);
  }
 
- void testResult_list_get_number_of_buckets()
+ void testMiddle_list_get_number_of_buckets()
  {
-     result_list* list=create_result_list();
+     middle_list* list=create_middle_list();
      if(list==NULL)
      {
          CU_ASSERT(0);
          return;
      }
      uint64_t r_row_id=1;
-     uint64_t s_row_id=2;
      int i=0;
-     for(;i<RESULT_LIST_BUCKET_SIZE*6;i++)
+     for(;i<middle_LIST_BUCKET_SIZE*6;i++)
      {
-         if(append_to_list(list, r_row_id, s_row_id)!=0||
-                 list->tail->bucket.row_ids[i%RESULT_LIST_BUCKET_SIZE][ROWID_R_INDEX]!=r_row_id||
-                 list->tail->bucket.row_ids[i%RESULT_LIST_BUCKET_SIZE][ROWID_S_INDEX]!=s_row_id)
+         if(append_to_middle_list(list, r_row_id)!=0||
+                 list->tail->bucket.row_ids[i%middle_LIST_BUCKET_SIZE]!=r_row_id)
          {
              CU_ASSERT(0);
          }
          r_row_id+=2;
-         s_row_id+=2;
      }
      if(list->number_of_nodes!=6)
      {
          CU_ASSERT(0);
      }
-     //print_result_list(list,stdout);
-     delete_result_list(list);
+     //print_middle_list(list,stdout);
+     delete_middle_list(list);
  }
 
- void testResult_list_get_number_of_records()
+ void testMiddle_list_get_number_of_records()
  {
-     result_list* list=create_result_list();
+     middle_list* list=create_middle_list();
      if(list==NULL)
      {
          CU_ASSERT(0);
          return;
      }
      uint64_t r_row_id=1;
-     uint64_t s_row_id=2;
      int i=0;
-     for(;i<RESULT_LIST_BUCKET_SIZE*6;i++)
+     for(;i<middle_LIST_BUCKET_SIZE*6;i++)
      {
-         if(append_to_list(list, r_row_id, s_row_id)!=0||
-                 list->tail->bucket.row_ids[i%RESULT_LIST_BUCKET_SIZE][ROWID_R_INDEX]!=r_row_id||
-                 list->tail->bucket.row_ids[i%RESULT_LIST_BUCKET_SIZE][ROWID_S_INDEX]!=s_row_id)
+         if(append_to_middle_list(list, r_row_id)!=0||
+                 list->tail->bucket.row_ids[i%middle_LIST_BUCKET_SIZE]!=r_row_id)
          {
              CU_ASSERT(0);
          }
          r_row_id+=2;
-         s_row_id+=2;
      }
-     if(result_list_get_number_of_records(list)!=RESULT_LIST_BUCKET_SIZE*6)
+     if(middle_list_get_number_of_records(list)!=middle_LIST_BUCKET_SIZE*6)
      {
          CU_ASSERT(0);
      }
-     //print_result_list(list,stdout);
-     delete_result_list(list);
+     //print_middle_list(list,stdout);
+     delete_middle_list(list);
  }
 
 /**
@@ -2126,15 +2113,15 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testSort_merge_join4", testSort_merge_join4))||
         (NULL==CU_add_test(pSuite, "testSort_merge_join5", testSort_merge_join5))||
         (NULL==CU_add_test(pSuite, "testSort_merge_join6", testSort_merge_join6))||
-
-        (NULL==CU_add_test(pSuite, "testCreate_result_list_node", testCreate_result_list_node))||
-        (NULL==CU_add_test(pSuite, "testIs_result_list_bucket_full", testIs_result_list_bucket_full))||
-        (NULL==CU_add_test(pSuite, "testAppend_to_bucket", testAppend_to_bucket))||
-        (NULL==CU_add_test(pSuite, "testCreate_result_list", testCreate_result_list))||
-        (NULL==CU_add_test(pSuite, "testAppend_to_list", testAppend_to_list))||
-        (NULL==CU_add_test(pSuite, "testIs_result_list_empty", testIs_result_list_empty))||
-        (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_buckets", testResult_list_get_number_of_buckets))||
-        (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_records", testResult_list_get_number_of_records))||*/
+*/
+        (NULL==CU_add_test(pSuite, "testCreate_middle_list_node", testCreate_middle_list_node))||
+        (NULL==CU_add_test(pSuite, "testIs_middle_list_bucket_full", testIs_middle_list_bucket_full))||
+        (NULL==CU_add_test(pSuite, "testAppend_to_middle_bucket", testAppend_to_middle_bucket))||
+        (NULL==CU_add_test(pSuite, "testCreate_middle_list", testCreate_middle_list))||
+        (NULL==CU_add_test(pSuite, "testAppend_to_middle_list", testAppend_to_middle_list))||
+        (NULL==CU_add_test(pSuite, "testIs_middle_list_empty", testIs_middle_list_empty))||
+        (NULL==CU_add_test(pSuite, "testMiddle_list_get_number_of_buckets", testMiddle_list_get_number_of_buckets))||
+        (NULL==CU_add_test(pSuite, "testMiddle_list_get_number_of_records", testMiddle_list_get_number_of_records))||
 
         (NULL==CU_add_test(pSuite, "testTable_from_File1", testTable_from_File1))||
         (NULL==CU_add_test(pSuite, "testTable_from_File2", testTable_from_File2))||

@@ -4,8 +4,6 @@
 #include <inttypes.h>
 
 #define middle_LIST_BUCKET_SIZE (1048576/(2*sizeof(uint64_t)))
-#define ROWID_R_INDEX 0
-#define ROWID_S_INDEX 1
 
 typedef struct middle_list_bucket middle_list_bucket;
 typedef struct middle_list_node middle_list_node;
@@ -44,6 +42,33 @@ typedef struct middle_list
     unsigned int number_of_nodes; //Counter of the buckets;
 } middle_list;
 
+/**
+ * Creates and initializes a new empty middle list node (with the bucket)
+ * @return middle_list_node* The new node
+ */
+struct middle_list_node* create_middle_list_node();
+
+/**
+ * Checks if the bucket given is full
+ * @param middle_list_bucket The bucket to check
+ * @return int 1 if the bucket is full else 0
+ */
+int is_middle_list_bucket_full(middle_list_bucket*);
+
+/**
+ * Appends the rowids given to the bucket.
+ * @param middle_list_bucket* the bucket
+ * @param uint64_t r_row_id
+ * @return 0 if successful 1 else
+ */
+int append_to_middle_bucket(middle_list_bucket*, uint64_t);
+
+/**
+ * Prints the contents of the bucket (index and array)
+ * @param middle_list_bucket the bucket to print
+ * @param FILE* Where the output will be printed
+ */
+void print_middle_bucket(middle_list_bucket*,FILE*);
 
 /**
  * Creates an empty middle list and returns a pointer to that list
@@ -57,7 +82,6 @@ middle_list* create_middle_list();
  * @param middle_list* the list to delete
  */
 void delete_middle_list(middle_list*);
-
 
 /**
  * Adds a pair of row ids in the last bucket of the list and creates a new

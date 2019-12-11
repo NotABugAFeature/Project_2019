@@ -1545,11 +1545,14 @@ int optimize_query(query*q, table_index* ti)
                 }
                 else if(((predicate_join*) q->predicates[i].p)->s.table_id==next_tc->table_id&&((predicate_join*) q->predicates[i].p)->s.column_id==next_tc->column_id)
                 {//R is different
-                    if(z!=max_value-1)//Not the last occurance of max
+                    if(z!=max_value-1&&get_counter(c_list, &((predicate_join*) q->predicates[i].p)->r)==1)//Not the last occurance of max
                     {
                         swap_tc_in_predicate(&q->predicates[i]);
+                        p_index_to_swap=i;
+                        next_join=false;
+                        break;
                     }
-                    if(get_counter(c_list, &((predicate_join*) q->predicates[i].p)->r)==1)
+                    else if(get_counter(c_list, &((predicate_join*) q->predicates[i].p)->r)==1)
                     {
                         p_index_to_swap=i;
                         next_join=false;
@@ -1593,28 +1596,9 @@ int create_sort_array(query*q, bool**t_c_to_sort)
         fprintf(stderr, "create_sort_array: Error with the parameters\n");
         return -1;
     }
-    bool** joined_tables=malloc(sizeof(bool*)*q->number_of_tables);
+    bool joined_tables[q->number_of_tables][q->number_of_tables];
     //Array that keeps which table have become one
     //^Used to idendify self joins after two or more tables have joined
-    if(joined_tables==NULL)
-    {
-        perror("create_sort_array: malloc error");
-        return -3;
-    }
-    for(uint32_t i=0; i<q->number_of_tables; i++)
-    {
-        joined_tables[i]=malloc(sizeof(bool)*q->number_of_tables);
-        if(joined_tables[i]==NULL)
-        {
-            perror("create_sort_array: malloc error");
-            for(uint32_t j=0; j<i; j++)
-            {
-                free(joined_tables[j]);
-            }
-            free(joined_tables);
-            return -3;
-        }
-    }
     //Initialize to 0
     for(uint32_t i=0; i<q->number_of_tables; i++)
     {
@@ -1696,12 +1680,6 @@ int create_sort_array(query*q, bool**t_c_to_sort)
         }
     }
     *t_c_to_sort=bool_array;
-    //Free resources
-    for(uint32_t j=0; j<q->number_of_tables; j++)
-    {
-        free(joined_tables[j]);
-    }
-    free(joined_tables);
     //    return join_counter*2;
     return 0;
 }

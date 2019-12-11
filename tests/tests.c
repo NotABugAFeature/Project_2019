@@ -6,9 +6,11 @@
 #include "../radix_sort.h"
 #include "../sort_merge_join.h"
 #include "../queue.h"
-#include "../result_list.h"
 #include "../table.h"
 #include "../string_list.h"
+#include "../execute_query.h"
+#include "../query.h"
+#include "../middle_list.h"
 
 /*
  * CUnit Test Suite
@@ -1005,7 +1007,7 @@ void testRelation_from_file5()
  /**
   * Test case 1. Relation t is NULL
   *
-  */
+  *//*
  void testFinal_join1()
  {
      result_list* list = create_result_list();
@@ -1020,7 +1022,7 @@ void testRelation_from_file5()
  /**
   * Test case 2. Relation s is NULL
   *
-  */
+  *//*
  void testFinal_join2()
  {
      result_list* list = create_result_list();
@@ -1035,7 +1037,7 @@ void testRelation_from_file5()
  /**
   * Test case 3. Result list is NULL
   *
-  */
+  *//*
  void testFinal_join3()
  {
      relation p1, p2;
@@ -1048,7 +1050,7 @@ void testRelation_from_file5()
  /**
   * Test case 4. Relation t is empty
   *
-  */
+  *//*
  void testFinal_join4()
  {
      result_list* list = create_result_list();
@@ -1082,7 +1084,7 @@ void testRelation_from_file5()
  /**
   * Test case 5. Relation s is empty
   *
-  */
+  *//*
  void testFinal_join5()
  {
      result_list* list = create_result_list();
@@ -1116,7 +1118,7 @@ void testRelation_from_file5()
  /**
   * Test case 6. Successful test
   *
-  */
+  *//*
  void testFinal_join6()
  {
      result_list* list = create_result_list();
@@ -1164,7 +1166,7 @@ void testRelation_from_file5()
  /**
   * Test case 7. Successful test
   *
-  */
+  *//*
  void testFinal_join7()
  {
      result_list* list = create_result_list();
@@ -1212,7 +1214,7 @@ void testRelation_from_file5()
  /**
   * Test case 8. Successful test
   *
-  */
+  *//*
  void testFinal_join8()
  {
      result_list* list = create_result_list();
@@ -1260,7 +1262,7 @@ void testRelation_from_file5()
  /**
   * Test case 1. relR is NULL
   *
-  */
+  *//*
  void testSort_merge_join1()
  {
      relation relS;
@@ -1272,7 +1274,7 @@ void testRelation_from_file5()
  /**
   * Test case 2. relS is NULL
   *
-  */
+  *//*
  void testSort_merge_join2()
  {
      relation relR;
@@ -1284,7 +1286,7 @@ void testRelation_from_file5()
  /**
   * Test case 3. Successful test with small relations
   *
-  */
+  *//*
  void testSort_merge_join3()
  {
      relation p1, p2;
@@ -1329,7 +1331,7 @@ void testRelation_from_file5()
  /**
   * Test case 4. Successful test with one small and one big (ordered) relation
   *
-  */
+  *//*
  void testSort_merge_join4()
  {
      relation p1, p2;
@@ -1369,7 +1371,7 @@ void testRelation_from_file5()
  /**
   * Test case 5. Successful test with one small and one big (reverse order) relation
   *
-  */
+  *//*
  void testSort_merge_join5()
  {
      relation p1, p2;
@@ -1409,7 +1411,7 @@ void testRelation_from_file5()
  /**
   * Test case 6. Successful test with two big relations
   *
-  */
+  *//*
  void testSort_merge_join6()
  {
      relation p1, p2;
@@ -1455,7 +1457,7 @@ void testRelation_from_file5()
   * The Bucket inside a node of the result list.
   * Contains a 2d array of row ids (uint64_t) and an index (unsigned int)
   * to the next empty space in the array.
-  */
+  *//*
  typedef struct result_list_bucket
  {
      uint64_t row_ids[RESULT_LIST_BUCKET_SIZE][2];
@@ -1465,7 +1467,7 @@ void testRelation_from_file5()
  /**
   * The node of the result list.
   * Contains a bucket with the row ids and a pointer to the next node.
-  */
+  *//*
  typedef struct result_list_node
  {
      result_list_bucket bucket;
@@ -1476,7 +1478,7 @@ void testRelation_from_file5()
   * The result list.
   * Contains pointers to the head and tail nodes (for O(1) append)
   * and a node counter.
-  */
+  *//*
  typedef struct result_list
  {
      result_list_node* head; //The first node of the list
@@ -1493,7 +1495,7 @@ void testRelation_from_file5()
  //void print_bucket(result_list_bucket* bucket);
  //void print_result_list(result_list*);
  //void delete_result_list(result_list*);
-
+/*
  void testCreate_result_list_node()
  {
      result_list_node* list_node=create_result_list_node();
@@ -1792,7 +1794,7 @@ void testTable_from_File6()
 	}
 }
 
-/*
+/**
  * Test case 1: Table index is NULL
  */
 void testGet_table1()
@@ -1802,7 +1804,7 @@ void testGet_table1()
 	CU_ASSERT_EQUAL(t, NULL);
 }
 
-/*
+/**
  * Test case 2: Tables of table index is NULL
  */
 void testGet_table2()
@@ -1813,7 +1815,7 @@ void testGet_table2()
 	CU_ASSERT_EQUAL(t, NULL);
 }
 
-/*
+/**
  * Test case 3: Table does not exist
  */
 void testGet_table3()
@@ -1830,7 +1832,7 @@ void testGet_table3()
 	CU_ASSERT_EQUAL(t, NULL);
 }
 
-/*
+/**
  * Test case 3: Table exists
  */
 void testGet_table4()
@@ -1857,7 +1859,7 @@ void testString_list_create()
     free(list);
 }
 
-/*
+/**
  * Test case 1: list is NULL
  */
 void testString_list_insert1()
@@ -1867,7 +1869,7 @@ void testString_list_insert1()
     CU_ASSERT_NOT_EQUAL(res, 0);
 }
 
-/*
+/**
  * Test case 2: insert 3 strings
  */
 void testString_list_insert2()
@@ -1902,7 +1904,7 @@ void testString_list_insert2()
     free(list);
 }
 
-/*
+/**
  * Test case 3: insert 100 strings
  */
 void testString_list_insert3()
@@ -1937,7 +1939,7 @@ void testString_list_insert3()
     free(list);
 }
 
-/*
+/**
  * Test case 1: list is NULL
  */
 void testString_list_remove1()
@@ -1947,7 +1949,7 @@ void testString_list_remove1()
     CU_ASSERT_EQUAL(str, NULL);
 }
 
-/*
+/**
  * Test case 2: list is empty
  */
 void testString_list_remove2()
@@ -1959,7 +1961,7 @@ void testString_list_remove2()
     free(list);
 }
 
-/*
+/**
  * Test case 3: remove 3 of 10 strings
  */
 void testString_list_remove3()
@@ -1992,7 +1994,7 @@ void testString_list_remove3()
     free(list);
 }
 
-/*
+/**
  * Test case 4: remove 100 of 100 strings
  */
 void testString_list_remove4()
@@ -2015,6 +2017,36 @@ void testString_list_remove4()
     }
 
     free(list);
+}
+
+
+/**
+ * Test case 1: 0 number_of_tables given (should return NULL)
+ */
+void testInitialize_middleman1()
+{
+    middleman *m = initialize_middleman(0);
+    CU_ASSERT_EQUAL(m, NULL);
+}
+
+/**
+ * Test case 2: 1000 number_of_tables given
+ */
+void testInitialize_middleman2()
+{
+    uint32_t num = 1000;
+    middleman *m = initialize_middleman(num);
+    CU_ASSERT_NOT_EQUAL_FATAL(m, NULL);
+    CU_ASSERT_EQUAL(m->number_of_tables, num);
+    CU_ASSERT_NOT_EQUAL_FATAL(m->tables, NULL);
+
+    for(uint32_t i=0; i<num; i++)
+    {
+        CU_ASSERT_EQUAL(m->tables[i].list, NULL);
+    }
+
+    free(m->tables);
+    free(m);
 }
 
 int main(void)
@@ -2079,7 +2111,7 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testSwap", testSwap))||
         (NULL==CU_add_test(pSuite, "testPartition", testPartition))||
         (NULL==CU_add_test(pSuite, "testQuicksort", testQuicksort))||
-
+/*
         (NULL==CU_add_test(pSuite, "testFinal_join1", testFinal_join1))||
         (NULL==CU_add_test(pSuite, "testFinal_join2", testFinal_join2))||
         (NULL==CU_add_test(pSuite, "testFinal_join3", testFinal_join3))||
@@ -2088,7 +2120,7 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testFinal_join6", testFinal_join6))||
         (NULL==CU_add_test(pSuite, "testFinal_join7", testFinal_join7))||
         (NULL==CU_add_test(pSuite, "testFinal_join8", testFinal_join8))||
-        (NULL==CU_add_test(pSuite, "testSort_merge_join1", testSort_merge_join1))||
+    /*    (NULL==CU_add_test(pSuite, "testSort_merge_join1", testSort_merge_join1))||
         (NULL==CU_add_test(pSuite, "testSort_merge_join2", testSort_merge_join2))||
         (NULL==CU_add_test(pSuite, "testSort_merge_join3", testSort_merge_join3))||
         (NULL==CU_add_test(pSuite, "testSort_merge_join4", testSort_merge_join4))||
@@ -2102,7 +2134,7 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testAppend_to_list", testAppend_to_list))||
         (NULL==CU_add_test(pSuite, "testIs_result_list_empty", testIs_result_list_empty))||
         (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_buckets", testResult_list_get_number_of_buckets))||
-        (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_records", testResult_list_get_number_of_records))||
+        (NULL==CU_add_test(pSuite, "testResult_list_get_number_of_records", testResult_list_get_number_of_records))||*/
 
         (NULL==CU_add_test(pSuite, "testTable_from_File1", testTable_from_File1))||
         (NULL==CU_add_test(pSuite, "testTable_from_File2", testTable_from_File2))||
@@ -2122,7 +2154,10 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testString_list_remove1", testString_list_remove1))||
         (NULL==CU_add_test(pSuite, "testString_list_remove2", testString_list_remove2))||
         (NULL==CU_add_test(pSuite, "testString_list_remove3", testString_list_remove3))||
-        (NULL==CU_add_test(pSuite, "testString_list_remove4", testString_list_remove4))
+        (NULL==CU_add_test(pSuite, "testString_list_remove4", testString_list_remove4))||
+
+        (NULL==CU_add_test(pSuite, "testInitialize_middleman1", testInitialize_middleman1))||
+        (NULL==CU_add_test(pSuite, "testInitialize_middleman2", testInitialize_middleman2))
 
       )
     {

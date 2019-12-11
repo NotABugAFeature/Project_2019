@@ -9,8 +9,8 @@ all: queries
 
 tests: query_test test
 
-test: tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o
-	$(CC) -o test tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o $(TESTFLAGS)
+test: tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o
+	$(CC) -o test tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o $(TESTFLAGS)
 
 query_test: query_test.o query.o table.o
 	$(CC) $(TESTFLAGS) -o query_test query_test.o query.o table.o

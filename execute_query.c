@@ -13,11 +13,17 @@
 /**
  * Middleman initializator & memory allocator
  *
- * @param receives an number of tables
+ * @param receives a number of tables
  * @return a middleman struct with 'number_of_tables' elements
  */
 middleman *initialize_middleman(uint32_t number_of_tables)
 {
+  if(number_of_tables < 1)
+  {
+    fprintf(stderr, "initialize_middleman: Cannot create middleman with %d tables\n", number_of_tables);
+    return NULL;
+  }
+
   middleman *m = malloc(sizeof(middleman));
   if(m == NULL)
   {
@@ -30,6 +36,7 @@ middleman *initialize_middleman(uint32_t number_of_tables)
   m->tables = malloc(number_of_tables*sizeof(middle_table));
   if(m->tables == NULL)
   {
+    free(m);
     fprintf(stderr, "Cannot allocate memory for middle_tables\n");
     return NULL;
   }
@@ -796,7 +803,7 @@ void calculate_projections(query *q, table_index* index, middleman *m)
 
     if(m->tables[p.column_to_project.table_id].list==NULL||m->tables[p.column_to_project.table_id].list->number_of_nodes==0)
     {
-      printf("\e[1;33mNULL \e[0m ");
+      fprintf(stderr, "\e[1;33mNULL \e[0m");
       continue;
     }
 
@@ -815,9 +822,10 @@ void calculate_projections(query *q, table_index* index, middleman *m)
       list_temp = list_temp->next;
     }
 
-    printf("\e[1;33m%" PRIu64 "\e[0m ", sum);
+    fprintf(stderr, "\e[1;33m%" PRIu64 " \e[0m", sum);
   }
-  printf("\n");
+  fprintf(stderr, "\n");
+
 }
 
 

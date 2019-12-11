@@ -431,6 +431,11 @@ int analyze_query(char*query_str, query*q)
         //Remove the extra spaces
         remove_extra_chars(token, ' ');
         size_t token_size=strlen(token)+1;
+        if(token_size==0)
+        {
+            fprintf(stderr, "analyze_query: token_size == 0\n");
+            return -14;
+        }
         char *token_copy=malloc(sizeof(char)*token_size);
         if(token_copy==NULL)
         {
@@ -551,7 +556,7 @@ int analyze_query(char*query_str, query*q)
     i++;
     if(token==NULL)
     {
-        fprintf(stderr, "analyze_query: error with strtok_r projection token%s\n", token);
+        fprintf(stderr, "analyze_query: error with strtok_r projection token\n");
         return -21;
     }
     else

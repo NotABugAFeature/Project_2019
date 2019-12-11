@@ -88,7 +88,6 @@ void delete_middle_list(middle_list*);
  * bucket if needed.
  * @param middle_list* The list to add the row ids
  * @param uint64_t r_row_id
- * @param uint64_t s_row_id
  * @return int 0 If Successful
  */
 int append_to_middle_list(middle_list*, uint64_t r_row_id);

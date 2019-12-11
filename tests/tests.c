@@ -1567,6 +1567,44 @@ void testRelation_from_file5()
      free(list);
  }
 
+ void testConstruct_lookup_table()
+ {
+    middle_list_bucket **lookup_table;
+
+    //Giving NULL as list, should return NULL
+    lookup_table = construct_lookup_table(NULL);
+    CU_ASSERT_EQUAL(lookup_table, NULL);
+
+    middle_list *list = create_middle_list();
+    unsigned int num_buckets = 100;
+
+
+    //Add num_buckets buckets to the list
+    middle_list_node *new = create_middle_list_node();
+    new->bucket.row_ids[0] = 0;
+    list->head = new;
+    middle_list_node *prev = list->head;
+
+    for(unsigned int i=1; i<num_buckets; i++)
+    {
+        new = create_middle_list_node();
+        new->bucket.row_ids[0] = i;
+        prev->next = new;
+        prev = prev->next;
+    }
+    list->tail = new;
+    list->number_of_nodes = num_buckets;
+
+    lookup_table = construct_lookup_table(list);
+    for(unsigned int i=0; i<num_buckets; i++)
+    {
+        CU_ASSERT_EQUAL(lookup_table[i]->row_ids[0], i);
+    }
+
+    delete_middle_list(list);
+
+ }
+
  void testAppend_to_middle_list()
  {
      //Create a middle list
@@ -2118,6 +2156,7 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testIs_middle_list_bucket_full", testIs_middle_list_bucket_full))||
         (NULL==CU_add_test(pSuite, "testAppend_to_middle_bucket", testAppend_to_middle_bucket))||
         (NULL==CU_add_test(pSuite, "testCreate_middle_list", testCreate_middle_list))||
+        (NULL==CU_add_test(pSuite, "testConstruct_lookup_table", testConstruct_lookup_table))||
         (NULL==CU_add_test(pSuite, "testAppend_to_middle_list", testAppend_to_middle_list))||
         (NULL==CU_add_test(pSuite, "testIs_middle_list_empty", testIs_middle_list_empty))||
         (NULL==CU_add_test(pSuite, "testMiddle_list_get_number_of_buckets", testMiddle_list_get_number_of_buckets))||

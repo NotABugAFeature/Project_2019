@@ -25,6 +25,11 @@ string_list *read_tables(void)
 				line[strlen(line) - 1] = '\0';
 			}
 		}
+		if(strlen(line) < 1)
+        	{
+                	continue;
+        	}
+
 		if(strcmp(line, "Done") == 0 || feof(stdin))
 		{
 			break;

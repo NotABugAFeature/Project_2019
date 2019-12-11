@@ -8,11 +8,16 @@ fi
 exe=$1
 size=$2
 
-cp "$size.init" "$size_fixed.init";
-echo -e "Done\n" >> "$size_fixed.init";
+if grep -q "Done$" "$size.init"; then
+	init_file="$size.init";
+else
+	init_file="${size}_fixed.init";
+	cp "$size.init" "$init_file";
+	echo -e "Done\n" >> "$init_file";
+fi
 
 start=$(date +%s.%N);
-cat "$size_fixed.init" "$size.work" | "$exe" > /dev/null 2> colored_result;
+cat "$init_file" "$size.work" | "$exe" > /dev/null 2> colored_result;
 end=$(date +%s.%N);
 
 dur=$(echo $end - $start | bc);

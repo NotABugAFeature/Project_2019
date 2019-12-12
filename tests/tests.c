@@ -1742,7 +1742,7 @@ void testConstruct_relation_from_table2()
 	table *t = malloc(sizeof(table));
 	t->rows = 10;
 	t->columns = 2;
-	t->array = malloc(sizeof(columns * sizeof(uint64_t *)));
+	t->array = malloc(sizeof(t->columns * sizeof(uint64_t *)));
     for(uint64_t i=0; i<t->columns; i++)
     {
     	t->array[i] = malloc(t->rows*sizeof(uint64_t));
@@ -1767,7 +1767,7 @@ void testConstruct_relation_from_table3()
     table *t = malloc(sizeof(table));
 	t->rows = 4;
 	t->columns = 3;
-	t->array = malloc(sizeof(columns * sizeof(uint64_t *)));
+	t->array = malloc(sizeof(t->columns * sizeof(uint64_t *)));
     for(uint64_t i=0; i<t->columns; i++)
     {
     	t->array[i] = malloc(t->rows*sizeof(uint64_t));
@@ -1810,7 +1810,7 @@ void testConstruct_relation_from_table4()
     table *t = malloc(sizeof(table));
 	t->rows = 1000;
 	t->columns = 1000;
-	t->array = malloc(sizeof(columns * sizeof(uint64_t *)));
+	t->array = malloc(sizeof(t->columns * sizeof(uint64_t *)));
     for(uint64_t i=0; i<t->columns; i++)
     {
     	t->array[i] = malloc(t->rows*sizeof(uint64_t));
@@ -1852,23 +1852,24 @@ void testConstruct_relation_from_middleman1()
 {
 	uint64_t items = 10;
 
-	//Initialize table with data
-	table *t = malloc(sizeof(table));
-	t->rows = items;
-	t->columns = 3;
-	t->array = malloc(sizeof(columns * sizeof(uint64_t *)));
+    //Initialize table with data
+    table *t = malloc(sizeof(table));
+    t->rows = items;
+    t->columns = 3;
+    t->array = malloc(t->columns * sizeof(uint64_t *));
     for(uint64_t i=0; i<t->columns; i++)
     {
-    	t->array[i] = malloc(t->rows*sizeof(uint64_t));
+        t->array[i] = malloc(t->rows*sizeof(uint64_t));
     }
 
     for(uint64_t i=0; i<t->columns; i++)
     {
-    	for(uint64_t j=0; j<t->rows; j++)
-    	{
-    		t->array[i][j] = i + j;
-    	}
+        for(uint64_t j=0; j<t->rows; j++)
+        {
+            t->array[i][j] = i + j;
+        }
     }
+
 
 	//Initialize middle_list_bucket with data
 	middle_list_bucket *bucket = malloc(sizeof(middle_list_bucket));
@@ -1922,7 +1923,7 @@ void testConstruct_relation_from_middleman2()
 	table *t = malloc(sizeof(table));
 	t->rows = items;
 	t->columns = 3;
-	t->array = malloc(sizeof(columns * sizeof(uint64_t *)));
+	t->array = malloc(t->columns * sizeof(uint64_t *));
     for(uint64_t i=0; i<t->columns; i++)
     {
     	t->array[i] = malloc(t->rows*sizeof(uint64_t));
@@ -1942,13 +1943,13 @@ void testConstruct_relation_from_middleman2()
 	middle_list_bucket *bucket1 = malloc(sizeof(middle_list_bucket));
 	for(; i<items/2; i++)
 	{
-		bucket->row_ids[i] = i;
+		bucket1->row_ids[i] = i;
 	}
 	//Initialize middle_list_bucket with data
 	middle_list_bucket *bucket2 = malloc(sizeof(middle_list_bucket));
 	for(; i<items; i++)
 	{
-		bucket->row_ids[i] = i;
+		bucket2->row_ids[i] = i;
 	}
 
 	//Initialize relation to receive data
@@ -1984,7 +1985,8 @@ void testConstruct_relation_from_middleman2()
 	free(rel);
 
 	//Free middle_list_bucket
-	free(bucket);
+	free(bucket1);
+    free(bucket2);
 }
 
 
@@ -2088,7 +2090,6 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table2", testConstruct_relation_from_table2))||
         (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table3", testConstruct_relation_from_table3))||
         (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table4", testConstruct_relation_from_table4))||
-        (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table5", testConstruct_relation_from_table5))||
         (NULL==CU_add_test(pSuite, "testConstruct_relation_from_middleman1", testConstruct_relation_from_middleman1))||
         (NULL==CU_add_test(pSuite, "testConstruct_relation_from_middleman2", testConstruct_relation_from_middleman2))
 

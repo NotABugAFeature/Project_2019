@@ -1,14 +1,11 @@
 #ifndef QUICKSORT_H
 #define QUICKSORT_H
 #include"relation.h"
+
 /* Utility function to swap two elements */
 void swap(tuple *, tuple *);
 
-/* This function takes last element as pivot, places 
-    the pivot element at its correct position in sorted 
-    array, and places all smaller (smaller than pivot) 
-   to left of pivot and all greater elements to right 
-   of pivot */
+
 /**
  * Takes last element as pivot, places it in its correct position
  * and places all smaller elements to its left and all greater to its right

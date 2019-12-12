@@ -55,13 +55,13 @@ table *read_from_file(char *);
 
 
 /**
- * Frees the momory used by the table
+ * Frees the memory used by the table
  * @param table*
  */
 void delete_table(table*);
 
 /**
- * Frees the momory used by the contents of a table (doesn't free the table itself)
+ * Frees the memory used by the contents of a table (doesn't free the table itself)
  * @param table*
  */
 void delete_table_contents(table*);

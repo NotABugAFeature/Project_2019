@@ -13,7 +13,7 @@ test: tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o tabl
 	$(CC) -o test tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o $(TESTFLAGS)
 
 query_test: query_test.o query.o table.o
-	$(CC) $(TESTFLAGS) -o query_test query_test.o query.o table.o
+	$(CC) -o query_test query_test.o query.o table.o $(TESTFLAGS)
 
 
 queries: execute_query.o middle_list.o main.o query.o queue.o quicksort.o radix_sort.o relation.o sort_merge_join.o string_list.o table.o

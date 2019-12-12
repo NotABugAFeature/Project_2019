@@ -311,7 +311,7 @@ int analyze_query(char*query_str, query*q)
         return -2;
     }
     if(q->number_of_predicates!=0||q->number_of_projections!=0||q->number_of_tables!=0||
-            q->predicates!=NULL||q->projections!=NULL||q->table_ids!=NULL)
+       q->predicates!=NULL||q->projections!=NULL||q->table_ids!=NULL)
     {
         fprintf(stderr, "analyze_query: NULL query parameter not empty\n");
         return -3;
@@ -431,6 +431,11 @@ int analyze_query(char*query_str, query*q)
         //Remove the extra spaces
         remove_extra_chars(token, ' ');
         size_t token_size=strlen(token)+1;
+        if(token_size==0)
+        {
+            fprintf(stderr, "analyze_query: token_size == 0\n");
+            return -14;
+        }
         char *token_copy=malloc(sizeof(char)*token_size);
         if(token_copy==NULL)
         {
@@ -551,7 +556,7 @@ int analyze_query(char*query_str, query*q)
     i++;
     if(token==NULL)
     {
-        fprintf(stderr, "analyze_query: error with strtok_r projection token%s\n", token);
+        fprintf(stderr, "analyze_query: error with strtok_r projection token\n");
         return -21;
     }
     else
@@ -840,8 +845,8 @@ void print_query(query* q)
 void print_query_like_an_str(query* q)
 {
     if(q==NULL||q->number_of_tables==0||q->number_of_predicates==0||
-            q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
-            q->projections==NULL)
+       q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
+       q->projections==NULL)
     {
         fprintf(stderr, "print_query_like_an_str: Error with the query\n");
         return;
@@ -855,28 +860,28 @@ void print_query_like_an_str(query* q)
     {
         if(q->predicates[i].type==Filter)
         {
-            printf("%"PRIu32".%"PRIu64,((predicate_filter*)(q->predicates[i].p))->r.table_id,((predicate_filter*)(q->predicates[i].p))->r.column_id);
-            if(((predicate_filter*)(q->predicates[i].p))->filter_type==Less)
+            printf("%"PRIu32".%"PRIu64, ((predicate_filter*) (q->predicates[i].p))->r.table_id, ((predicate_filter*) (q->predicates[i].p))->r.column_id);
+            if(((predicate_filter*) (q->predicates[i].p))->filter_type==Less)
             {
                 printf("<");
             }
-            else if(((predicate_filter*)(q->predicates[i].p))->filter_type==Less_Equal)
+            else if(((predicate_filter*) (q->predicates[i].p))->filter_type==Less_Equal)
             {
                 printf("<=");
             }
-            else if(((predicate_filter*)(q->predicates[i].p))->filter_type==Equal)
+            else if(((predicate_filter*) (q->predicates[i].p))->filter_type==Equal)
             {
                 printf("=");
             }
-            else if(((predicate_filter*)(q->predicates[i].p))->filter_type==Not_Equal)
+            else if(((predicate_filter*) (q->predicates[i].p))->filter_type==Not_Equal)
             {
                 printf("<>");
             }
-            else if(((predicate_filter*)(q->predicates[i].p))->filter_type==Greater)
+            else if(((predicate_filter*) (q->predicates[i].p))->filter_type==Greater)
             {
                 printf(">");
             }
-            else if(((predicate_filter*)(q->predicates[i].p))->filter_type==Greater_Equal)
+            else if(((predicate_filter*) (q->predicates[i].p))->filter_type==Greater_Equal)
             {
                 printf(">=");
             }
@@ -885,12 +890,12 @@ void print_query_like_an_str(query* q)
                 printf("Empty Predicate Filter Type\n");
                 return;
             }
-            printf("%"PRIu64,((predicate_filter*)(q->predicates[i].p))->value);
+            printf("%"PRIu64, ((predicate_filter*) (q->predicates[i].p))->value);
         }
         else if(q->predicates[i].type==Join||q->predicates[i].type==Self_Join)
         {
-            printf("%"PRIu32".%"PRIu64"=%"PRIu32".%"PRIu64,((predicate_join*)(q->predicates[i].p))->r.table_id,((predicate_join*)(q->predicates[i].p))->r.column_id,
-                    ((predicate_join*)(q->predicates[i].p))->s.table_id,((predicate_join*)(q->predicates[i].p))->s.column_id);
+            printf("%"PRIu32".%"PRIu64"=%"PRIu32".%"PRIu64, ((predicate_join*) (q->predicates[i].p))->r.table_id, ((predicate_join*) (q->predicates[i].p))->r.column_id,
+                   ((predicate_join*) (q->predicates[i].p))->s.table_id, ((predicate_join*) (q->predicates[i].p))->s.column_id);
         }
         else
         {
@@ -905,13 +910,24 @@ void print_query_like_an_str(query* q)
     printf("|");
     for(uint32_t i=0; i<q->number_of_projections; i++)
     {
-        printf("%"PRIu32".%"PRIu64" ",q->projections[i].column_to_project.table_id,q->projections[i].column_to_project.column_id);
+        printf("%"PRIu32".%"PRIu64" ", q->projections[i].column_to_project.table_id, q->projections[i].column_to_project.column_id);
     }
     printf("\n");
 }
 
+/**
+ * Compares the contents of the two predicates and returns true if are the same
+ * @param predicate*
+ * @param predicate*
+ * @return bool true if equal
+ */
 bool compare_predicates(predicate* p1, predicate* p2)
 {
+    if(p1==NULL||p1->p==NULL||p2==NULL||p2->p==NULL)
+    {
+        fprintf(stderr, "compare_predicates: Error with the parameters\n");
+        return false;
+    }
     if(p1->type!=p2->type)
     {
         return false;
@@ -919,13 +935,13 @@ bool compare_predicates(predicate* p1, predicate* p2)
     if(p1->type==Join||p1->type==Self_Join)
     {
         if((((predicate_join*) (p1->p))->r.table_id==((predicate_join*) (p2->p))->r.table_id&&
-                ((predicate_join*) (p1->p))->r.column_id==((predicate_join*) (p2->p))->r.column_id&&
-                ((predicate_join*) (p1->p))->s.table_id==((predicate_join*) (p2->p))->s.table_id&&
-                ((predicate_join*) (p1->p))->s.column_id==((predicate_join*) (p2->p))->s.column_id)||
-                (((predicate_join*) (p1->p))->r.table_id==((predicate_join*) (p2->p))->s.table_id&&
-                ((predicate_join*) (p1->p))->r.column_id==((predicate_join*) (p2->p))->s.column_id&&
-                ((predicate_join*) (p1->p))->s.table_id==((predicate_join*) (p2->p))->r.table_id&&
-                ((predicate_join*) (p1->p))->s.column_id==((predicate_join*) (p2->p))->r.column_id))
+            ((predicate_join*) (p1->p))->r.column_id==((predicate_join*) (p2->p))->r.column_id&&
+            ((predicate_join*) (p1->p))->s.table_id==((predicate_join*) (p2->p))->s.table_id&&
+            ((predicate_join*) (p1->p))->s.column_id==((predicate_join*) (p2->p))->s.column_id)||
+           (((predicate_join*) (p1->p))->r.table_id==((predicate_join*) (p2->p))->s.table_id&&
+            ((predicate_join*) (p1->p))->r.column_id==((predicate_join*) (p2->p))->s.column_id&&
+            ((predicate_join*) (p1->p))->s.table_id==((predicate_join*) (p2->p))->r.table_id&&
+            ((predicate_join*) (p1->p))->s.column_id==((predicate_join*) (p2->p))->r.column_id))
         {
             return true;
         }
@@ -937,9 +953,9 @@ bool compare_predicates(predicate* p1, predicate* p2)
     else
     {
         if(((predicate_filter*) (p1->p))->r.table_id!=((predicate_filter*) (p2->p))->r.table_id||
-                ((predicate_filter*) (p1->p))->r.column_id!=((predicate_filter*) (p2->p))->r.column_id||
-                ((predicate_filter*) (p1->p))->filter_type!=((predicate_filter*) (p2->p))->filter_type||
-                ((predicate_filter*) (p1->p))->value!=((predicate_filter*) (p2->p))->value)
+           ((predicate_filter*) (p1->p))->r.column_id!=((predicate_filter*) (p2->p))->r.column_id||
+           ((predicate_filter*) (p1->p))->filter_type!=((predicate_filter*) (p2->p))->filter_type||
+           ((predicate_filter*) (p1->p))->value!=((predicate_filter*) (p2->p))->value)
         {
             return false;
         }
@@ -947,6 +963,11 @@ bool compare_predicates(predicate* p1, predicate* p2)
     return true;
 }
 
+/**
+ * Swaps the two predicates
+ * @param predicate*
+ * @param predicate*
+ */
 void swap_predicates(predicate* p1, predicate* p2)
 {
     predicate t=*p1;
@@ -958,9 +979,9 @@ int validate_query(query*q, table_index* ti)
 {
     //Check the parameters
     if(q==NULL||ti==NULL||ti->num_tables==0||ti->tables==NULL||
-            q->number_of_tables==0||q->number_of_predicates==0||
-            q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
-            q->projections==NULL)
+       q->number_of_tables==0||q->number_of_predicates==0||
+       q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
+       q->projections==NULL)
     {
         fprintf(stderr, "validate_query: Error with the parameters\n");
         return -1;
@@ -995,17 +1016,17 @@ int validate_query(query*q, table_index* ti)
             return -4;
         }
         //Check for duplicates
-//        if(table_indexes[i]==i)//Not a duplicate
-//        {
-//            for(uint32_t j=i+1; j<q->number_of_tables; j++)
-//            {
-//                if(q->table_ids[i]==q->table_ids[j])
-//                {//Duplicate table Ids
-//                    printf("Duplicate table ids\n");
-//                    table_indexes[j]=i;
-//                }
-//            }
-//        }
+        //        if(table_indexes[i]==i)//Not a duplicate
+        //        {
+        //            for(uint32_t j=i+1; j<q->number_of_tables; j++)
+        //            {
+        //                if(q->table_ids[i]==q->table_ids[j])
+        //                {//Duplicate table Ids
+        //                    printf("Duplicate table ids\n");
+        //                    table_indexes[j]=i;
+        //                }
+        //            }
+        //        }
     }
     //Verify the predicates
     for(uint32_t i=0; i<q->number_of_predicates; i++)
@@ -1210,10 +1231,16 @@ int validate_query(query*q, table_index* ti)
     return 0;
 }
 
+/**
+ * Swaps the table.columns in a join or self join predicate
+ * (1.0=0.2 -> 0.2=1.0)
+ * @param predicate*
+ */
 void swap_tc_in_predicate(predicate* p)
 {
     if(p==NULL||p->type!=Join)
     {
+        fprintf(stderr, "swap_tc_in_predicate: Error with the parameters\n");
         return;
     }
     table_column temp;
@@ -1224,6 +1251,8 @@ void swap_tc_in_predicate(predicate* p)
     ((predicate_join*) p->p)->s.table_id=temp.table_id;
     ((predicate_join*) p->p)->s.column_id=temp.column_id;
 }
+
+//Helper list for counting the table.columns in join predicates
 typedef struct counter_node counter_node;
 
 typedef struct counter_node
@@ -1239,6 +1268,10 @@ typedef struct counter_list
     counter_node* head;
 } counter_list;
 
+/**
+ * Creates and returns a new empty counter node
+ * @return counter_node* or Null if malloc fails
+ */
 counter_node* new_counter_node(void)
 {
     counter_node* new_node=malloc(sizeof(counter_node));
@@ -1254,6 +1287,10 @@ counter_node* new_counter_node(void)
     return new_node;
 }
 
+/**
+ * Prints the data of all the nodes in the list
+ * @param counter_list* The list to print
+ */
 void print_counter_list(counter_list* cl)
 {
     if(cl==NULL)
@@ -1273,6 +1310,13 @@ void print_counter_list(counter_list* cl)
     }
 }
 
+/**
+ * Appends a new table.column in the list or if it already exists increases
+ * the counter
+ * @param counter_list* The counter list
+ * @param table_column* The table.column
+ * @return 0 if successful
+ */
 int counter_list_append(counter_list*list, table_column* tc/*,predicate_join* p*/)
 {
     if(list==NULL||tc==NULL/*||p==NULL*/)
@@ -1316,6 +1360,13 @@ int counter_list_append(counter_list*list, table_column* tc/*,predicate_join* p*
     return 0;
 }
 
+/**
+ * Removes the table.column in the list or if the counter is greater than 1
+ * decreases the counter
+ * @param counter_list* The counter list
+ * @param table_column* The table.column
+ * @return 0 if successful
+ */
 int counter_list_remove(counter_list*list, table_column* tc)
 {
     if(list==NULL||tc==NULL)
@@ -1354,10 +1405,16 @@ int counter_list_remove(counter_list*list, table_column* tc)
         }
         temp=temp->next;
     }
-    return 0;
+    return -1;
 }
 
-uint32_t get_counter(counter_list* list, table_column* tc)
+/**
+ * Returns the counter of the table.column given
+ * @param counter_list*
+ * @param table_column*
+ * @return uint32_t The counter or 0
+ */
+uint32_t counter_list_get_counter(counter_list* list, table_column* tc)
 {
     if(list==NULL||tc==NULL)
     {
@@ -1375,6 +1432,10 @@ uint32_t get_counter(counter_list* list, table_column* tc)
     return 0;
 }
 
+/**
+ * Creates and returns an empty counter list
+ * @return counter_list* of NULL if malloc fails
+ */
 counter_list* create_counter_list(void)
 {
     //Create the list
@@ -1391,6 +1452,10 @@ counter_list* create_counter_list(void)
     return new_list;
 }
 
+/**
+ * Deletes all the nodes of the counter list
+ * @param counter_list*
+ */
 void delete_counter_list(counter_list* list)
 {
     if(list==NULL)
@@ -1414,9 +1479,9 @@ int optimize_query(query*q, table_index* ti)
 {
     //Check the parameters
     if(q==NULL||ti==NULL||ti->num_tables==0||ti->tables==NULL||
-            q->number_of_tables==0||q->number_of_predicates==0||
-            q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
-            q->projections==NULL)
+       q->number_of_tables==0||q->number_of_predicates==0||
+       q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
+       q->projections==NULL)
     {
         fprintf(stderr, "optimize_query: Error with the parameters\n");
         return -1;
@@ -1501,7 +1566,7 @@ int optimize_query(query*q, table_index* ti)
         }
         else
         {
-            max_value=get_counter(c_list, next_tc);
+            max_value=counter_list_get_counter(c_list, next_tc);
             if(max_value==0)
             {
                 delete_counter_list(c_list);
@@ -1520,7 +1585,7 @@ int optimize_query(query*q, table_index* ti)
             {
                 if(((predicate_join*) q->predicates[i].p)->r.table_id==next_tc->table_id&&((predicate_join*) q->predicates[i].p)->r.column_id==next_tc->column_id)
                 {//S is different
-                    if(get_counter(c_list, &((predicate_join*) q->predicates[i].p)->s)>1)
+                    if(counter_list_get_counter(c_list, &((predicate_join*) q->predicates[i].p)->s)>1)
                     {
                         if(z==max_value-1)//Last occurance of max
                         {
@@ -1545,14 +1610,14 @@ int optimize_query(query*q, table_index* ti)
                 }
                 else if(((predicate_join*) q->predicates[i].p)->s.table_id==next_tc->table_id&&((predicate_join*) q->predicates[i].p)->s.column_id==next_tc->column_id)
                 {//R is different
-                    if(z!=max_value-1&&get_counter(c_list, &((predicate_join*) q->predicates[i].p)->r)==1)//Not the last occurance of max
+                    if(z!=max_value-1&&counter_list_get_counter(c_list, &((predicate_join*) q->predicates[i].p)->r)==1)//Not the last occurance of max
                     {
                         swap_tc_in_predicate(&q->predicates[i]);
                         p_index_to_swap=i;
                         next_join=false;
                         break;
                     }
-                    else if(get_counter(c_list, &((predicate_join*) q->predicates[i].p)->r)==1)
+                    else if(counter_list_get_counter(c_list, &((predicate_join*) q->predicates[i].p)->r)==1)
                     {
                         p_index_to_swap=i;
                         next_join=false;
@@ -1589,9 +1654,9 @@ int create_sort_array(query*q, bool**t_c_to_sort)
 {
     //Check the parameters
     if(q==NULL||t_c_to_sort==NULL||
-            *t_c_to_sort!=NULL||q->number_of_tables==0||q->number_of_predicates==0||
-            q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
-            q->projections==NULL)
+       *t_c_to_sort!=NULL||q->number_of_tables==0||q->number_of_predicates==0||
+       q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
+       q->projections==NULL)
     {
         fprintf(stderr, "create_sort_array: Error with the parameters\n");
         return -1;
@@ -1664,14 +1729,14 @@ int create_sort_array(query*q, bool**t_c_to_sort)
         {
             bool_array[bool_counter]=true;
             if(last_sorted!=NULL&&last_sorted->table_id==((predicate_join*) (q->predicates[i].p))->r.table_id&&
-                    last_sorted->column_id==((predicate_join*) (q->predicates[i].p))->r.column_id)
+               last_sorted->column_id==((predicate_join*) (q->predicates[i].p))->r.column_id)
             {//Already sorted
                 bool_array[bool_counter]=false;
             }
             bool_counter++;
             bool_array[bool_counter]=true;
             if(last_sorted!=NULL&&last_sorted->table_id==((predicate_join*) (q->predicates[i].p))->s.table_id&&
-                    last_sorted->column_id==((predicate_join*) (q->predicates[i].p))->s.column_id)
+               last_sorted->column_id==((predicate_join*) (q->predicates[i].p))->s.column_id)
             {//Already sorted
                 bool_array[bool_counter]=false;
             }
@@ -1684,11 +1749,18 @@ int create_sort_array(query*q, bool**t_c_to_sort)
     return 0;
 }
 
+/**
+ * Moves the predicate in the query from index_start to index_end and shifts 
+ * all the other predicates accordingly
+ * @param query*
+ * @param uint32_t
+ * @param uint32_t
+ */
 void move_predicate(query*q, uint32_t index_start, uint32_t index_end)
 {
     if(q==NULL||q->number_of_predicates==0||q->predicates==NULL||
-            q->number_of_predicates<index_start||q->number_of_predicates<index_end||
-            index_end==index_start)
+       q->number_of_predicates<index_start||q->number_of_predicates<index_end||
+       index_end==index_start)
     {
         return;
     }
@@ -1713,8 +1785,8 @@ int optimize_query_memory(query*q)
     //The create bool must be called first
     //Check the parameters
     if(q==NULL||q->number_of_tables==0||q->number_of_predicates==0||
-            q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
-            q->projections==NULL)
+       q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
+       q->projections==NULL)
     {
         fprintf(stderr, "optimize_query_after_bool_array: Error with the parameters\n");
         return -1;
@@ -1731,7 +1803,7 @@ int optimize_query_memory(query*q)
                 if(q->predicates[j].type==Join)
                 {
                     if((((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_filter*) (q->predicates[i].p))->r.table_id)||
-                            (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_filter*) (q->predicates[i].p))->r.table_id))
+                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_filter*) (q->predicates[i].p))->r.table_id))
                     {
                         break;
                     }
@@ -1763,7 +1835,7 @@ int optimize_query_memory(query*q)
                 if(q->predicates[j].type==Join)
                 {
                     if((((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id)||
-                            (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id))
+                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id))
                     {
                         break;
                     }
@@ -1797,9 +1869,9 @@ int optimize_query_memory(query*q)
                 if(q->predicates[j].type==Join)
                 {
                     if((((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id)||
-                            (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
-                            (((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
-                            (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id))
+                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
+                       (((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
+                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id))
                     {
                         break;
                     }

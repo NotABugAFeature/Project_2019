@@ -2,129 +2,169 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "middle_list.h"
-#include "table.h"
+#include <inttypes.h>
 #include "query.h"
+#include "string_list.h"
+#include "execute_query.h"
 
+/**
+ * Reads queries from stdin and returns them in a list
+ * @return string_list of the queries
+ */
+string_list *read_batch(void)
+{
+    char line[STRING_SIZE];
+    string_list *list=string_list_create();
+    while(1)
+    {
+        fgets(line, STRING_SIZE, stdin);
+        if(feof(stdin))
+        {
+            printf("End of input\n");
+            string_list_delete(list);
+            return NULL;
+        }
+        if(line==NULL)
+        {
+        	string_list_delete(list);
+            return NULL;
+        }
+        if(line[strlen(line) - 1] == '\n')
+        {
+            line[strlen(line) - 1] = '\0';
+            if(line[strlen(line) - 1] == '\r')
+            {
+                line[strlen(line) - 1] = '\0';
+            }
+        }
+
+	if(strlen(line) < 1)
+	{
+		continue;
+	}
+
+        if(strcmp(line, "F")==0||strcmp(line, "f")==0)
+        {
+            break;
+        }
+        string_list_insert(list, line);
+    }
+    return list;
+}
 int main(void)
 {
 
-	// FILE *ff = stdout;
-	// middle_list* dd = create_middle_list();
-	// append_to_middle_list(dd, 2);
-	// append_to_middle_list(dd, 3);
-	// append_to_middle_list(dd, 4);
-	// append_to_middle_list(dd, 5);
-	// append_to_middle_list(dd, 6);
-	// print_middle_list(dd, ff);
+    string_list *list=read_tables();
+    printf("List of names:\n");
+    string_list_print(list);
+    table_index *ti=insert_tables_from_list(list);
+    printf("ti->num_tables: %" PRIu64 "\n", ti->num_tables);
+    for(uint32_t i=0; i<ti->num_tables; i++)
+    {
+        printf("ti->tables[%d].table_id: %" PRIu32 " - ti->tables[%d].columns: %" PRIu64 " - ti->tables[%d].rows: %" PRIu64 "\n", i, ti->tables[i].table_id, i, ti->tables[i].columns, i, ti->tables[i].rows);
+    }
+    while(1)
+    {
+        list=read_batch();
+        if(list==NULL)
+        {
+            break;
+        }
 
-	table_index table;
-	table.num_tables = 3;
-	table.tables = malloc(3*sizeof(table));
+        //Call query analysis, execute queries
+        char *query_str;
+        while(list->num_nodes>0)
+        {
+            query_str=string_list_remove(list);
+            printf("The query to analyze: %s\n", query_str);
+            query* q=create_query();
 
-	table.tables[0].table_id = 0;
-	table.tables[0].rows = 10;
-	table.tables[0].columns = 2;
+            if(q==NULL)
+            {
+                delete_table_index(ti);
+                free(query_str);
+                string_list_delete(list);
+                return -3;
+            }
 
-		int N = 10, M = 2;
-	table.tables[0].array  = (uint64_t **)malloc(N * sizeof(uint64_t *));
-   for (int i=0 ; i < N ; i++)
-	 {
-		 *(table.tables[0].array+i) = malloc(M * sizeof(uint64_t));
-	 }
+            if(analyze_query(query_str, q)!=0)
+            {
+                delete_query(q);
+                free(query_str);
+                continue;
+            }
+	    	free(query_str);
 
-	 // for (int i=0 ; i < N ; i++)
-	 // {
-		//  for (int j=0 ; j < M ; j++)
-		//  		table.tables[0].array[i][j]=i;
-	 // }
+            //printf("After analyzing: ");
+            //print_query_like_an_str(q);
+            if(validate_query(q,ti)!=0)
+            {
+                delete_query(q);
+                continue;
+            }
 
-	 for (int i=0 ; i < N ; i++)
-	 {
-		 	table.tables[0].array[i][0]=i;
-			table.tables[0].array[i][1]=i+1;
-	 }
+            //printf("After validation: ");
+            //print_query_like_an_str(q);
+            if(validate_query(q,ti)!=0)
+            {
+                delete_query(q);
+                continue;
+            }
 
-	 for (int i=0 ; i < N ; i++)
-	 {
-		 for (int j=0 ; j < M ; j++)
-		 		printf("%d  ", table.tables[0].array[i][j]);
-			printf("\n");
-	 }
-/*************************/
-table.tables[1].table_id = 1;
-table.tables[1].rows = 10;
-table.tables[1].columns = 2;
+            if(optimize_query(q,ti)!=0)
+            {
+                delete_query(q);
+                continue;
+            }
 
+            //printf("After optimizing: ");
+            //print_query_like_an_str(q);
+            bool* bool_array=NULL;
+            if(create_sort_array(q,&bool_array)!=0)
+            {
+                delete_query(q);
+                continue;
+            }
 
-table.tables[1].array  = (uint64_t **)malloc(N * sizeof(uint64_t *));
-for (int i=0 ; i < N ; i++)
-{
- *(table.tables[1].array+i) = malloc(M * sizeof(uint64_t));
-}
+            //printf("After creating bool array: ");
+            //print_query_like_an_str(q);
+            if(optimize_query_memory(q)!=0)
+            {
+                delete_query(q);
+                continue;
+            }
 
-// for (int i=0 ; i < N ; i++)
-// {
-//  for (int j=0 ; j < M ; j++)
-//  		table.tables[0].array[i][j]=i;
-// }
+            printf("After optimizing memory: ");
+            print_query_like_an_str(q);
 
-for (int i=0 ; i < N ; i++)
-{
-	table.tables[1].array[i][0]=i;
-	table.tables[1].array[i][1]=i+1;
-}
-printf("\n\n\n");
-for (int i=0 ; i < N ; i++)
-{
-	for (int j=0 ; j < M ; j++)
-		 printf("%d  ", table.tables[1].array[i][j]);
-	 printf("\n");
-}
-/****************/
+            /*
+            for(uint32_t i=0; i<q->number_of_predicates*2; i++)
+            {
+                printf("%d", bool_array[i]);
+            }
+	    	printf("\n");
+	    	*/
 
+			//Execute
+            middleman *middle = execute_query(q, ti, bool_array);
+            calculate_projections(q, ti, middle);
 
-		query q;
-		q.number_of_tables = 2;
-		q.table_ids = malloc((q.number_of_tables)*sizeof(uint32_t));
-		q.table_ids[0] = 0;
-		q.table_ids[1] = 1;
-		q.number_of_predicates = 1;
-		q.predicates = malloc((q.number_of_predicates) * sizeof(predicate));
+			//Free memory
+            for(uint32_t i = 0; i < middle->number_of_tables; i++)
+            {
+                if(middle->tables[i].list != NULL)
+                    delete_middle_list(middle->tables[i].list);
+            }
 
-		//filter
+            free(middle->tables);
+            free(middle);
 
-		// q.predicates[0].type = Filter;
-		// predicate_filter f;
-		// f.filter_type = Greater_Equal;
-		// f.value = 5;
-		// f.r.table_id = 0;
-		// f.r.column_id = 1;
-		//
-		// q.predicates[0].p = &f;
+            free(bool_array);
+	    	delete_query(q);
+        }
 
-		q.predicates[0].type = Join;
-		predicate_join j;
-		j.r.table_id = 0;
-		j.r.column_id = 0;
-
-		j.s.table_id = 1;
-		j.s.column_id = 1;
-		q.predicates[0].p = &j;
-
-		q.number_of_projections = 1;
-		q.projections = malloc((q.number_of_projections) * sizeof(projection));
-		q.projections[0].column_to_project.table_id = 0;
-		q.projections[0].column_to_project.column_id = 0;
-
-
-		bool b[2]={1,1};
-
-		middleman *m = execute_query(&q, &table, b);
-
-		calculate_projections(&q, &table, m);
-
-		free(q.predicates);
-
+        string_list_delete(list);
+    }
+    delete_table_index(ti);
     return 0;
 }

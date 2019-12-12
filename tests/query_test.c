@@ -452,6 +452,44 @@ void testAnalyze_query5(void)
     delete_query(q3);
 }
 
+void move_predicate(query* q, uint32_t index_start, uint32_t index_end);
+
+void testMove_predicate(void)
+{
+    query *q=create_query();
+    query *q1=create_query();
+    query *q2=create_query();
+    query *q3=create_query();
+    query *q4=create_query();
+    if(q==NULL||q1==NULL||q2==NULL||q3==NULL||q4==NULL)
+    {
+        return;
+    }
+    char query_str[80];
+    char query_str_1[80];
+    char query_str_2[80];
+    char query_str_3[80];
+    char query_str_4[80];
+    strncpy(query_str, "3 0 2 1|0.2=1.0&1.0=2.1&2.1=3.2&0.2<74|1.2 2.5 3.5", 79);
+    strncpy(query_str_1, "3 0 2 1|1.0=2.1&0.2=1.0&2.1=3.2&0.2<74|1.2 2.5 3.5", 79);
+    strncpy(query_str_2, "3 0 2 1|0.2<74&1.0=2.1&0.2=1.0&2.1=3.2|1.2 2.5 3.5", 79);
+    strncpy(query_str_3, "3 0 2 1|0.2<74&0.2=1.0&2.1=3.2&1.0=2.1|1.2 2.5 3.5", 79);
+    strncpy(query_str_4, "3 0 2 1|2.1=3.2&0.2<74&0.2=1.0&1.0=2.1|1.2 2.5 3.5", 79);
+    CU_ASSERT_EQUAL_FATAL(analyze_query(query_str, q), 0);
+    CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_1, q1), 0);
+    CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_2, q2), 0);
+    CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_3, q3), 0);
+    CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_4, q4), 0);
+    move_predicate(q,0,1);
+    CU_ASSERT_EQUAL_FATAL(compare_queries(q, q1), true);
+    move_predicate(q,3,0);
+    CU_ASSERT_EQUAL_FATAL(compare_queries(q, q2), true);
+    move_predicate(q,1,3);
+    CU_ASSERT_EQUAL_FATAL(compare_queries(q, q3), true);
+    move_predicate(q,2,0);
+    CU_ASSERT_EQUAL_FATAL(compare_queries(q, q4), true);
+}
+
 /**
  * Test 1
  * The function must return 0
@@ -463,6 +501,7 @@ void testValidate_query1(void)
     CU_ASSERT_EQUAL_FATAL(validate_query(q, NULL), -1);
     table_index ti;
     ti.num_tables=0;
+    ti.tables=NULL;
     CU_ASSERT_EQUAL_FATAL(validate_query(q, &ti), -1);
     ti.num_tables=1;
     CU_ASSERT_EQUAL_FATAL(validate_query(q, &ti), -1);
@@ -715,6 +754,76 @@ void testValidate_query2(void)
     delete_query(q_c_20);
     free(ti.tables);
 }
+typedef struct counter_list counter_list;
+counter_list* create_counter_list(void);
+int counter_list_append(counter_list* list, table_column* tc);
+int counter_list_remove(counter_list* list, table_column* tc);
+uint32_t counter_list_get_counter(counter_list* list, table_column* tc);
+void delete_counter_list(counter_list* list);
+void test_counter_list(void)
+{
+    counter_list* list=create_counter_list();
+    CU_ASSERT_NOT_EQUAL_FATAL(list,NULL);
+    table_column tc1_1;//one time
+    table_column tc2_2;//two times
+    table_column tc3_2;//two times
+    table_column tc4_3;//tree times
+    table_column tc5_4;//four times
+    tc1_1.table_id=1;
+    tc1_1.column_id=1;
+    tc2_2.table_id=2;
+    tc2_2.column_id=2;
+    tc3_2.table_id=3;
+    tc3_2.column_id=3;
+    tc4_3.table_id=2;
+    tc4_3.column_id=1;
+    tc5_4.table_id=1;
+    tc5_4.column_id=3;
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc1_1),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc1_1),1);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc2_2),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc2_2),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc2_2),2);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc3_2),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc3_2),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc3_2),2);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc4_3),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc4_3),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc4_3),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc4_3),3);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc5_4),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc5_4),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc5_4),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_append(list,&tc5_4),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc5_4),4);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc1_1),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc1_1),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc5_4),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc5_4),3);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc2_2),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc2_2),1);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc2_2),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc2_2),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc5_4),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc5_4),2);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc3_2),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc3_2),1);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc3_2),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc3_2),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc5_4),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc5_4),1);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc4_3),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc4_3),2);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc5_4),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc5_4),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc4_3),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc4_3),1);
+    CU_ASSERT_EQUAL_FATAL(counter_list_remove(list,&tc4_3),0);
+    CU_ASSERT_EQUAL_FATAL(counter_list_get_counter(list,&tc4_3),0);
+    
+    delete_counter_list(list);
+}
+
 
 bool compare_bool_arrays(bool* ar1, bool*ar2, size_t size)
 {
@@ -2426,8 +2535,10 @@ int main(void)
             NULL==CU_add_test(pSuite, "testAnalyze_query3", testAnalyze_query3)||
             NULL==CU_add_test(pSuite, "testAnalyze_query4", testAnalyze_query4)||
             NULL==CU_add_test(pSuite, "testAnalyze_query5", testAnalyze_query5)||
+            NULL==CU_add_test(pSuite, "testMove_predicate", testMove_predicate)||
             NULL==CU_add_test(pSuite, "testValidate_query1", testValidate_query1)||
             NULL==CU_add_test(pSuite, "testValidate_query2", testValidate_query2)||
+            NULL==CU_add_test(pSuite, "test_counter_list", test_counter_list)||
             NULL==CU_add_test(pSuite, "testOptimize_query1", testOptimize_query1)||
             NULL==CU_add_test(pSuite, "testOptimize_query_memory1", testOptimize_query_memory1)
             ))

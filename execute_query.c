@@ -732,6 +732,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
         delete_middle_list(index_list);
 
     }
+    //Case C. Original Self-Join
     else if(q->predicates[i].type == Self_Join &&
         (((predicate_join *)q->predicates[i].p)->r.table_id == ((predicate_join *)q->predicates[i].p)->s.table_id))
     {

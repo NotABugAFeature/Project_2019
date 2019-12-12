@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include "middle_list.h"
 
+
 /**
  * Creates and initializes a new empty middle list node (with the bucket)
  * @return middle_list_node* The new node
@@ -23,6 +24,7 @@ struct middle_list_node* create_middle_list_node()
     return new_node;
 }
 
+
 /**
  * Checks if the bucket given is full
  * @param middle_list_bucket The bucket to check
@@ -33,8 +35,9 @@ int is_middle_list_bucket_full(middle_list_bucket* bucket)
     return bucket->index_to_add_next==middle_LIST_BUCKET_SIZE ? 1 : 0;
 }
 
+
 /**
- * Appends the rowids given to the bucket.
+ * Appends the given rowid to the bucket
  * @param middle_list_bucket* the bucket
  * @param uint64_t r_row_id
  * @return 0 if successful 1 else
@@ -49,6 +52,8 @@ int append_to_middle_bucket(middle_list_bucket* bucket, uint64_t r_row_id)
     }
     return 1;
 }
+
+
 /**
  * Prints the contents of the bucket (index and array)
  * @param middle_list_bucket the bucket to print
@@ -57,12 +62,12 @@ int append_to_middle_bucket(middle_list_bucket* bucket, uint64_t r_row_id)
 void print_middle_bucket(middle_list_bucket* bucket,FILE*output)
 {
     //Print the array inside the bucket
-    //printf("Index to add next: %u\n", bucket->index_to_add_next);
     for(unsigned int i=0; i<bucket->index_to_add_next; i++)
     {
         fprintf(output,"RowIdR: %" PRIu64 "\n", bucket->row_ids[i]);
     }
 }
+
 
 middle_list* create_middle_list()
 {
@@ -82,6 +87,7 @@ middle_list* create_middle_list()
     return new_list;
 }
 
+
 void delete_middle_list(middle_list* list)
 {
     if(list==NULL)
@@ -93,22 +99,17 @@ void delete_middle_list(middle_list* list)
     //Delete all the nodes
     while(list->head!=NULL)
     {
-        //printf("Nodes: %u\n", list->number_of_nodes);
         list->head=temp->next;
         free(temp);
         temp=list->head;
         list->number_of_nodes--;
-        //printf("Node Deleted\n");
     }
     free(list);
-    //printf("List Deleted\n");
 }
+
 
 void print_middle_list(middle_list* list,FILE*output)
 {
-    //printf("%" PRIu64 "\n", sizeof(middle_list));
-    //printf("%" PRIu64 "\n", sizeof(middle_list_node));
-    //printf("%" PRIu64 "\n", sizeof(middle_list_bucket));
     if(list==NULL)
     {
         fprintf(stderr,"print_middle_list: NULL list pointer\n");
@@ -126,6 +127,7 @@ void print_middle_list(middle_list* list,FILE*output)
         temp=temp->next;
     }
 }
+
 
 middle_list_bucket **construct_lookup_table(middle_list* list)
 {
@@ -199,16 +201,19 @@ int append_to_middle_list(middle_list* list, uint64_t r_row_id)
     return 0;
 }
 
+
 int is_middle_list_empty(middle_list* list)
 {
     //return list->Head==NULL ? 1 : 0;
     return list->number_of_nodes==0 ? 1 : 0;
 }
 
+
 unsigned int middle_list_get_number_of_buckets(middle_list* list)
 {
     return list->number_of_nodes;
 }
+
 
 uint64_t middle_list_get_number_of_records(middle_list* list)
 {

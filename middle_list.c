@@ -37,7 +37,6 @@ int is_middle_list_bucket_full(middle_list_bucket* bucket)
  * Appends the rowids given to the bucket.
  * @param middle_list_bucket* the bucket
  * @param uint64_t r_row_id
- * @param uint64_t s_row_id
  * @return 0 if successful 1 else
  */
 int append_to_middle_bucket(middle_list_bucket* bucket, uint64_t r_row_id)

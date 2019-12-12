@@ -1796,6 +1796,8 @@ void testConstruct_relation_from_table3()
     }
     free(t->array);
     free(t);
+
+    free(rel->tuples);
     free(rel);
 }
 
@@ -1837,9 +1839,153 @@ void testConstruct_relation_from_table4()
     }
     free(t->array);
     free(t);
+
+    free(rel->tuples);
     free(rel);
 }
 
+
+/**
+ * Test case 1: called once for one bucket
+ */
+void testConstruct_relation_from_middleman1()
+{
+	uint64_t items = 10;
+
+	//Initialize table with data
+	table *t = malloc(sizeof(table));
+	t->rows = items;
+	t->columns = 3;
+	t->array = malloc(sizeof(columns * sizeof(uint64_t *)));
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	t->array[i] = malloc(t->rows*sizeof(uint64_t));
+    }
+
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	for(uint64_t j=0; j<t->rows; j++)
+    	{
+    		t->array[i][j] = i + j;
+    	}
+    }
+
+	//Initialize middle_list_bucket with data
+	middle_list_bucket *bucket = malloc(sizeof(middle_list_bucket));
+	for(uint64_t i=0; i<items; i++)
+	{
+		bucket->row_ids[i] = i;
+	}
+
+	//Initialize relation to receive data
+    relation *rel = malloc(sizeof(rel));
+	rel->num_tuples = items;
+	rel->tuples = malloc(items*sizeof(tuple));
+
+	uint64_t column = 1;
+	uint64_t counter = 0;
+
+	construct_relation_from_middleman(bucket, t, rel, column, &counter);
+	CU_ASSERT_EQUAL(counter, items-1);
+
+	for(uint64_t i=0; i<items; i++)
+	{
+		CU_ASSERT_EQUAL(rel->tuples[i].key, t->array[column][i]);
+		CU_ASSERT_EQUAL(rel->tuples[i].row_id, i);
+	}
+
+	//Free table
+	for(uint64_t i=0; i<t->columns; i++)
+	{
+		free(t->array[i]);
+	}
+	free(t->array);
+	free(t);
+
+	//Free relation
+	free(rel->tuples);
+	free(rel);
+
+	//Free middle_list_bucket
+	free(bucket);
+}
+
+
+/**
+ * Test case 2: called multiple times for different buckets
+ */
+void testConstruct_relation_from_middleman2()
+{
+	uint64_t items = 20;
+
+	//Initialize table with data
+	table *t = malloc(sizeof(table));
+	t->rows = items;
+	t->columns = 3;
+	t->array = malloc(sizeof(columns * sizeof(uint64_t *)));
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	t->array[i] = malloc(t->rows*sizeof(uint64_t));
+    }
+
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	for(uint64_t j=0; j<t->rows; j++)
+    	{
+    		t->array[i][j] = i + j;
+    	}
+    }
+
+
+    uint64_t i = 0;
+	//Initialize middle_list_bucket with data
+	middle_list_bucket *bucket1 = malloc(sizeof(middle_list_bucket));
+	for(; i<items/2; i++)
+	{
+		bucket->row_ids[i] = i;
+	}
+	//Initialize middle_list_bucket with data
+	middle_list_bucket *bucket2 = malloc(sizeof(middle_list_bucket));
+	for(; i<items; i++)
+	{
+		bucket->row_ids[i] = i;
+	}
+
+	//Initialize relation to receive data
+    relation *rel = malloc(sizeof(rel));
+	rel->num_tuples = items;
+	rel->tuples = malloc(items*sizeof(tuple));
+
+	uint64_t column = 1;
+	uint64_t counter = 0;
+
+	construct_relation_from_middleman(bucket1, t, rel, column, &counter);
+	CU_ASSERT_EQUAL(counter, items/2 - 1);
+
+	construct_relation_from_middleman(bucket2, t, rel, column, &counter);
+
+	i = 0;
+	for(; i<items; i++)
+	{
+		CU_ASSERT_EQUAL(rel->tuples[i].key, t->array[column][i]);
+		CU_ASSERT_EQUAL(rel->tuples[i].row_id, i);
+	}
+
+	//Free table
+	for(uint64_t i=0; i<t->columns; i++)
+	{
+		free(t->array[i]);
+	}
+	free(t->array);
+	free(t);
+
+	//Free relation
+	free(rel->tuples);
+	free(rel);
+
+	//Free middle_list_bucket
+	free(bucket);
+}
 
 
 int main(void)
@@ -1942,7 +2088,9 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table2", testConstruct_relation_from_table2))||
         (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table3", testConstruct_relation_from_table3))||
         (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table4", testConstruct_relation_from_table4))||
-        (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table5", testConstruct_relation_from_table5))
+        (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table5", testConstruct_relation_from_table5))||
+        (NULL==CU_add_test(pSuite, "testConstruct_relation_from_middleman1", testConstruct_relation_from_middleman1))||
+        (NULL==CU_add_test(pSuite, "testConstruct_relation_from_middleman2", testConstruct_relation_from_middleman2))
 
       )
     {

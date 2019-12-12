@@ -768,7 +768,7 @@ void testRelation_from_file5()
 
 
 /*
- * quicksort_test.c
+ * quicksort.c
  */
 
 
@@ -1133,7 +1133,9 @@ void testRelation_from_file5()
 
 
 
-/* middle_list.c */
+/* 
+ * middle_list.c
+ */
 
  void testCreate_middle_list_node()
  {
@@ -1366,7 +1368,9 @@ void testRelation_from_file5()
  }
 
 
- /* table.c */
+ /*
+  * table.c
+  */
 
 /**
  * Test case 1: NULL table
@@ -1687,6 +1691,10 @@ void testString_list_remove4()
 }
 
 
+/*
+ * execute_query.c
+ */
+
 /**
  * Test case 1: 0 number_of_tables given (should return NULL)
  */
@@ -1715,6 +1723,124 @@ void testInitialize_middleman2()
     free(m->tables);
     free(m);
 }
+
+
+/**
+ * Test case 1: table NULL
+ */
+void testConstruct_relation_from_table1()
+{
+    relation* rel = construct_relation_from_table(NULL, 1);
+    CU_ASSERT_EQUAL(rel, NULL);
+}
+
+/**
+ * Test case 2: column_id doesn't exist
+ */
+void testConstruct_relation_from_table2()
+{
+	table *t = malloc(sizeof(table));
+	t->rows = 10;
+	t->columns = 2;
+	t->array = malloc(sizeof(columns * sizeof(uint64_t *)));
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	t->array[i] = malloc(t->rows*sizeof(uint64_t));
+    }
+
+    relation *rel = construct_relation_from_table(t, 10);
+    CU_ASSERT_EQUAL(rel, NULL);
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	free(t->array[i]);
+    }
+    free(t->array);
+    free(t);
+}
+
+
+/**
+ * Test case 3: Small table 3x4
+ */
+void testConstruct_relation_from_table3()
+{
+    table *t = malloc(sizeof(table));
+	t->rows = 4;
+	t->columns = 3;
+	t->array = malloc(sizeof(columns * sizeof(uint64_t *)));
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	t->array[i] = malloc(t->rows*sizeof(uint64_t));
+    }
+
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	for(uint64_t j=0; j<t->rows; j++)
+    	{
+    		t->array[i][j] = i + j;
+    	}
+    }
+
+    relation *rel = construct_relation_from_table(t, 1);
+    CU_ASSERT_NOT_EQUAL(rel, NULL);
+    CU_ASSERT_EQUAL(rel->num_tuples, t->rows);
+    for(uint64_t j=0; j<t->rows; j++)
+    {
+    	CU_ASSERT_EQUAL(rel->tuples[j].key, 1+j);
+    	CU_ASSERT_EQUAL(rel->tuples[j].row_id, j);
+    }
+
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	free(t->array[i]);
+    }
+    free(t->array);
+    free(t);
+    free(rel);
+}
+
+
+/**
+ * Test case 4: Big table 1000x1000
+ */
+void testConstruct_relation_from_table4()
+{
+    table *t = malloc(sizeof(table));
+	t->rows = 1000;
+	t->columns = 1000;
+	t->array = malloc(sizeof(columns * sizeof(uint64_t *)));
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	t->array[i] = malloc(t->rows*sizeof(uint64_t));
+    }
+
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	for(uint64_t j=0; j<t->rows; j++)
+    	{
+    		t->array[i][j] = i + j;
+    	}
+    }
+
+    relation *rel = construct_relation_from_table(t, 5);
+    CU_ASSERT_NOT_EQUAL(rel, NULL);
+    CU_ASSERT_EQUAL(rel->num_tuples, t->rows);
+    for(uint64_t j=0; j<t->rows; j++)
+    {
+    	CU_ASSERT_EQUAL(rel->tuples[j].key, 5+j);
+    	CU_ASSERT_EQUAL(rel->tuples[j].row_id, j);
+    }
+
+    for(uint64_t i=0; i<t->columns; i++)
+    {
+    	free(t->array[i]);
+    }
+    free(t->array);
+    free(t);
+    free(rel);
+}
+
+
 
 int main(void)
 {
@@ -1811,7 +1937,12 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testString_list_remove4", testString_list_remove4))||
 
         (NULL==CU_add_test(pSuite, "testInitialize_middleman1", testInitialize_middleman1))||
-        (NULL==CU_add_test(pSuite, "testInitialize_middleman2", testInitialize_middleman2))
+        (NULL==CU_add_test(pSuite, "testInitialize_middleman2", testInitialize_middleman2))||
+        (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table1", testConstruct_relation_from_table1))||
+        (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table2", testConstruct_relation_from_table2))||
+        (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table3", testConstruct_relation_from_table3))||
+        (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table4", testConstruct_relation_from_table4))||
+        (NULL==CU_add_test(pSuite, "testConstruct_relation_from_table5", testConstruct_relation_from_table5))
 
       )
     {

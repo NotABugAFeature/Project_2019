@@ -115,6 +115,11 @@ int filter_original_table(predicate_filter *filter,
  */
 relation *construct_relation_from_table(table * table, uint64_t column_id)
 {
+  if(table == NULL || table->array == NULL || column_id < 0 || column_id >= table->columns)
+  {
+  	fprintf(stderr, "construct_relation_from_table: Incorrect arguments\n");
+  	return NULL;
+  }
   relation *rel = malloc(sizeof(relation));
   if(rel == NULL)
   {

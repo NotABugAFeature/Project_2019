@@ -15,7 +15,7 @@
  */
 int final_join(middle_list* list_t, middle_list* list_s, relation *t, relation *s)
 {
-    if(list_t==NULL||list_s==NULL||t==NULL||s==NULL||(t->num_tuples>0&&t->tuples==NULL)||(s->num_tuples>0&&s->tuples==NULL))
+    if(list_t==NULL||list_s==NULL||t==NULL||s==NULL||t->num_tuples<=0||t->tuples==NULL||s->num_tuples<=0||s->tuples==NULL)
     {
 	    fprintf(stderr, "%s", "final_join Error: arguments cannot be null\n");
         return 1;

@@ -44,15 +44,6 @@ typedef struct
  */
 int table_from_file(table *, char *);
 
-//TODO: Old version (possibly remove it)
-/**
- * Reads a table from a file
- *
- * @param filename - path of the file
- * @return table in table * format, NULL for error
- */
-table *read_from_file(char *);
-
 
 /**
  * Frees the memory used by the table

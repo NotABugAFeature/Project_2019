@@ -111,7 +111,7 @@ int is_middle_list_empty(middle_list* list);
 
 /**
  * Returns the number of nodes in the middle list.
- * @param
+ * @param middle_list The middle list
  * @return int The number of nodes
  */
 unsigned int middle_list_get_number_of_buckets(middle_list*);
@@ -119,7 +119,7 @@ unsigned int middle_list_get_number_of_buckets(middle_list*);
 
 /**
  * Returns the number of records in the middle list.
- * @param
+ * @param middle_list The middle list
  * @return uint64_t The number of records
  */
 uint64_t middle_list_get_number_of_records(middle_list*);

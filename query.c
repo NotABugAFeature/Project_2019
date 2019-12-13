@@ -1714,6 +1714,12 @@ int create_sort_array(query*q, bool**t_c_to_sort)
             }
         }
     }
+    //Check if all tables all joined in the end
+    if(join_counter<q->number_of_tables-1)
+    {
+        printf("The query requires cartesian product\n");
+        return -5;
+    }
     //Create the bool table
     bool* bool_array=malloc(sizeof(bool)*join_counter*2);
     if(bool_array==NULL)

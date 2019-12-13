@@ -61,6 +61,11 @@ int filter_middle_bucket(predicate_filter *filter,
                          table* table,
                          middle_list *new_list)
 {
+  if(filter==NULL||table==NULL||table->array==NULL||new_list==NULL||bucket==NULL)
+  {
+      fprintf(stderr, "filter_middle_bucket: Error with parameters\n");
+      return -1;
+  }
   for(uint32_t i = 0; i < bucket->index_to_add_next; i++)
   {
     if( (filter->filter_type == Less && table->array[filter->r.column_id][bucket->row_ids[i]] < filter->value)||
@@ -89,7 +94,11 @@ int filter_original_table(predicate_filter *filter,
                           table* table,
                           middle_list *new_list)
 {
-
+  if(filter==NULL||table==NULL||table->array==NULL||new_list==NULL)
+  {
+      fprintf(stderr, "filter_original_table: Error with parameters\n");
+      return -1;
+  }
   for(uint64_t i = 0; i < table->rows; i++)
   {
     if( (filter->filter_type == Less && table->array[filter->r.column_id][i] < filter->value)||
@@ -833,5 +842,3 @@ void calculate_projections(query *q, table_index* index, middleman *m)
   fprintf(stderr, "\n");
 
 }
-
-

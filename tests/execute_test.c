@@ -90,7 +90,7 @@ void testExecute_query()
     strncpy(query_str14, " ", 199);
     strncpy(query_str15, " ", 199);
     bool* bool_array=NULL;
-    if(analyze_query(q1, query_str1)==0&&validate_query(q1, ti)==0&&
+    if(analyze_query(query_str1, q1)==0&&validate_query(q1, ti)==0&&
        optimize_query(q1, ti)==0&&create_sort_array(q1, &bool_array)==0&&
        optimize_query_memory(q1)==0
        )

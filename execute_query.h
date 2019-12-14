@@ -2,6 +2,7 @@
 #define EXECUTE_QUERY_H
 
 #include "relation.h"
+#include "query.h"
 
 middleman *initialize_middleman(uint32_t number_of_tables);
 int filter_middle_bucket(predicate_filter *filter,

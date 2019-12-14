@@ -105,12 +105,6 @@ int main(void)
 
             //printf("After validation: ");
             //print_query_like_an_str(q);
-            if(validate_query(q,ti)!=0)
-            {
-                delete_query(q);
-                continue;
-            }
-
             if(optimize_query(q,ti)!=0)
             {
                 delete_query(q);

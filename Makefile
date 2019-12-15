@@ -5,18 +5,13 @@ CC=gcc -std=gnu11
 FLAGS= -Wall -g
 TESTFLAGS= -Wall -lcunit
 
-all: queries
+all: queries tests
+	./tests
 
-tests: query_test test execute_test
+notests: queries
 
-test: tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o
-	$(CC) -o test tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o $(TESTFLAGS)
-
-query_test: query_test.o query.o table.o
-	$(CC) -o query_test query_test.o query.o table.o $(TESTFLAGS)
-
-execute_test: execute_test.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o
-	$(CC) -o execute_test execute_test.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o $(TESTFLAGS)
+tests: tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o
+	$(CC) -o tests tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o $(TESTFLAGS)
 
 queries: execute_query.o middle_list.o main.o query.o queue.o quicksort.o radix_sort.o relation.o sort_merge_join.o string_list.o table.o
 	$(CC) $(FLAGS) -o queries execute_query.o middle_list.o main.o query.o queue.o quicksort.o radix_sort.o relation.o sort_merge_join.o string_list.o table.o
@@ -54,14 +49,8 @@ table.o: table.c table.h
 query.o: query.c query.h
 	$(CC) $(FLAGS) -c query.c
 
-query_test.o: ./tests/query_test.c
-	$(CC) $(FLAGS) -c ./tests/query_test.c
-
-tests.o: ./tests/tests.c
-	$(CC) $(FLAGS) -c ./tests/tests.c
-
-execute_test.o: ./tests/execute_test.c
-	$(CC) $(FLAGS) -c ./tests/execute_test.c
+tests.o: tests.c
+	$(CC) $(FLAGS) -c tests.c
 
 clean:
-	rm -f *.o queries test query_test execute_test
+	rm -f *.o queries tests

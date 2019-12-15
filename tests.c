@@ -4,14 +4,14 @@
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
 #include <limits.h>
-#include "../radix_sort.h"
-#include "../sort_merge_join.h"
-#include "../queue.h"
-#include "../table.h"
-#include "../string_list.h"
-#include "../execute_query.h"
-#include "../query.h"
-#include "../middle_list.h"
+#include "radix_sort.h"
+#include "sort_merge_join.h"
+#include "queue.h"
+#include "table.h"
+#include "string_list.h"
+#include "execute_query.h"
+#include "query.h"
+#include "middle_list.h"
 
 /*
  * CUnit Test Suite
@@ -942,49 +942,12 @@ void testRelation_from_file5()
  }
 
 
+ 
  /**
-  * Test case 3. Relation t or relation s is empty
+  * Test case 3. Successful test
   *
   */
  void testFinal_join3()
- {
-     middle_list* list_t = create_middle_list();
-     middle_list* list_s = create_middle_list();
-
-     relation p1, p2;
-
-     p1.num_tuples = 0;
-     p1.tuples = NULL;
-
-     p2.num_tuples = 3;
-     p2.tuples = malloc(3*sizeof(tuple));
-     p2.tuples[0].key = 1;
-     p2.tuples[0].row_id = 1;
-
-     p2.tuples[1].key = 1;
-     p2.tuples[1].row_id = 2;
-
-     p2.tuples[2].key = 3;
-     p2.tuples[2].row_id = 3;
-
-
-     int res = final_join(list_t, list_s, &p1, &p2);
-     CU_ASSERT_EQUAL(res, 1);
-
-     res = final_join(list_t, list_s, &p2, &p1);
-     CU_ASSERT_EQUAL(res, 1);
-
-     free(p2.tuples);
-     delete_middle_list(list_t);
-     delete_middle_list(list_s);
- }
-
-
- /**
-  * Test case 4. Successful test
-  *
-  */
- void testFinal_join4()
  {
      middle_list* list_t = create_middle_list();
      middle_list* list_s = create_middle_list();
@@ -1032,10 +995,10 @@ void testRelation_from_file5()
 
 
  /**
-  * Test case 5. Successful test
+  * Test case 4. Successful test
   *
   */
- void testFinal_join5()
+ void testFinal_join4()
  {
      middle_list* list_t = create_middle_list();
      middle_list* list_s = create_middle_list();
@@ -1083,10 +1046,10 @@ void testRelation_from_file5()
 
 
  /**
-  * Test case 6. Successful test
+  * Test case 5. Successful test
   *
   */
- void testFinal_join6()
+ void testFinal_join5()
  {
      middle_list* list_t = create_middle_list();
      middle_list* list_s = create_middle_list();
@@ -1131,7 +1094,6 @@ void testRelation_from_file5()
      delete_middle_list(list_t);
      delete_middle_list(list_s);
  }
-
 
 
 
@@ -5384,7 +5346,6 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testFinal_join3", testFinal_join3))||
         (NULL==CU_add_test(pSuite, "testFinal_join4", testFinal_join4))||
         (NULL==CU_add_test(pSuite, "testFinal_join5", testFinal_join5))||
-        (NULL==CU_add_test(pSuite, "testFinal_join6", testFinal_join6))||
 
         (NULL==CU_add_test(pSuite, "testCreate_middle_list_node", testCreate_middle_list_node))||
         (NULL==CU_add_test(pSuite, "testIs_middle_list_bucket_full", testIs_middle_list_bucket_full))||

@@ -937,6 +937,7 @@ void testRelation_from_file5()
 
      res = final_join(list, NULL, &p1, &p2);
      CU_ASSERT_EQUAL(res, 1);
+     delete_middle_list(list);
  }
 
 
@@ -1136,7 +1137,9 @@ void testRelation_from_file5()
 /* 
  * middle_list.c
  */
-
+struct middle_list_node* create_middle_list_node();
+int is_middle_list_bucket_full(middle_list_bucket*);
+int append_to_middle_bucket(middle_list_bucket*, uint64_t);
  void testCreate_middle_list_node()
  {
      middle_list_node* list_node=create_middle_list_node();
@@ -1241,7 +1244,7 @@ void testRelation_from_file5()
     {
         CU_ASSERT_EQUAL(lookup_table[i]->row_ids[0], i);
     }
-
+    free(lookup_table);
     delete_middle_list(list);
 
  }
@@ -1425,6 +1428,7 @@ void testTable_from_File4()
 			CU_ASSERT_EQUAL(t->array[i][j], i+j);
 		}
 	}
+        delete_table(t);
 }
 
 /**
@@ -1444,6 +1448,7 @@ void testTable_from_File5()
 			CU_ASSERT_EQUAL(t->array[i][j], i+j);
 		}
 	}
+        delete_table(t);
 }
 
 /**
@@ -1463,6 +1468,7 @@ void testTable_from_File6()
 			CU_ASSERT_EQUAL(t->array[i][j], i+j);
 		}
 	}
+        delete_table(t);
 }
 
 /**
@@ -1484,6 +1490,7 @@ void testGet_table2()
 	ti->tables = NULL;
 	table *t = get_table(ti, 1);
 	CU_ASSERT_EQUAL(t, NULL);
+        free(ti);
 }
 
 /**
@@ -1501,6 +1508,8 @@ void testGet_table3()
 
 	table *t = get_table(ti, 10);
 	CU_ASSERT_EQUAL(t, NULL);
+        free(ti->tables);
+        free(ti);
 }
 
 /**
@@ -1518,6 +1527,8 @@ void testGet_table4()
 
 	table *t = get_table(ti, 10);
 	CU_ASSERT_EQUAL(t->table_id, 10);
+        free(ti->tables);
+        free(ti);
 }
 
 
@@ -1652,6 +1663,7 @@ void testString_list_remove3()
         sprintf(str, "string%d", i);
         char *str2 = string_list_remove(list);
         CU_ASSERT_EQUAL(strcmp(str, str2), 0);
+        free(str2);
     }
 
     string_list_node *node = list->head;
@@ -1685,6 +1697,7 @@ void testString_list_remove4()
         sprintf(str, "string%d", i);
         char *str2 = string_list_remove(list);
         CU_ASSERT_EQUAL(strcmp(str, str2), 0);
+        free(str2);
     }
 
     free(list);
@@ -1880,7 +1893,7 @@ void testConstruct_relation_from_middleman1()
     bucket->index_to_add_next = items;
 
 	//Initialize relation to receive data
-    relation *rel = malloc(sizeof(rel));
+    relation *rel = malloc(sizeof(relation));
 	rel->num_tuples = items;
 	rel->tuples = malloc(items*sizeof(tuple));
 
@@ -1959,7 +1972,7 @@ void testConstruct_relation_from_middleman2()
 
 
 	//Initialize relation to receive data
-    relation *rel = malloc(sizeof(rel));
+    relation *rel = malloc(sizeof(relation));
 	rel->num_tuples = items;
 	rel->tuples = malloc(items*sizeof(tuple));
 
@@ -2034,7 +2047,7 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testCopy_relation_with_psum3", testCopy_relation_with_psum3))||
         (NULL==CU_add_test(pSuite, "testCopy_relation_with_psum4", testCopy_relation_with_psum4))||
         (NULL==CU_add_test(pSuite, "testRadix_sort1", testRadix_sort1))||
-     //   (NULL==CU_add_test(pSuite, "testRadix_sort2", testRadix_sort2))||
+        (NULL==CU_add_test(pSuite, "testRadix_sort2", testRadix_sort2))||
 
     	(NULL==CU_add_test(pSuite, "testCreate_relation_from_table1", testCreate_relation_from_table1))||
     	(NULL==CU_add_test(pSuite, "testCreate_relation_from_table2", testCreate_relation_from_table2))||

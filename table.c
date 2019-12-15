@@ -16,7 +16,10 @@ string_list *read_tables(void)
 
 	while(1)
 	{
-		fgets(line, STRING_SIZE, stdin);
+		if(fgets(line, STRING_SIZE, stdin)==NULL)
+        	{
+            		break;
+        	}
 		if(line[strlen(line) - 1] == '\n')
 		{
 			line[strlen(line) - 1] = '\0';

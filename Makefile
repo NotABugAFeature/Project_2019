@@ -1,14 +1,17 @@
-#Makefile for Project_2019_1
+#Makefile for Project_2019_2
 
 CC=gcc -std=gnu11
 
 FLAGS= -Wall -g
-TESTFLAGS= -Wall -lcunit
+TESTFLAGS= -Wall -g -lcunit
 
 all: queries tests
 	./tests
 
 notests: queries
+
+queries_fast: execute_query.c middle_list.c main.c query.c queue.c quicksort.c radix_sort.c relation.c sort_merge_join.c string_list.c table.c
+	$(CC) $(FLAGS) -O3 -o queries execute_query.c middle_list.c main.c query.c queue.c quicksort.c radix_sort.c relation.c sort_merge_join.c string_list.c table.c
 
 tests: tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o
 	$(CC) -o tests tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o $(TESTFLAGS)

@@ -55,6 +55,13 @@ void testExecute_query()
         CU_ASSERT(0);
         return;
     }
+    for(unsigned int i=0;i<ti->num_tables;i++)
+    {
+        ti->tables[i].array=NULL;
+        ti->tables[i].columns=0;
+        ti->tables[i].rows=0;
+        ti->tables[i].table_id=0;
+    }
     char path[40];
     bool errors=false;
     unsigned int error_index=0;
@@ -64,14 +71,7 @@ void testExecute_query()
         if(table_from_file(&(ti->tables[i]),path)!=0)
         {
             errors=true;
-            if(i==0)
-            {
-                error_index=0;
-            }
-            else
-            {
-                error_index=i+1;
-            }
+            error_index=i;
         }
     }
     if(errors)

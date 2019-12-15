@@ -488,6 +488,11 @@ void testMove_predicate(void)
     CU_ASSERT_EQUAL_FATAL(compare_queries(q, q3), true);
     move_predicate(q,2,0);
     CU_ASSERT_EQUAL_FATAL(compare_queries(q, q4), true);
+    delete_query(q);
+    delete_query(q1);
+    delete_query(q2);
+    delete_query(q3);
+    delete_query(q4);
 }
 
 /**

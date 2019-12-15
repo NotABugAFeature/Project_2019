@@ -64,7 +64,7 @@ int filter_middle_bucket(predicate_filter *filter,
   if(filter==NULL||table==NULL||table->array==NULL||new_list==NULL||bucket==NULL)
   {
       fprintf(stderr, "filter_middle_bucket: Error with parameters\n");
-      return -1;
+      return 1;
   }
   for(uint32_t i = 0; i < bucket->index_to_add_next; i++)
   {
@@ -97,7 +97,7 @@ int filter_original_table(predicate_filter *filter,
   if(filter==NULL||table==NULL||table->array==NULL||new_list==NULL)
   {
       fprintf(stderr, "filter_original_table: Error with parameters\n");
-      return -1;
+      return 1;
   }
   for(uint64_t i = 0; i < table->rows; i++)
   {
@@ -208,6 +208,11 @@ int update_middle_bucket(middle_list_bucket **lookup, middle_list_bucket *bucket
  */
 int self_join_table(predicate_join *join, table* table, middle_list *list)
 {
+  if(join==NULL||table==NULL||table->array==NULL||list==NULL)
+  {
+      fprintf(stderr, "self_join_table: Error with parameters\n");
+      return 1;
+  }
   for(uint64_t i = 0; i < table->rows; i++)
   {
     if(table->array[join->r.column_id][i] == table->array[join->s.column_id][i])
@@ -237,6 +242,12 @@ int self_join_middle_bucket(predicate_join *join,
                             middle_list *index_list,
                             uint32_t *counter)
 {
+  if(join==NULL||table_r==NULL||table_s==NULL||table_r->array==NULL||table_s->array==NULL||
+     bucket_r==NULL||bucket_s==NULL||list_r==NULL||list_s==NULL||index_list==NULL||counter==NULL)
+  {
+      fprintf(stderr, "self_join_middle_bucket: Error with parameters\n");
+      return 1;
+  }
   for(uint32_t i = 0; i < bucket_r->index_to_add_next; i++)
   {
     if(table_r->array[join->r.column_id][bucket_r->row_ids[i]] ==
@@ -261,6 +272,11 @@ int original_self_join_middle_bucket(predicate_join *join,
                          table* table,
                          middle_list *new_list)
 {
+  if(join==NULL||table==NULL||table->array==NULL||new_list==NULL||bucket==NULL)
+  {
+      fprintf(stderr, "original_self_join_middle_bucket: Error with parameters\n");
+      return 1;
+  }
   for(unsigned int i = 0; i < bucket->index_to_add_next; i++)
   {
     if(table->array[join->r.column_id][bucket->row_ids[i]] == table->array[join->s.column_id][bucket->row_ids[i]])

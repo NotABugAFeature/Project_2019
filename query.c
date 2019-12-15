@@ -1721,6 +1721,10 @@ int create_sort_array(query*q, bool**t_c_to_sort)
         return -5;
     }
     //Create the bool table
+    if(join_counter==0)//No joins one table
+    {
+        join_counter=1;
+    }
     bool* bool_array=malloc(sizeof(bool)*join_counter*2);
     if(bool_array==NULL)
     {
@@ -1798,7 +1802,8 @@ int optimize_query_memory(query*q)
         return -1;
     }
     //First move the filters as much to the right as you can before it is needed
-    for(uint32_t i=0; i<q->number_of_predicates; i++)
+    uint32_t move_counter=0;
+    for(uint32_t i=0; i<q->number_of_predicates&&move_counter<q->number_of_predicates; i++)
     {
         if(q->predicates[i].type==Filter)
         {
@@ -1827,6 +1832,7 @@ int optimize_query_memory(query*q)
             {
                 move_predicate(q, i, filter_pos);
                 i--;
+                move_counter++;
             }
         }
     }

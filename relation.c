@@ -99,8 +99,7 @@ relation *relation_from_file(char *filename)
     rewind(fp);
     for(uint64_t i=0; i<rows; i++)
     {
-    	fgets(str, 99, fp);
-    	if(sscanf(str, "%" PRIu64 ",%" PRIu64, &(rel->tuples[i].key), &(rel->tuples[i].row_id)) != 2)
+    	if(fgets(str, 99, fp)==NULL||sscanf(str, "%" PRIu64 ",%" PRIu64, &(rel->tuples[i].key), &(rel->tuples[i].row_id))!=2)
 	{
 		fprintf(stderr, "relation_from_file: incorrect file format\n");
 		free(rel->tuples);

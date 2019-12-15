@@ -17,8 +17,7 @@ string_list *read_batch(void)
     string_list *list=string_list_create();
     while(1)
     {
-        fgets(line, STRING_SIZE, stdin);
-        if(feof(stdin))
+        if(fgets(line, STRING_SIZE, stdin)==NULL||feof(stdin))
         {
             printf("End of input\n");
             string_list_delete(list);

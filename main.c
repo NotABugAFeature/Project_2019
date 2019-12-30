@@ -9,7 +9,6 @@
 #include "string_list.h"
 #include "execute_query.h"
 #include "job_scheduler.h"
-
 /**
  * Reads queries from stdin and returns them in a list
  * @return string_list of the queries
@@ -39,14 +38,18 @@ string_list *read_batch(void)
                 line[strlen(line)-1]='\0';
             }
         }
-
         if(strlen(line)<1)
         {
             continue;
         }
-
         if(strcmp(line, "F")==0||strcmp(line, "f")==0)
         {
+            string_list_insert(list, line);
+            break;
+        }
+        if(strcmp(line, "Done")==0||strcmp(line, "done")==0)
+        {
+            string_list_insert(list, line);
             break;
         }
         string_list_insert(list, line);
@@ -68,14 +71,13 @@ void *Thread_Function(void* thr_arg);
 
 //We can use this struct instead of global
 //The Parameters To Pass To The Threads 
-typedef struct 
+typedef struct
 {
-//    pthread_mutex_t*
-//    sem*
+    //    pthread_mutex_t*
+    //    sem*
     job_scheduler* jobs;
-}thread_parameters;
-
-int main(int argc,char** argv)
+} thread_parameters;
+int main(int argc, char** argv)
 {
     //TODO command line args
     //TODO change positions of some parts of the code
@@ -86,15 +88,22 @@ int main(int argc,char** argv)
         perror("Semaphore fifo_job_counter_sem initialization");
         return 1;
     }
-    uint16_t worker_th=10;//argv
-    thread_parameters tp;//If needed
+    uint16_t worker_th=10; //argv
+    job_scheduler* scheduler=create_job_scheduler();
+    if(scheduler==NULL)
+    {
+        //TODO destroy sem/mutexes
+        return 1;
+    }
+    thread_parameters tp; //If needed
+    tp.jobs=scheduler;
     pthread_t threads[worker_th];
     //Start The Threads
-    for(int i=0;i<worker_th;i++)
+    for(int i=0; i<worker_th; i++)
     {
         if((pthread_create(&threads[i], NULL, Thread_Function, &tp)))
         {//ERROR
-            fprintf(stderr,"Pthread_create error\n");
+            fprintf(stderr, "Pthread_create error\n");
             return 2;
         }
     }
@@ -108,6 +117,7 @@ int main(int argc,char** argv)
     {
         printf("ti->tables[%d].table_id: %" PRIu32 " - ti->tables[%d].columns: %" PRIu64 " - ti->tables[%d].rows: %" PRIu64 "\n", i, ti->tables[i].table_id, i, ti->tables[i].columns, i, ti->tables[i].rows);
     }
+    uint64_t queries_count=0;
     while(1)
     {
         list=read_batch();
@@ -117,103 +127,55 @@ int main(int argc,char** argv)
         }
         //Call query analysis, execute queries
         char *query_str;
-        while(list->num_nodes>0)
+        while(list->num_nodes>1)
         {
             query_str=string_list_remove(list);
-            printf("The query to analyze: %s\n", query_str);
-            query* q=create_query();
-            if(q==NULL)
+            job* newjob=create_query_job(query_str,ti,queries_count);
+            if(newjob==NULL)
             {
-                delete_table_index(ti);
-                free(query_str);
-                string_list_delete(list);
-                return -3;
+                break;
             }
-            if(analyze_query(query_str, q)!=0)
-            {
-                delete_query(q);
-                free(query_str);
-                continue;
-            }
-            free(query_str);
-            //printf("After analyzing: ");
-            //print_query_like_an_str(q);
-            if(validate_query(q, ti)!=0)
-            {
-                delete_query(q);
-                continue;
-            }
-            //printf("After validation: ");
-            //print_query_like_an_str(q);
-            if(optimize_query(q, ti)!=0)
-            {
-                delete_query(q);
-                continue;
-            }
-            //printf("After optimizing: ");
-            //print_query_like_an_str(q);
-            bool* bool_array=NULL;
-            if(create_sort_array(q, &bool_array)!=0)
-            {
-                delete_query(q);
-                continue;
-            }
-            //printf("After creating bool array: ");
-            //print_query_like_an_str(q);
-            if(optimize_query_memory(q)!=0)
-            {
-                delete_query(q);
-                continue;
-            }
-            printf("After optimizing memory: ");
-            print_query_like_an_str(q);
-            /*
-            for(uint32_t i=0; i<q->number_of_predicates*2; i++)
-            {
-                printf("%d", bool_array[i]);
-            }
-                printf("\n");
-             */
-            //Execute
-            middleman *middle=execute_query(q, ti, bool_array);
-            calculate_projections(q, ti, middle);
-            //Free memory
-            for(uint32_t i=0; i<middle->number_of_tables; i++)
-            {
-                if(middle->tables[i].list!=NULL)
-                    delete_middle_list(middle->tables[i].list);
-            }
-            free(middle->tables);
-            free(middle);
-            free(bool_array);
-            delete_query(q);
+            pthread_mutex_lock(&job_fifo_mutex);
+            //Append to fifo
+            //TODO Add checks
+            schedule_job(scheduler,newjob);
+            pthread_mutex_unlock(&job_fifo_mutex);
+            sem_post(&fifo_job_counter_sem);
+            queries_count++;
+        }
+        query_str=string_list_remove(list);
+        if(strcmp(query_str, "Done")==0||strcmp(query_str, "done")==0)
+        {
+            string_list_delete(list);
+            break;
         }
         string_list_delete(list);
     }
     /**************************************************************************/
+    sleep(20);
+
     th_term=true;
     for(int i=0;i<worker_th;i++)
+    {//Inform All Thread To Exit
+        sem_post(&fifo_job_counter_sem);
+    }
+    for(int i=0;i<worker_th;i++)
     {
-        th_term=true;
-        for(int i=0;i<worker_th;i++)
-        {//Inform All Thread To Exit
-            sem_post(&fifo_job_counter_sem);
-        }
         if(pthread_join(threads[i], NULL))
         {//ERROR
             fprintf(stderr,"Pthread_join error\n");
         }
-        printf("Thread %d Exited",i);
+        printf("Thread %d Exited\n",i);
     }
+    delete_job_scheduler(scheduler);
     delete_table_index(ti);
+    sem_destroy(&fifo_job_counter_sem);
     return 0;
 }
-
-
 void *Thread_Function(void * thr_arg)
 {
     //Read the parameters if needed
-    thread_parameters* tp=(thread_parameters *)(thr_arg);
+    thread_parameters* tp=(thread_parameters *) (thr_arg);
     while(true&&!th_term)
     {
         //Pop A Job From The Buffer
@@ -222,9 +184,12 @@ void *Thread_Function(void * thr_arg)
         {
             break;
         }
+        //TODO Add checks
         pthread_mutex_lock(&job_fifo_mutex);
         //Pop job from fifo
+        job* j=get_job(tp->jobs);
         pthread_mutex_unlock(&job_fifo_mutex);
+        j->run(j->parameters);
         //Ecexute the job
     }
     pthread_exit(NULL);

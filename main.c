@@ -57,11 +57,6 @@ string_list *read_batch(void)
     return list;
 }
 
-
-//Mutex for accessing the job fifo
-pthread_mutex_t job_fifo_mutex=PTHREAD_MUTEX_INITIALIZER;
-//Semaphore that counts the items in the job fifo
-sem_t fifo_job_counter_sem;
 bool th_term=false; //Used to signal the thread termination
 /**
  * The thread function
@@ -83,16 +78,11 @@ int main(int argc, char** argv)
     //TODO change positions of some parts of the code
     //TODO create the query job and delete the execute code here
     //Initialize The Semaphores
-    if(sem_init(&fifo_job_counter_sem, 0, 0)!=0)
-    {
-        perror("Semaphore fifo_job_counter_sem initialization");
-        return 1;
-    }
+    //TODO destroy sem/mutexes
     uint16_t worker_th=10; //argv
     job_scheduler* scheduler=create_job_scheduler();
     if(scheduler==NULL)
     {
-        //TODO destroy sem/mutexes
         return 1;
     }
     thread_parameters tp; //If needed
@@ -130,17 +120,17 @@ int main(int argc, char** argv)
         while(list->num_nodes>1)
         {
             query_str=string_list_remove(list);
-            job* newjob=create_query_job(query_str,ti,queries_count);
+            job* newjob=create_query_job(scheduler,query_str,ti,queries_count);
             if(newjob==NULL)
             {
                 break;
             }
-            pthread_mutex_lock(&job_fifo_mutex);
+//            pthread_mutex_lock(&scheduler->job_fifo_mutex);
             //Append to fifo
             //TODO Add checks
             schedule_job(scheduler,newjob);
-            pthread_mutex_unlock(&job_fifo_mutex);
-            sem_post(&fifo_job_counter_sem);
+//            pthread_mutex_unlock(&job_fifo_mutex);
+//            sem_post(&fifo_job_counter_sem);
             queries_count++;
         }
         query_str=string_list_remove(list);
@@ -152,12 +142,12 @@ int main(int argc, char** argv)
         string_list_delete(list);
     }
     /**************************************************************************/
-    sleep(20);
+    sleep(100);
 
     th_term=true;
     for(int i=0;i<worker_th;i++)
     {//Inform All Thread To Exit
-        sem_post(&fifo_job_counter_sem);
+        sem_post(&scheduler->fifo_job_counter_sem);
     }
     for(int i=0;i<worker_th;i++)
     {
@@ -169,7 +159,7 @@ int main(int argc, char** argv)
     }
     delete_job_scheduler(scheduler);
     delete_table_index(ti);
-    sem_destroy(&fifo_job_counter_sem);
+//    sem_destroy(&fifo_job_counter_sem);
     return 0;
 }
 void *Thread_Function(void * thr_arg)
@@ -179,17 +169,24 @@ void *Thread_Function(void * thr_arg)
     while(true&&!th_term)
     {
         //Pop A Job From The Buffer
-        sem_wait(&fifo_job_counter_sem);
-        if(th_term)
+//        sem_wait(&fifo_job_counter_sem);
+//        if(th_term)
+//        {
+//            break;
+//        }
+        //TODO Add checks
+//        pthread_mutex_lock(&job_fifo_mutex);
+        //Pop job from fifo
+        job* j=get_job(tp->jobs);
+//        pthread_mutex_unlock(&job_fifo_mutex);
+        if(j!=NULL)
+        {
+            j->run(j->parameters);
+        }
+        else
         {
             break;
         }
-        //TODO Add checks
-        pthread_mutex_lock(&job_fifo_mutex);
-        //Pop job from fifo
-        job* j=get_job(tp->jobs);
-        pthread_mutex_unlock(&job_fifo_mutex);
-        j->run(j->parameters);
         //Ecexute the job
     }
     pthread_exit(NULL);

@@ -1088,7 +1088,7 @@ int execute_query_parallel(job_query_parameters* p)
             }
             //TODO Add checks
             schedule_job(p->this_job->scheduler, newjob_s);
-            p->this_job->run=run_join_job;
+            p->this_job->run=run_prejoin_job;
             schedule_job(p->this_job->scheduler, p->this_job);
             return 1;
         }

@@ -120,8 +120,8 @@ job* create_query_job(job_scheduler* jb, char* query_str, table_index* ti, uint6
     par->r=NULL;
     par->s=NULL;
     //TODO check mutex init
-    par->r_mutex=PTHREAD_MUTEX_INITIALIZER;
-    par->s_mutex=PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_init(&par->r_mutex, NULL);
+    pthread_mutex_init(&par->s_mutex, NULL);
     par->unsorted_r_rows=0;
     par->unsorted_s_rows=0;
     newjob->scheduler=jb;
@@ -271,6 +271,81 @@ void destroy_presort_job(void* parameters)
 void destroy_sort_job(void* parameters)
 {//TODO Check frees
 }
+
+job* create_prejoin_job(void * parameters)
+{
+
+}
+
+job* create_join_job(void * parameters)
+{
+
+}
+
+int run_prejoin_job(void * parameters)
+{
+	job_query_parameters* p=(job_query_parameters*) parameters;
+	if(p==NULL||p->query_str!=NULL||p->bool_array==NULL||p->query==NULL||p->tables==NULL||p->this_job==NULL||
+	   p->b_counter==0||p->joined_tables==NULL||p->middle==NULL)
+	{
+	    fprintf(stderr, "run_prejoin_job: wrong parameters\n");
+	    destroy_query_job(parameters);
+	    return -1;
+	}
+
+	//Check if the sorting is complete
+    pthread_mutex_lock(&p->r_mutex);
+//    printf("Unsorted R:%"PRIu64"\n",p->unsorted_r_rows);
+    if(p->unsorted_r_rows!=0)
+    {
+        pthread_mutex_unlock(&p->r_mutex);
+        //Append to fifo
+        //TODO Add checks
+        schedule_job(p->this_job->scheduler, p->this_job);
+        return 0;
+    }
+    pthread_mutex_unlock(&p->r_mutex);
+    pthread_mutex_lock(&p->s_mutex);
+//    printf("Unsorted S:%"PRIu64"\n",p->unsorted_s_rows);
+    if(p->unsorted_s_rows!=0)
+    {
+        pthread_mutex_unlock(&p->s_mutex);
+        schedule_job(p->this_job->scheduler, p->this_job);
+        return 0;
+    }
+    pthread_mutex_unlock(&p->s_mutex);
+
+	uint64_t chunks = 3;
+	uint64_t sizes[chunks];
+	uint64_t small_size = p->r->num_tuples/chunks;
+	uint64_t extra = p->r->num_tuples%chunks;
+	for(uint64_t i=0; i<chunks; i++)
+	{
+		sizes[i] = small_size;
+		if(i < extra)
+			sizes[i]++;
+
+		printf("\e[1;36msizes[%" PRIu64 "] = %" PRIu64 "\e[0m\n", i, sizes[i]);
+	}
+
+	uint64_t start_r = 0, end_r, start_s = 0;
+	for(uint64_t i=0; i<chunks; i++)
+	{
+		end_r = start_r + sizes[i];
+		printf("\e[1;36mRange R: %" PRIu64 " - %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_r, end_r, p->r->tuples[start_r]);
+		while(p->s->tuples[start_s] < p->r->tuples[start_r])
+		{
+			start_s++;
+		}
+
+		printf("\e[1;36mRange S: %" PRIu64 " starting at %" PRIu64 "\e[0m", start_s, p->s->tuples[start_s]);
+	}
+
+	exit(0);
+}
+
+
+
 int run_join_job(void* parameters)
 {
     job_query_parameters* p=(job_query_parameters*) parameters;

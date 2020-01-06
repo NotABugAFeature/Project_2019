@@ -75,6 +75,7 @@ int run_query_job(void*);
 int run_execute_job(void*);
 int run_presort_job(void*);
 int run_sort_job(void*);
+int run_prejoin_job(void*);
 int run_join_job(void*);
 void destroy_query_job(void*);
 job* create_query_job(job_scheduler*, char*, table_index*,uint64_t);

@@ -3,6 +3,7 @@
 
 #include "relation.h"
 #include "query.h"
+#include "job_scheduler.h"
 
 middleman *initialize_middleman(uint32_t number_of_tables);
 int filter_middle_bucket(predicate_filter *filter,
@@ -34,5 +35,11 @@ int self_join_middle_bucket(predicate_join *,
 middleman *execute_query(query *q, table_index* index, bool *sorting);
 void calculate_sum(projection p, middle_list_bucket *bucket, table *table, uint64_t *sum);
 void calculate_projections(query *q, table_index* index, middleman *m);
+
+int execute_query_parallel(job_query_parameters* p);
+int update_related_lists(uint32_t predicate_index, query *q, uint32_t **concatenated_tables,
+                         middleman *m,int delete_r, int delete_s,
+                         middle_list *result_R,
+                         middle_list *result_S, middle_list *index_list);
 
 #endif // EXECUTE_QUERY_H

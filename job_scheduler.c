@@ -315,31 +315,37 @@ int run_prejoin_job(void * parameters)
     }
     pthread_mutex_unlock(&p->s_mutex);
 
+    pthread_mutex_lock(&p->r_mutex);
+    printf("\e[1;31mR->num_tuples = %" PRIu64 "\e[0m\n", p->r->num_tuples);
+    pthread_mutex_unlock(&p->r_mutex);
+
+    pthread_mutex_lock(&p->r_mutex);
 	uint64_t chunks = 3;
-	uint64_t sizes[chunks];
 	uint64_t small_size = p->r->num_tuples/chunks;
 	uint64_t extra = p->r->num_tuples%chunks;
+
+	printf("\e[1;36mR tuples: %" PRIu64 ", S tuples: %" PRIu64 "\e[0m\n", p->r->num_tuples, p->s->num_tuples);
+	uint64_t start_r, end_r = 0, start_s = 0;
 	for(uint64_t i=0; i<chunks; i++)
 	{
-		sizes[i] = small_size;
+		start_r = end_r;
+		end_r = start_r + small_size;
 		if(i < extra)
-			sizes[i]++;
-
-		printf("\e[1;36msizes[%" PRIu64 "] = %" PRIu64 "\e[0m\n", i, sizes[i]);
-	}
-
-	uint64_t start_r = 0, end_r, start_s = 0;
-	for(uint64_t i=0; i<chunks; i++)
-	{
-		end_r = start_r + sizes[i];
-		printf("\e[1;36mRange R: %" PRIu64 " - %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_r, end_r, p->r->tuples[start_r]);
-		while(p->s->tuples[start_s] < p->r->tuples[start_r])
 		{
+			end_r++;
+		}
+		printf("\e[1;36mRange R: %" PRIu64 " - %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_r, end_r, p->r->tuples[start_r].key);
+		pthread_mutex_lock(&p->s_mutex);
+		while(p->s->tuples[start_s].key < p->r->tuples[start_r].key && start_s < p->s->num_tuples)
+		{
+			//printf("\e[1;36mS[%" PRIu64 "].key = %" PRIu64 ", and R[%" PRIu64 "] = %" PRIu64 "\e[0m\n", start_s, p->s->tuples[start_s].key, start_r, p->r->tuples[start_r].key);
 			start_s++;
 		}
 
-		printf("\e[1;36mRange S: %" PRIu64 " starting at %" PRIu64 "\e[0m", start_s, p->s->tuples[start_s]);
+		printf("\e[1;36mRange S: %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_s, p->s->tuples[start_s].key);
+		pthread_mutex_unlock(&p->s_mutex);
 	}
+	pthread_mutex_unlock(&p->r_mutex);
 
 	exit(0);
 }

@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
+#include <stdbool.h>
 #include "table.h"
+
+#define N 472882027
 
 
 /**
@@ -11,37 +14,37 @@
  */
 string_list *read_tables(void)
 {
-	char line[STRING_SIZE];
-	string_list *list = string_list_create();
+  char line[STRING_SIZE];
+  string_list *list = string_list_create();
 
-	while(1)
-	{
-		if(fgets(line, STRING_SIZE, stdin)==NULL)
-        	{
-            		break;
-        	}
-		if(line[strlen(line) - 1] == '\n')
-		{
-			line[strlen(line) - 1] = '\0';
-			if(line[strlen(line) - 1] == '\r')
-			{
-				line[strlen(line) - 1] = '\0';
-			}
-		}
-		if(strlen(line) < 1)
-        	{
-                	continue;
-        	}
+  while(1)
+  {
+    if(fgets(line, STRING_SIZE, stdin)==NULL)
+    {
+      break;
+    }
+    if(line[strlen(line) - 1] == '\n')
+    {
+      line[strlen(line) - 1] = '\0';
+      if(line[strlen(line) - 1] == '\r')
+      {
+        line[strlen(line) - 1] = '\0';
+      }
+    }
+    if(strlen(line) < 1)
+    {
+      continue;
+    }
 
-		if(strcmp(line, "Done") == 0 || feof(stdin))
-		{
-			break;
-		}
-		string_list_insert(list, line);
+    if(strcmp(line, "Done") == 0 || feof(stdin))
+    {
+      break;
+    }
+    string_list_insert(list, line);
 
-	}
+  }
 
-	return list;
+  return list;
 }
 
 
@@ -53,14 +56,14 @@ string_list *read_tables(void)
  */
 int table_from_file(table *t, char *filename)
 {
-	FILE *fp;
-	uint64_t rows, columns;
+  FILE *fp;
+  uint64_t rows, columns;
 
-	if(t == NULL)
-	{
-		fprintf(stderr, "table_from_file: given table is NULL\n");
-		return -1;
-	}
+  if(t == NULL)
+  {
+    fprintf(stderr, "table_from_file: given table is NULL\n");
+    return -1;
+  }
 
     //open file
     fp = fopen(filename, "rb");
@@ -72,16 +75,16 @@ int table_from_file(table *t, char *filename)
 
     if(fread(&rows, sizeof(uint64_t), 1, fp) < 1)
     {
-    	perror("table_from_file: read error");
-    	fclose(fp);
-    	return -2;
+      perror("table_from_file: read error");
+      fclose(fp);
+      return -2;
     }
 
     if(fread(&columns, sizeof(uint64_t), 1, fp) < 1)
     {
-    	perror("table_from_file: read error");
-    	fclose(fp);
-    	return -2;
+      perror("table_from_file: read error");
+      fclose(fp);
+      return -2;
     }
 
     uint32_t id;
@@ -92,32 +95,89 @@ int table_from_file(table *t, char *filename)
     t->array = malloc(columns * sizeof(uint64_t *));
     if(t->array == NULL)
     {
-    	perror("table_from_file: malloc error");
-    	return -3;
+      perror("table_from_file: malloc error");
+      return -3;
     }
 
     for(uint64_t i=0; i<columns; i++)
     {
-    	t->array[i] = malloc(rows * sizeof(uint64_t));
-    	if(t->array[i] == NULL)
-    	{
-    		perror("table_from_file: malloc error");
-    		return -3;
-    	}
+      t->array[i] = malloc(rows * sizeof(uint64_t));
+      if(t->array[i] == NULL)
+      {
+        perror("table_from_file: malloc error");
+        return -3;
+      }
     }
+
+    t->columns_stats = malloc(columns * sizeof(statistics));
+    if(t->columns_stats == NULL)
+    {
+      perror("table_from_file: malloc error");
+      return -4;
+    }
+
 
     //read content
     for(uint64_t i = 0; i < columns; i++)
     {
+        t->columns_stats[i].f_A = rows;
+
         for(uint64_t j = 0; j < rows; j++)
         {
-            if(fread(&(t->array[i][j]), sizeof(uint64_t), 1, fp) < 1)
-	    	{
-				fprintf(stderr, "table_from_file: incorrect file format\n");
-				fclose(fp);
-				return -3;
-	    	}
+          if(fread(&(t->array[i][j]), sizeof(uint64_t), 1, fp) < 1)
+          {
+            fprintf(stderr, "table_from_file: incorrect file format\n");
+            fclose(fp);
+            return -3;
+          }
+
+          printf("el: %llu\n", t->array[i][j]);
+
+          if(j == 0)
+          {
+            t->columns_stats[i].i_A = t->array[i][j];
+            t->columns_stats[i].u_A = t->array[i][j];
+          }
+          else
+          {
+            if(t->array[i][j] < t->columns_stats[i].i_A)
+            {
+              t->columns_stats[i].i_A = t->array[i][j];
+            }
+            if(t->array[i][j] > t->columns_stats[i].u_A)
+            {
+              t->columns_stats[i].u_A = t->array[i][j];
+            }
+          }
         }
+
+        bool *distinct_vals, flag = false;
+        if((t->columns_stats[i].u_A - t->columns_stats[i].i_A + 1) < N)
+        {
+          distinct_vals = malloc(bool_vals * sizeof(bool));
+          flag = true;
+        }
+        else
+          distinct_vals = malloc(N * sizeof(bool));
+
+        if(distinct_vals == NULL)
+        {
+          fprintf(stderr, "table_from_file: malloc error\n");
+          fclose(fp);
+          return -5;
+        }
+
+        for(uint64_t j = 0; j < rows; j++)
+        {
+          if(flag)
+            distinct_vals[t->array[i][j] - t->columns_stats[i].u_A] = true; 
+          else
+            distinct_vals[(t->array[i][j] - t->columns_stats[i].u_A) % N] = true; 
+        }
+
+        if()
+
+        printf("%llu\n%llu\n\n", t->columns_stats[i].i_A, t->columns_stats[i].u_A);
     }
 
     fclose(fp);
@@ -173,37 +233,37 @@ void delete_table_contents(table*table_r)
  */
 table_index *insert_tables_from_list(string_list *list)
 {
-	table_index *ti = malloc(sizeof(table_index));
-	if(ti == NULL)
-	{
-		perror("insert_tables: malloc error");
-		return NULL;
-	}
+  table_index *ti = malloc(sizeof(table_index));
+  if(ti == NULL)
+  {
+    perror("insert_tables: malloc error");
+    return NULL;
+  }
 
-	ti->num_tables = list->num_nodes;
-	ti->tables = malloc(ti->num_tables*sizeof(table));
-	if(ti->tables == NULL)
-	{
-		perror("insert_tables: malloc error");
-		return NULL;
-	}
+  ti->num_tables = list->num_nodes;
+  ti->tables = malloc(ti->num_tables*sizeof(table));
+  if(ti->tables == NULL)
+  {
+    perror("insert_tables: malloc error");
+    return NULL;
+  }
 
-	char *filename;
-	for(uint32_t i=0; i<ti->num_tables; i++)
-	{
-		filename = string_list_remove(list);
-		if(table_from_file(&(ti->tables[i]), filename) < 0)
-		{
-			fprintf(stderr, "insert_tables: error reading in table %s\n", filename);
-			free(filename);
-			break;
-		}
+  char *filename;
+  for(uint32_t i=0; i<ti->num_tables; i++)
+  {
+    filename = string_list_remove(list);
+    if(table_from_file(&(ti->tables[i]), filename) < 0)
+    {
+      fprintf(stderr, "insert_tables: error reading in table %s\n", filename);
+      free(filename);
+      break;
+    }
 
-		free(filename);
-	}
+    free(filename);
+  }
 
-	free(list);
-	return ti;
+  free(list);
+  return ti;
 }
 
 
@@ -215,26 +275,26 @@ table_index *insert_tables_from_list(string_list *list)
  */
 table *get_table(table_index *ti, uint32_t id)
 {
-	if(ti == NULL)
-	{
-		fprintf(stderr, "get_table: table index is NULL\n");
-		return NULL;
-	}
+  if(ti == NULL)
+  {
+    fprintf(stderr, "get_table: table index is NULL\n");
+    return NULL;
+  }
 
-	if(ti->tables == NULL)
-	{
-		fprintf(stderr, "get_table: tables of table index is NULL\n");
-		return NULL;
-	}
+  if(ti->tables == NULL)
+  {
+    fprintf(stderr, "get_table: tables of table index is NULL\n");
+    return NULL;
+  }
 
-	for(uint32_t i=0; i<ti->num_tables; i++)
-	{
-		if(ti->tables[i].table_id == id)
-		{
-			return &(ti->tables[i]);
-		}
-	}
-	return NULL;
+  for(uint32_t i=0; i<ti->num_tables; i++)
+  {
+    if(ti->tables[i].table_id == id)
+    {
+      return &(ti->tables[i]);
+    }
+  }
+  return NULL;
 }
 
 /**
@@ -243,14 +303,14 @@ table *get_table(table_index *ti, uint32_t id)
  */
 void delete_table_index(table_index *ti)
 {
-	for(uint32_t i=0; i<ti->num_tables; i++)
-	{
-		delete_table_contents(&(ti->tables[i]));
-	}
-	free(ti->tables);
+  for(uint32_t i=0; i<ti->num_tables; i++)
+  {
+    delete_table_contents(&(ti->tables[i]));
+  }
+  free(ti->tables);
 
-	free(ti);
-	ti = NULL;
+  free(ti);
+  ti = NULL;
 }
 
 
@@ -260,7 +320,7 @@ void delete_table_index(table_index *ti)
  */
 table_index *insert_tables(void)
 {
-	string_list *list = read_tables();
-	table_index *ti = insert_tables_from_list(list);
-	return ti;
+  string_list *list = read_tables();
+  table_index *ti = insert_tables_from_list(list);
+  return ti;
 }

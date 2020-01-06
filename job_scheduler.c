@@ -272,14 +272,181 @@ void destroy_sort_job(void* parameters)
 {//TODO Check frees
 }
 
-job* create_prejoin_job(void * parameters)
-{
 
+job* create_join_job(uint64_t start_r, uint64_t end_r, uint64_t start_s, uint64_t *unjoined_parts, pthread_mutex_t *parts_mutex, uint64_t list_position, job_query_parameters *exe_params)
+{
+	if(start_r>end_r||unjoined_parts==NULL||parts_mutex==NULL||exe_params==NULL)
+	{
+		fprintf(stderr, "create_join_job: wrong parameters\n");
+        return NULL;
+	}
+
+	job* newjob=malloc(sizeof(job));
+    if(newjob==NULL)
+    {
+        perror("create_join_job: malloc error");
+        return NULL;
+    }
+    job_join_parameters* par=malloc(sizeof(job_join_parameters));
+    if(par==NULL)
+    {
+        perror("create_join_job: malloc error");
+        free(newjob);
+        return NULL;
+    }
+
+    par->start_r = start_r;
+    par->end_r = end_r;
+    par->start_s = start_s;
+    par->unjoined_parts = unjoined_parts;
+    par->parts_mutex = parts_mutex;
+    par->list_position = list_position;
+    par->exe_params = exe_params;
+    par->this_job = newjob;
+    newjob->scheduler = exe_params->this_job->scheduler;
+    newjob->parameters = (void *) par;
+    newjob->run = &run_join_job;
+    newjob->destroy = &destroy_join_job;
+    return newjob;
 }
 
-job* create_join_job(void * parameters)
+int run_join_job(void * parameters)
 {
+	job_join_parameters* p=(job_join_parameters*) parameters;
 
+	//Do the join
+    predicate_join *join=p->exe_params->query->predicates[p->exe_params->pred_index].p;
+    int delete_r=1, delete_s=1;
+    //Create middle lists in which we are going to store the join results
+    middle_list *result_R=create_middle_list();
+    if(result_R==NULL)
+    {
+        fprintf(stderr, "run_join_job: Error in create_result_list\n");
+        return -3;
+    }
+    middle_list *result_S=create_middle_list();
+    if(result_S==NULL)
+    {
+        fprintf(stderr, "run_join_job: Error in create_result_list\n");
+        return -3;
+    }
+    //B.3.4 Join
+    if(p->exe_params->r==NULL&&p->exe_params->s==NULL)
+    {
+
+        return -4;
+    }
+    if(final_join(result_R, result_S, p->exe_params->r, p->exe_params->s, p->start_r, p->end_r, p->start_s))
+    {
+        fprintf(stderr, "run_join_job: Error in final_join\n");
+        return -6;
+    }
+    //B.3.5 Now go back to middleman
+    //If the list exists then update it
+    //If not then put the result list (result_R, result_S) in its place
+    if(p->exe_params->middle->tables[join->r.table_id].list==NULL)
+    {
+        p->exe_params->middle->tables[join->r.table_id].list=result_R;
+        delete_r=0;
+    }
+    else
+    {
+        middle_list *new_list=create_middle_list();
+        if(result_R->number_of_nodes>0)
+        {
+            //Construct lookup table of the existing (old) list
+            middle_list_bucket **lookup=construct_lookup_table(p->exe_params->middle->tables[join->r.table_id].list);
+            //Traverse result list and for every rowId find it in the old list and put
+            //the result in the new_list
+            middle_list_node *list_temp=result_R->head;
+            while(list_temp!=NULL)
+            {
+                if(update_middle_bucket(lookup, &(list_temp->bucket), new_list))
+                {
+                    fprintf(stderr, "run_join_job: Error in update_middle_bucket\n");
+                    return -7;
+                }
+                list_temp=list_temp->next;
+            }
+            free(lookup);
+        }
+        delete_middle_list(p->exe_params->middle->tables[join->r.table_id].list);
+        p->exe_params->middle->tables[join->r.table_id].list=new_list;
+    }
+    //Same procedure for S as above
+    if(p->exe_params->middle->tables[join->s.table_id].list==NULL)
+    {
+        p->exe_params->middle->tables[join->s.table_id].list=result_S;
+        delete_s=0;
+    }
+    else
+    {
+        middle_list *new_list=create_middle_list();
+        if(result_S->number_of_nodes>0)
+        {
+            middle_list_bucket **lookup=construct_lookup_table(p->exe_params->middle->tables[join->s.table_id].list);
+            middle_list_node *list_temp=result_S->head;
+            while(list_temp!=NULL)
+            {
+                if(update_middle_bucket(lookup, &(list_temp->bucket), new_list))
+                {
+                    fprintf(stderr, "run_join_job: Error in update_middle_bucket\n");
+                    return -8;
+                }
+                list_temp=list_temp->next;
+            }
+            free(lookup);
+        }
+        delete_middle_list(p->exe_params->middle->tables[join->s.table_id].list);
+        p->exe_params->middle->tables[join->s.table_id].list=new_list;
+    }
+
+    //If last join_job clean up and return to execute job
+    pthread_mutex_lock(p->parts_mutex);
+    p->unjoined_parts--;
+    if(p->unjoined_parts == 0)
+    {
+    	pthread_mutex_unlock(p->parts_mutex);
+
+    	//Keep only the execute_parameters (with the old job)
+    	job_query_parameters *exe_params = p->exe_params;
+    	free(p->unjoined_parts);
+    	pthread_mutex_destroy(p->parts_mutex);
+    	free(p->parts_mutex);
+    	free(p);
+
+    	//B.3.6 Free relations
+    	if(exe_params->r->num_tuples>0)
+    	{
+    	    free(exe_params->r->tuples);
+    	    exe_params->r->tuples=NULL;
+    	}
+    	free(exe_params->r);
+    	exe_params->r=NULL;
+    	if(exe_params->s->num_tuples>0)
+    	{
+    	    free(exe_params->s->tuples);
+    	    exe_params->s->tuples=NULL;
+    	}
+    	free(exe_params->s);
+    	exe_params->s=NULL;
+    	//TODO Add if for return !=0
+    	update_related_lists(exe_params->pred_index, exe_params->query, exe_params->joined_tables, exe_params->middle, delete_r, delete_s, result_R, result_S, NULL);
+    	exe_params->pred_index++;
+    	exe_params->this_job->run=run_execute_job;
+    	schedule_job(exe_params->this_job->scheduler, exe_params->this_job);
+    }
+    else {
+    	pthread_mutex_unlock(p->parts_mutex);
+    }
+
+    
+    return 0;
+}
+
+void destroy_join_job(void * parameters)
+{
+	//TODO
 }
 
 int run_prejoin_job(void * parameters)
@@ -315,18 +482,23 @@ int run_prejoin_job(void * parameters)
     }
     pthread_mutex_unlock(&p->s_mutex);
 
-    pthread_mutex_lock(&p->r_mutex);
-    printf("\e[1;31mR->num_tuples = %" PRIu64 "\e[0m\n", p->r->num_tuples);
-    pthread_mutex_unlock(&p->r_mutex);
 
-    pthread_mutex_lock(&p->r_mutex);
-	uint64_t chunks = 3;
-	uint64_t small_size = p->r->num_tuples/chunks;
-	uint64_t extra = p->r->num_tuples%chunks;
+    printf("\e[1;31mR->num_tuples = %" PRIu64 "\e[0m\n", p->r->num_tuples);
+
+    //Create mutex for unjoined_parts
+	pthread_mutex_t *parts_mutex = malloc(sizeof(pthread_mutex_t));
+    pthread_mutex_init(parts_mutex, NULL);
+    uint64_t *unjoined_parts = malloc(sizeof(uint64_t));
+
+    //Split relation in parts
+	uint64_t parts = 3;
+	uint64_t small_size = p->r->num_tuples/parts;
+	uint64_t extra = p->r->num_tuples%parts;
+	*unjoined_parts = parts;
 
 	printf("\e[1;36mR tuples: %" PRIu64 ", S tuples: %" PRIu64 "\e[0m\n", p->r->num_tuples, p->s->num_tuples);
 	uint64_t start_r, end_r = 0, start_s = 0;
-	for(uint64_t i=0; i<chunks; i++)
+	for(uint64_t i=0; i<parts; i++)
 	{
 		start_r = end_r;
 		end_r = start_r + small_size;
@@ -335,7 +507,6 @@ int run_prejoin_job(void * parameters)
 			end_r++;
 		}
 		printf("\e[1;36mRange R: %" PRIu64 " - %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_r, end_r, p->r->tuples[start_r].key);
-		pthread_mutex_lock(&p->s_mutex);
 		while(p->s->tuples[start_s].key < p->r->tuples[start_r].key && start_s < p->s->num_tuples)
 		{
 			//printf("\e[1;36mS[%" PRIu64 "].key = %" PRIu64 ", and R[%" PRIu64 "] = %" PRIu64 "\e[0m\n", start_s, p->s->tuples[start_s].key, start_r, p->r->tuples[start_r].key);
@@ -343,15 +514,19 @@ int run_prejoin_job(void * parameters)
 		}
 
 		printf("\e[1;36mRange S: %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_s, p->s->tuples[start_s].key);
-		pthread_mutex_unlock(&p->s_mutex);
+		job *newjob = create_join_job(start_r, end_r, start_s, unjoined_parts, parts_mutex, i, p);
 	}
-	pthread_mutex_unlock(&p->r_mutex);
 
-	exit(0);
+    return 0;
+}
+
+void destroy_prejoin_job(void * parameters)
+{
+	//TODO
 }
 
 
-
+/*
 int run_join_job(void* parameters)
 {
     job_query_parameters* p=(job_query_parameters*) parameters;
@@ -491,7 +666,7 @@ int run_join_job(void* parameters)
     p->this_job->run=run_execute_job;
     schedule_job(p->this_job->scheduler, p->this_job);
     return 0;
-}
+}*/
 job* create_presort_job(job_query_parameters* p, relation** r, table_column* tc, pthread_mutex_t* mutex, bool sort, uint64_t* uns_rows)
 {
     if(p->middle==NULL||(*r)!=NULL||p->query==NULL||p->tables==NULL||p->this_job==NULL||

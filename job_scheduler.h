@@ -71,6 +71,18 @@ typedef struct job_sort_parameters
     window win;
 }job_sort_parameters;
 
+typedef struct job_join_parameters
+{
+    uint64_t start_r;
+    uint64_t end_r;
+    uint64_t start_s;
+    uint64_t *unjoined_parts;
+    pthread_mutex_t *parts_mutex;
+    uint64_t list_position;
+    job_query_parameters *exe_params;
+    job* this_job;
+}job_join_parameters;
+
 int run_query_job(void*);
 int run_execute_job(void*);
 int run_presort_job(void*);
@@ -78,8 +90,11 @@ int run_sort_job(void*);
 int run_prejoin_job(void*);
 int run_join_job(void*);
 void destroy_query_job(void*);
+void destroy_join_job(void*);
 job* create_query_job(job_scheduler*, char*, table_index*,uint64_t);
 job* create_presort_job(job_query_parameters*,relation**,table_column*,pthread_mutex_t*,bool,uint64_t*);
+job* create_join_job(uint64_t, uint64_t, uint64_t, uint64_t*, pthread_mutex_t*, uint64_t, job_query_parameters*);
+
 
 
 

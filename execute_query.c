@@ -433,7 +433,7 @@ int update_related_lists(uint32_t predicate_index, query *q, uint32_t **concaten
         delete_middle_list(index_list);
     return 0;
 }
-
+/*
 middleman *execute_query(query *q, table_index* index, bool *sorting)
 {
   int bool_counter = 0;
@@ -957,7 +957,7 @@ middleman *execute_query(query *q, table_index* index, bool *sorting)
 
   return m;
 }
-
+*/
 int execute_query_parallel(job_query_parameters* p)
 {
     //Check for proper argument format
@@ -1088,7 +1088,7 @@ int execute_query_parallel(job_query_parameters* p)
             }
             //TODO Add checks
             schedule_job(p->this_job->scheduler, newjob_s);
-            p->this_job->run=run_prejoin_job;
+            p->this_job->run=run_join_job;
             schedule_job(p->this_job->scheduler, p->this_job);
             return 1;
         }

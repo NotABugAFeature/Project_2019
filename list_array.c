@@ -3,7 +3,7 @@
 #include "list_array.h"
 
 /**
- * Creates a list_array
+ * Creates a list_array (with middle_lists initialized with create_middle_list)
  * @param unsigned int size - the number of lists in the array
  * @return the list_array, NULL for error
  */

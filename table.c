@@ -131,7 +131,7 @@ int table_from_file(table *t, char *filename)
             return -3;
           }
 
-          printf("el: %llu\n", t->array[i][j]);
+          //printf("el: %llu\n", t->array[i][j]);
 
           if(j == 0)
           {
@@ -151,43 +151,115 @@ int table_from_file(table *t, char *filename)
           }
         }
 
-        bool *distinct_vals, over_n;
-        uint64_t num_vals;
-        if((t->columns_stats[i].u_A - t->columns_stats[i].i_A + 1) > N) 
+        bool over_n;
+        uint64_t min_max = t->columns_stats[i].u_A - t->columns_stats[i].i_A + 1;
+        if(min_max > N) 
         {
-          num_vals = N;
+          t->distinct_num_vals = (N%8 > 0) ? (N/8 + 1): (N/8);
           over_n = true;
         }
         else
         {
-          num_vals = t->columns_stats[i].u_A - t->columns_stats[i].i_A + 1;
+          t->distinct_num_vals = (min_max%8 > 0) ? (min_max/8 + 1): (min_max/8);
           over_n = false;
         }
 
-        distinct_vals = malloc(num_vals * sizeof(bool));
+        t->distinct_vals = malloc(t->distinct_num_vals * sizeof(int8_t));
           
-        if(distinct_vals == NULL)
+        if(t->distinct_vals == NULL)
         {
           fprintf(stderr, "table_from_file: malloc error\n");
           fclose(fp);
           return -5;
         }
 
-        for(uint64_t j = 0; j < num_vals; j++)
-          distinct_vals[j] = false;
+        for(uint64_t j = 0; j < t->distinct_num_vals; j++)
+          t->distinct_vals[j] = 0;
 
         for(uint64_t j = 0; j < rows; j++)
         {
           if(over_n)
-            distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A) % N] = true; 
+          {
+            int8_t b = t->distinct_vals[((t->array[i][j] - t->columns_stats[i].i_A) % N)/8];
+            int position = ((t->array[i][j] - t->columns_stats[i].i_A) % N)%8;
+
+            switch(position)
+            {
+              case 0:
+                b = b | 0x80;
+                break;
+              case 1:
+                b = b | 0x40;
+                break;
+              case 2:
+                b = b | 0x20;
+                break;
+              case 3:
+                b = b | 0x10;
+                break;
+              case 4:
+                b = b | 0x08;
+                break;
+              case 5:
+                b = b | 0x04;
+                break;
+              case 6:
+                b = b | 0x02;
+                break;
+              case 7:
+                b = b | 0x01;
+                break;
+            }
+
+            t->distinct_vals[((t->array[i][j] - t->columns_stats[i].i_A) % N)/8] = b;
+          }
           else
-            distinct_vals[t->array[i][j] - t->columns_stats[i].i_A] = true; 
+          {
+           // distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A)/8] |= 1<<((t->array[i][j] - t->columns_stats[i].i_A)%8);
+            int8_t b = t->distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A)/8];
+            int position = (t->array[i][j] - t->columns_stats[i].i_A)%8;
+
+            switch(position)
+            {
+              case 0:
+                b = b | 0x80;
+                break;
+              case 1:
+                b = b | 0x40;
+                break;
+              case 2:
+                b = b | 0x20;
+                break;
+              case 3:
+                b = b | 0x10;
+                break;
+              case 4:
+                b = b | 0x08;
+                break;
+              case 5:
+                b = b | 0x04;
+                break;
+              case 6:
+                b = b | 0x02;
+                break;
+              case 7:
+                b = b | 0x01;
+                break;
+            }
+
+            t->distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A)/8] = b;
+          }
         }
 
-        for(uint64_t j = 0; j < num_vals; j++)
+        for(uint64_t j = 0; j < t->distinct_num_vals; j++)
         {
-          if(distinct_vals[j] == true)
-            t->columns_stats[i].d_A++;
+          int8_t b = t->distinct_vals[j];
+          for(int k = 0; k < 8; k++)
+          {
+            if(b < 0)
+              t->columns_stats[i].d_A++;
+            b = b<<1;
+          }
         }
 
         printf("%llu\n%llu\n%llu\n%llu\n\n", t->columns_stats[i].i_A, t->columns_stats[i].u_A, t->columns_stats[i].f_A, t->columns_stats[i].d_A);

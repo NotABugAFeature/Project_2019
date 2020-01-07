@@ -42,6 +42,8 @@ typedef struct
   uint64_t columns;
   uint64_t **array;
   statistics *columns_stats;
+  uint64_t distinct_num_vals;
+  int8_t *distinct_vals; 
 }table;
 
 

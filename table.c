@@ -151,15 +151,21 @@ int table_from_file(table *t, char *filename)
           }
         }
 
-        bool *distinct_vals, flag = false;
-        if((t->columns_stats[i].u_A - t->columns_stats[i].i_A + 1) < N)
+        bool *distinct_vals, over_n;
+        uint64_t num_vals;
+        if((t->columns_stats[i].u_A - t->columns_stats[i].i_A + 1) > N) 
         {
-          distinct_vals = malloc(bool_vals * sizeof(bool));
-          flag = true;
+          num_vals = N;
+          over_n = true;
         }
         else
-          distinct_vals = malloc(N * sizeof(bool));
+        {
+          num_vals = t->columns_stats[i].u_A - t->columns_stats[i].i_A + 1;
+          over_n = false;
+        }
 
+        distinct_vals = malloc(num_vals * sizeof(bool));
+          
         if(distinct_vals == NULL)
         {
           fprintf(stderr, "table_from_file: malloc error\n");
@@ -167,17 +173,24 @@ int table_from_file(table *t, char *filename)
           return -5;
         }
 
+        for(uint64_t j = 0; j < num_vals; j++)
+          distinct_vals[j] = false;
+
         for(uint64_t j = 0; j < rows; j++)
         {
-          if(flag)
-            distinct_vals[t->array[i][j] - t->columns_stats[i].u_A] = true; 
+          if(over_n)
+            distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A) % N] = true; 
           else
-            distinct_vals[(t->array[i][j] - t->columns_stats[i].u_A) % N] = true; 
+            distinct_vals[t->array[i][j] - t->columns_stats[i].i_A] = true; 
         }
 
-        if()
+        for(uint64_t j = 0; j < num_vals; j++)
+        {
+          if(distinct_vals[j] == true)
+            t->columns_stats[i].d_A++;
+        }
 
-        printf("%llu\n%llu\n\n", t->columns_stats[i].i_A, t->columns_stats[i].u_A);
+        printf("%llu\n%llu\n%llu\n%llu\n\n", t->columns_stats[i].i_A, t->columns_stats[i].u_A, t->columns_stats[i].f_A, t->columns_stats[i].d_A);
     }
 
     fclose(fp);

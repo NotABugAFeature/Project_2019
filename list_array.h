@@ -2,17 +2,39 @@
 #define LIST_ARRAY_H
 #include "middle_list.h"
 
-#define NUM_LISTS 3
-
 typedef struct list_array
 {
-	middle_list *lists[NUM_LISTS][2];	//Or is it jobs?
+	unsigned int num_lists;
+	middle_list **lists;	//Will be allocated as lists[num_lists][2]
 
 } list_array;
 
-list_array *create_list_array();
-middle_list *append_middle_list(middle_list *, middle_list *);
+/**
+ * Creates a list_array
+ * @param unsigned int size - the number of lists in the array
+ * @return the list_array, NULL for error
+ */
+list_array *create_list_array(unsigned int);
+
+/**
+ * Appends the second middle list given, to the end of the first middle list given
+ * @param middle_list *main_list - the list to append to
+ * @param middle_list *list - the list to append to the main_list
+ */
+void append_middle_list(middle_list *, middle_list *);
+
+/**
+ * Merges all the lists of the list_array into two lists (one for R [0], one for S [1])
+ * @param list_array *la - the list_array
+ * @param middle_list *final_r - list to place the merged [0] lists (must be initialized with create_middle_list)
+ * @param middle_list *final_s - list to place the merged [1] lists (must be initialized with create_middle_list)
+ */
 void merge_middle_lists(list_array *, middle_list *, middle_list *);
+
+/**
+ * Frees a list_array
+ * @param list_array *la - the list_array
+ */
 void delete_list_array(list_array *);
 
 #endif //LIST_ARRAY_H

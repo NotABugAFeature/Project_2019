@@ -17,11 +17,18 @@ typedef struct list_array
 list_array *create_list_array(unsigned int);
 
 /**
- * Appends the second middle list given, to the end of the first middle list given
+ * Appends the second middle list given, to the end of the first middle list given (possibly leaving gaps in the last bucket)
  * @param middle_list *main_list - the list to append to
  * @param middle_list *list - the list to append to the main_list
  */
 void append_middle_list(middle_list *, middle_list *);
+
+/**
+ * Appends the second middle list given, to the end of the first middle list given (leaving no gaps in the buckets)
+ * @param middle_list *main_list - the list to append to
+ * @param middle_list *list - the list to append to the main_list
+ */
+void append_middle_list_no_gaps(middle_list *, middle_list *);
 
 /**
  * Merges all the lists of the list_array into two lists (one for R [0], one for S [1])

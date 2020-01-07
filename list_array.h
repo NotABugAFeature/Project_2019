@@ -5,7 +5,7 @@
 typedef struct list_array
 {
 	unsigned int num_lists;
-	middle_list **lists;	//Will be allocated as lists[num_lists][2]
+	middle_list ***lists;	//Will be allocated as lists *[num_lists][2]
 
 } list_array;
 

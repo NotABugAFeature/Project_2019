@@ -18,10 +18,30 @@ string_list *read_tables(void);
  */
 typedef struct
 {
+  //min value
+  uint64_t i_A;
+  //mac value
+  uint64_t u_A;
+  //total elements
+  uint64_t f_A;
+  //distinct elements
+  uint64_t d_A;
+}statistics;
+
+
+/** 
+ * Type definition for a table as read from a file
+ * columns - the number of initial table's columns 
+ * rows - the number of initial table's rows
+ * array - an rows x columns array
+ */
+typedef struct
+{
 	uint32_t table_id;
-    uint64_t rows;
-    uint64_t columns;
-    uint64_t **array;
+  uint64_t rows;
+  uint64_t columns;
+  uint64_t **array;
+  statistics *columns_stats;
 }table;
 
 
@@ -35,6 +55,7 @@ typedef struct
 	uint64_t num_tables;
 	table *tables;
 }table_index;
+
 
 /**
  * Reads a table from a file
@@ -51,11 +72,13 @@ int table_from_file(table *, char *);
  */
 void delete_table(table*);
 
+
 /**
  * Frees the memory used by the contents of a table (doesn't free the table itself)
  * @param table*
  */
 void delete_table_contents(table*);
+
 
 /**
  * Takes a list of table names and reads the tables from their files into a table_index struct
@@ -73,16 +96,18 @@ table_index *insert_tables_from_list(string_list *);
  */
 table *get_table(table_index *, uint32_t);
 
+
 /**
  * Deletes a table_index and all its tables
  * @param table_index the table index
  */
 void delete_table_index(table_index *);
 
+
 /**
  * Reads in the tables from the files given from stdin
  * @return the tables in table_index format
  */
- table_index *insert_tables(void);
+table_index *insert_tables(void);
 
 #endif	// TABLE_H

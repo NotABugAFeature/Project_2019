@@ -294,7 +294,6 @@ job* create_join_job(uint64_t start_r, uint64_t end_r, uint64_t start_s, uint64_
         free(newjob);
         return NULL;
     }
-
     par->start_r = start_r;
     par->end_r = end_r;
     par->start_s = start_s;
@@ -313,7 +312,7 @@ job* create_join_job(uint64_t start_r, uint64_t end_r, uint64_t start_s, uint64_
 
 int run_join_job(void * parameters)
 {
-	printf("\e[1;31mrun_prejoin_job\e[0m\n");
+	printf("\e[1;31mrun_join_job\e[0m\n");
 	job_join_parameters* p=(job_join_parameters*) parameters;
 
 	//Do the join
@@ -342,8 +341,9 @@ int run_join_job(void * parameters)
 
     //If last join_job merge the results, clean up, and return to the execute_job
     pthread_mutex_lock(p->parts_mutex);
-    p->unjoined_parts--;
-    if(p->unjoined_parts == 0)
+    (*(p->unjoined_parts))--;
+    printf("\e[1;31mJob leaving, now unjoined_parts: %" PRIu64 "\e[0m\n", *(p->unjoined_parts));
+    if(*(p->unjoined_parts) == 0)
     {
     	pthread_mutex_unlock(p->parts_mutex);
 
@@ -355,7 +355,12 @@ int run_join_job(void * parameters)
     		fprintf(stderr, "run_join_job: Error in create_result_list\n");
     		return -3;
     	}
+    	printf("\e[1;32mcreate_middle_lists ok\e[0m\n");
     	merge_middle_lists(p->lists, result_R, result_S);
+    	printf("\e[1;36mMerged: result_R:\e[0m\n");
+    	print_middle_list(result_R, stdout);
+    	printf("\n\e[1;36mresult_S:\e[0m\n");
+    	print_middle_list(result_S, stdout);
 
     	//B.3.5 Now go back to middleman
     	//If the list exists then update it
@@ -460,7 +465,7 @@ void destroy_join_job(void * parameters)
 
 int run_prejoin_job(void * parameters)
 {
-	printf("\e[1;31mrun_prejoin_job\e[0m\n");
+	//printf("\e[1;31mrun_prejoin_job\e[0m\n");
 	job_query_parameters* p=(job_query_parameters*) parameters;
 	if(p==NULL||p->query_str!=NULL||p->bool_array==NULL||p->query==NULL||p->tables==NULL||p->this_job==NULL||
 	   p->b_counter==0||p->joined_tables==NULL||p->middle==NULL)
@@ -469,6 +474,7 @@ int run_prejoin_job(void * parameters)
 	    destroy_query_job(parameters);
 	    return -1;
 	}
+
 
 	//Check if the sorting is complete
     pthread_mutex_lock(&p->r_mutex);
@@ -492,6 +498,7 @@ int run_prejoin_job(void * parameters)
     }
     pthread_mutex_unlock(&p->s_mutex);
 
+    printf("\e[1;31mrun_prejoin_job\e[0m\n");
 
     printf("\e[1;36mR->num_tuples = %" PRIu64 "\e[0m\n", p->r->num_tuples);
 
@@ -508,6 +515,11 @@ int run_prejoin_job(void * parameters)
 
 	//Create a list_array to keep the results of each part
 	list_array *la = create_list_array(parts);
+	if(la == NULL)
+	{
+		fprintf(stderr, "run_prejoin_job: error in create_list_array\n");
+		return -1;
+	}
 
 	printf("\e[1;36mR tuples: %" PRIu64 ", S tuples: %" PRIu64 "\e[0m\n", p->r->num_tuples, p->s->num_tuples);
 	uint64_t start_r, end_r = 0, start_s = 0;
@@ -522,12 +534,14 @@ int run_prejoin_job(void * parameters)
 		printf("\e[1;36mRange R: %" PRIu64 " - %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_r, end_r, p->r->tuples[start_r].key);
 		while(p->s->tuples[start_s].key < p->r->tuples[start_r].key && start_s < p->s->num_tuples)
 		{
-			printf("\e[1;36mS[%" PRIu64 "].key = %" PRIu64 ", and R[%" PRIu64 "] = %" PRIu64 "\e[0m\n", start_s, p->s->tuples[start_s].key, start_r, p->r->tuples[start_r].key);
+			//printf("\e[1;36mS[%" PRIu64 "].key = %" PRIu64 ", and R[%" PRIu64 "] = %" PRIu64 "\e[0m\n", start_s, p->s->tuples[start_s].key, start_r, p->r->tuples[start_r].key);
 			start_s++;
 		}
 
 		printf("\e[1;36mRange S: %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_s, p->s->tuples[start_s].key);
 		job *newjob = create_join_job(start_r, end_r, start_s, unjoined_parts, parts_mutex, la, i, p);
+		schedule_job(p->this_job->scheduler, newjob);
+		printf("\e[1;31mScheduled\e[0m\n");
 	}
 
     return 0;

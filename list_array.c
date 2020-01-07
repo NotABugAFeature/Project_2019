@@ -44,7 +44,28 @@ list_array *create_list_array(unsigned int size)
  */
 void append_middle_list(middle_list *main_list, middle_list *list)
 {
-	main_list->tail->next = list->head;
+	if(main_list == NULL || list == NULL)
+	{
+		fprintf(stderr, "append_middle_list: NULL parameters\n");
+		return;
+	}
+
+	//Second list is empty, nothing to append
+	if(list->head == NULL)
+	{
+		return;
+	}
+
+	//First list is empty, replace it with second
+	if(main_list->head == NULL)
+	{
+		main_list->head = list->head;
+	}
+	else
+	{
+		//Both lists are full, add head of second list to the end of first
+		main_list->tail->next = list->head;
+	}
 	main_list->tail = list->tail;
 	main_list->number_of_nodes += list->number_of_nodes;
 }

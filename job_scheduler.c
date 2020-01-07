@@ -357,10 +357,6 @@ int run_join_job(void * parameters)
     	}
     	printf("\e[1;32mcreate_middle_lists ok\e[0m\n");
     	merge_middle_lists(p->lists, result_R, result_S);
-    	printf("\e[1;36mMerged: result_R:\e[0m\n");
-    	print_middle_list(result_R, stdout);
-    	printf("\n\e[1;36mresult_S:\e[0m\n");
-    	print_middle_list(result_S, stdout);
 
     	//B.3.5 Now go back to middleman
     	//If the list exists then update it
@@ -502,10 +498,12 @@ int run_prejoin_job(void * parameters)
 
     printf("\e[1;36mR->num_tuples = %" PRIu64 "\e[0m\n", p->r->num_tuples);
 
+
     //Create mutex for unjoined_parts
 	pthread_mutex_t *parts_mutex = malloc(sizeof(pthread_mutex_t));
     pthread_mutex_init(parts_mutex, NULL);
     uint64_t *unjoined_parts = malloc(sizeof(uint64_t));
+
 
     //Figure out size of parts
 	uint64_t parts = 3;
@@ -520,6 +518,15 @@ int run_prejoin_job(void * parameters)
 		fprintf(stderr, "run_prejoin_job: error in create_list_array\n");
 		return -1;
 	}
+
+	//If a relation is empty, no need to split it in parts
+    if(p->r->num_tuples == 0 || p->s->num_tuples == 0)
+    {
+    	*unjoined_parts = 1;
+    	job *newjob = create_join_job(0, 0, 0, unjoined_parts, parts_mutex, la, 0, p);
+    	schedule_job(p->this_job->scheduler, newjob);
+    	return 0;
+    }
 
 	printf("\e[1;36mR tuples: %" PRIu64 ", S tuples: %" PRIu64 "\e[0m\n", p->r->num_tuples, p->s->num_tuples);
 	uint64_t start_r, end_r = 0, start_s = 0;

@@ -21,6 +21,7 @@ struct middle_list_node* create_middle_list_node()
     //Initialize empty
     new_node->next=NULL;
     new_node->bucket.index_to_add_next=0;
+    new_node->bucket.gaps_before=0;
     return new_node;
 }
 
@@ -84,6 +85,7 @@ middle_list* create_middle_list()
     new_list->head=NULL;
     new_list->tail=NULL;
     new_list->number_of_nodes=0;
+    new_list->number_of_records=0;
     return new_list;
 }
 
@@ -188,6 +190,7 @@ int append_to_middle_list(middle_list* list, uint64_t r_row_id)
             {//Full Bucket
                 list->tail->next=create_middle_list_node();
                 //No Need To Check
+                list->tail->next->bucket.gaps_before=list->tail->bucket.gaps_before;
                 list->tail=list->tail->next;
                 if(append_to_middle_bucket(&list->tail->bucket, r_row_id))
                 {
@@ -198,6 +201,7 @@ int append_to_middle_list(middle_list* list, uint64_t r_row_id)
             }
         }
     }
+    list->number_of_records++;
     return 0;
 }
 
@@ -221,5 +225,6 @@ uint64_t middle_list_get_number_of_records(middle_list* list)
     {
         return 0;
     }
-    return ((list->number_of_nodes-1)*middle_LIST_BUCKET_SIZE+list->tail->bucket.index_to_add_next);
+    return list->number_of_records;
+//    return ((list->number_of_nodes-1)*middle_LIST_BUCKET_SIZE+list->tail->bucket.index_to_add_next);
 }

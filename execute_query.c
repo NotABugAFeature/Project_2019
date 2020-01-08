@@ -193,8 +193,27 @@ int update_middle_bucket(middle_list_bucket **lookup, middle_list_bucket *bucket
       return 2;
     }
 
-    if(append_to_middle_list(updated_list, target->row_ids[(bucket->row_ids[i])%middle_LIST_BUCKET_SIZE]))
+    uint64_t real_position = ((bucket->row_ids[i])%middle_LIST_BUCKET_SIZE) + bucket->gaps_before;
+
+    if((real_position >= middle_LIST_BUCKET_SIZE) && append_to_middle_list(updated_list, target->row_ids[real_position]))
+    {
       return 1;
+    }
+    else
+    {
+      target = lookup[real_position / middle_LIST_BUCKET_SIZE];
+
+      if(target == NULL)
+      {
+        fprintf(stderr, "update_middle_bucket: Target bucket not found in lookup table\n");
+        return 2;
+      }
+
+      if(append_to_middle_list(updated_list, target->row_ids[real_position % middle_LIST_BUCKET_SIZE]))
+      {
+        return 1;
+      }
+    }
   }
   return 0;
 }

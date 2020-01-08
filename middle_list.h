@@ -17,6 +17,7 @@ typedef struct middle_list middle_list;
 typedef struct middle_list_bucket
 {
     uint64_t row_ids[middle_LIST_BUCKET_SIZE];
+    uint64_t gaps_before;
     unsigned int index_to_add_next;
 } middle_list_bucket;
 
@@ -40,6 +41,7 @@ typedef struct middle_list
     middle_list_node* head; //The first node of the list
     middle_list_node* tail; //The last node of the list
     unsigned int number_of_nodes; //Counter of the buckets;
+    unsigned int number_of_records; //Counter of the records;
 } middle_list;
 
 /**

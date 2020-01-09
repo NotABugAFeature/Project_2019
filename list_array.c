@@ -65,14 +65,6 @@ void append_middle_list(middle_list *main_list, middle_list *list)
 	{
 		//Both lists are full, add head of second list to the end of first
 		main_list->tail->next = list->head;
-                //Update the gaps counters
-                middle_list_node* temp=main_list->tail;
-                uint64_t gaps_before=0;
-                while(temp->next!=NULL)
-                {
-                    temp->next->bucket.gaps_before=temp->bucket.gaps_before+(middle_LIST_BUCKET_SIZE-temp->bucket.index_to_add_next);
-                    temp=temp->next;
-                }
 	}
 	main_list->tail = list->tail;
 	main_list->number_of_nodes += list->number_of_nodes;
@@ -104,6 +96,7 @@ void append_middle_list_no_gaps(middle_list *main_list, middle_list *list)
 		main_list->head = list->head;
 		main_list->tail = list->tail;
 		main_list->number_of_nodes += list->number_of_nodes;
+		main_list->number_of_records += list->number_of_records;
 		return;
 	}
 	

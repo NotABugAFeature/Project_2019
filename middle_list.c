@@ -21,7 +21,6 @@ struct middle_list_node* create_middle_list_node()
     //Initialize empty
     new_node->next=NULL;
     new_node->bucket.index_to_add_next=0;
-    new_node->bucket.gaps_before=0;
     return new_node;
 }
 
@@ -129,33 +128,110 @@ void print_middle_list(middle_list* list,FILE*output)
         temp=temp->next;
     }
 }
-
-
-middle_list_bucket **construct_lookup_table(middle_list* list)
+//middle_list_bucket **construct_lookup_table(middle_list* list)
+//{
+//    if(list==NULL)
+//    {
+//        fprintf(stderr,"print_middle_list: NULL list pointer\n");
+//        return NULL;
+//    }
+//
+//    middle_list_bucket **lookup = malloc(middle_list_get_number_of_buckets(list)*sizeof(middle_list_bucket *));
+//    if(lookup==NULL)
+//    {
+//        fprintf(stderr,"print_middle_list: NULL list pointer\n");
+//        return NULL;
+//    }
+//
+//    unsigned int i = 0;
+//    middle_list_node*temp=list->head;
+//    while(temp!=NULL)//Visit all the nodes and print them
+//    {
+//      lookup[i] = &(temp->bucket);
+//      temp=temp->next;
+//      i++;
+//    }
+//
+//    return lookup;
+//}
+lookup_table *construct_lookup_table(middle_list* list)
 {
     if(list==NULL)
     {
         fprintf(stderr,"print_middle_list: NULL list pointer\n");
         return NULL;
     }
-
-    middle_list_bucket **lookup = malloc(middle_list_get_number_of_buckets(list)*sizeof(middle_list_bucket *));
-    if(lookup==NULL)
+    lookup_table *lookup_t= malloc(sizeof(lookup_table));
+    if(lookup_t==NULL)
     {
-        fprintf(stderr,"print_middle_list: NULL list pointer\n");
+        perror("construct_lookup_table: malloc error\n");
         return NULL;
     }
-
+    lookup_t->lookup_table= malloc(middle_list_get_number_of_buckets(list)*sizeof(middle_list_bucket *));
+    if(lookup_t->lookup_table==NULL)
+    {
+        perror("construct_lookup_table: malloc error\n");
+        free(lookup_t);
+        return NULL;
+    }
+    lookup_t->min= malloc(middle_list_get_number_of_buckets(list)*sizeof(uint64_t));
+    if(lookup_t->min==NULL)
+    {
+        perror("construct_lookup_table: malloc error\n");
+        free(lookup_t->lookup_table);
+        free(lookup_t);
+        return NULL;
+    }
+    lookup_t->max= malloc(middle_list_get_number_of_buckets(list)*sizeof(uint64_t));
+    if(lookup_t->max==NULL)
+    {
+        perror("construct_lookup_table: malloc error\n");
+        free(lookup_t->lookup_table);
+        free(lookup_t->min);
+        free(lookup_t);
+        return NULL;
+    }
+    lookup_t->size=list->number_of_nodes;
+    uint64_t min=0;
+    uint64_t max=0;
     unsigned int i = 0;
     middle_list_node*temp=list->head;
-    while(temp!=NULL)//Visit all the nodes and print them
+    while(temp!=NULL)//Visit all the nodes find the min/max rowids
     {
-      lookup[i] = &(temp->bucket);
+      min=max;
+      lookup_t->lookup_table[i] = &(temp->bucket);
+      lookup_t->min[i] = min;
+      max+=(temp->bucket.index_to_add_next-1);
+      lookup_t->max[i] = max++;
       temp=temp->next;
       i++;
     }
-
-    return lookup;
+    return lookup_t;
+}
+void delete_lookup_table (lookup_table* lt)
+{
+    if(lt==NULL)
+    {
+        fprintf(stderr,"delete_lookup_table: NULL pointer\n");
+        return;
+    }
+    if(lt->lookup_table!=NULL)
+    {
+        free(lt->lookup_table);
+        lt->lookup_table=NULL;
+    }
+    if(lt->max!=NULL)
+    {
+        free(lt->max);
+        lt->max=NULL;
+    }
+    if(lt->min!=NULL)
+    {
+        free(lt->min);
+        lt->min=NULL;
+    }
+    free(lt);
+    lt=NULL;
 }
 
 
@@ -190,7 +266,6 @@ int append_to_middle_list(middle_list* list, uint64_t r_row_id)
             {//Full Bucket
                 list->tail->next=create_middle_list_node();
                 //No Need To Check
-                list->tail->next->bucket.gaps_before=list->tail->bucket.gaps_before;
                 list->tail=list->tail->next;
                 if(append_to_middle_bucket(&list->tail->bucket, r_row_id))
                 {

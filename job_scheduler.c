@@ -312,7 +312,7 @@ job* create_join_job(uint64_t start_r, uint64_t end_r, uint64_t start_s, uint64_
 
 int run_join_job(void * parameters)
 {
-	printf("\e[1;31mrun_join_job\e[0m\n");
+//	printf("\e[1;31mrun_join_job\e[0m\n");
 	job_join_parameters* p=(job_join_parameters*) parameters;
 
 	//Do the join
@@ -342,7 +342,7 @@ int run_join_job(void * parameters)
     //If last join_job merge the results, clean up, and return to the execute_job
     pthread_mutex_lock(p->parts_mutex);
     (*(p->unjoined_parts))--;
-    printf("\e[1;31mJob leaving, now unjoined_parts: %" PRIu64 "\e[0m\n", *(p->unjoined_parts));
+//    printf("\e[1;31mJob leaving, now unjoined_parts: %" PRIu64 "\e[0m\n", *(p->unjoined_parts));
     if(*(p->unjoined_parts) == 0)
     {
     	pthread_mutex_unlock(p->parts_mutex);
@@ -355,7 +355,7 @@ int run_join_job(void * parameters)
     		fprintf(stderr, "run_join_job: Error in create_result_list\n");
     		return -3;
     	}
-    	printf("\e[1;32mcreate_middle_lists ok\e[0m\n");
+//    	printf("\e[1;32mcreate_middle_lists ok\e[0m\n");
     	merge_middle_lists(p->lists, result_R, result_S);
 
     	//B.3.5 Now go back to middleman
@@ -372,7 +372,8 @@ int run_join_job(void * parameters)
     	    if(result_R->number_of_nodes>0)
     	    {
     	        //Construct lookup table of the existing (old) list
-    	        middle_list_bucket **lookup=construct_lookup_table(p->exe_params->middle->tables[join->r.table_id].list);
+//    	        middle_list_bucket **lookup=construct_lookup_table(p->exe_params->middle->tables[join->r.table_id].list);
+    	        lookup_table *lookup=construct_lookup_table(p->exe_params->middle->tables[join->r.table_id].list);
     	        //Traverse result list and for every rowId find it in the old list and put
     	        //the result in the new_list
     	        middle_list_node *list_temp=result_R->head;
@@ -401,7 +402,8 @@ int run_join_job(void * parameters)
     	    middle_list *new_list=create_middle_list();
     	    if(result_S->number_of_nodes>0)
     	    {
-    	        middle_list_bucket **lookup=construct_lookup_table(p->exe_params->middle->tables[join->s.table_id].list);
+//    	        middle_list_bucket **lookup=construct_lookup_table(p->exe_params->middle->tables[join->s.table_id].list);
+    	        lookup_table *lookup=construct_lookup_table(p->exe_params->middle->tables[join->s.table_id].list);
     	        middle_list_node *list_temp=result_S->head;
     	        while(list_temp!=NULL)
     	        {
@@ -494,9 +496,9 @@ int run_prejoin_job(void * parameters)
     }
     pthread_mutex_unlock(&p->s_mutex);
 
-    printf("\e[1;31mrun_prejoin_job\e[0m\n");
+//    printf("\e[1;31mrun_prejoin_job\e[0m\n");
 
-    printf("\e[1;36mR->num_tuples = %" PRIu64 "\e[0m\n", p->r->num_tuples);
+//    printf("\e[1;36mR->num_tuples = %" PRIu64 "\e[0m\n", p->r->num_tuples);
 
 
     //Create mutex for unjoined_parts
@@ -528,7 +530,7 @@ int run_prejoin_job(void * parameters)
     	return 0;
     }
 
-	printf("\e[1;36mR tuples: %" PRIu64 ", S tuples: %" PRIu64 "\e[0m\n", p->r->num_tuples, p->s->num_tuples);
+//	printf("\e[1;36mR tuples: %" PRIu64 ", S tuples: %" PRIu64 "\e[0m\n", p->r->num_tuples, p->s->num_tuples);
 	uint64_t start_r, end_r = 0, start_s = 0;
 	for(uint64_t i=0; i<parts; i++)
 	{
@@ -538,17 +540,17 @@ int run_prejoin_job(void * parameters)
 		{
 			end_r++;
 		}
-		printf("\e[1;36mRange R: %" PRIu64 " - %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_r, end_r, p->r->tuples[start_r].key);
+//		printf("\e[1;36mRange R: %" PRIu64 " - %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_r, end_r, p->r->tuples[start_r].key);
 		while(p->s->tuples[start_s].key < p->r->tuples[start_r].key && start_s < p->s->num_tuples)
 		{
 			//printf("\e[1;36mS[%" PRIu64 "].key = %" PRIu64 ", and R[%" PRIu64 "] = %" PRIu64 "\e[0m\n", start_s, p->s->tuples[start_s].key, start_r, p->r->tuples[start_r].key);
 			start_s++;
 		}
 
-		printf("\e[1;36mRange S: %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_s, p->s->tuples[start_s].key);
+//		printf("\e[1;36mRange S: %" PRIu64 " starting at %" PRIu64 "\e[0m\n", start_s, p->s->tuples[start_s].key);
 		job *newjob = create_join_job(start_r, end_r, start_s, unjoined_parts, parts_mutex, la, i, p);
 		schedule_job(p->this_job->scheduler, newjob);
-		printf("\e[1;31mScheduled\e[0m\n");
+//		printf("\e[1;31mScheduled\e[0m\n");
 	}
 
     return 0;
@@ -612,7 +614,6 @@ int run_join_job(void* parameters)
     //B.3.4 Join
     if(p->r==NULL&&p->s==NULL)
     {
-
         return -4;
     }
     if(final_join(result_R, result_S, p->r, p->s))

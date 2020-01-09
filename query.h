@@ -3,7 +3,6 @@
 
 #include "middle_list.h"
 #include "table.h"
-#include <stdbool.h>
 typedef enum predicate_type
 {
     Join, Self_Join, Filter

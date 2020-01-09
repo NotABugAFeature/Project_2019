@@ -1,6 +1,9 @@
 #ifndef TABLE_H
 #define TABLE_H
 
+#define N 472882027
+
+#include <stdbool.h>
 #include "string_list.h"
 
 /**
@@ -20,7 +23,7 @@ typedef struct
 {
   //min value
   uint64_t i_A;
-  //mac value
+  //max value
   uint64_t u_A;
   //total elements
   uint64_t f_A;
@@ -42,7 +45,7 @@ typedef struct
   uint64_t columns;
   uint64_t **array;
   statistics *columns_stats;
-  uint64_t distinct_num_vals;
+  bool over_n;
   int8_t *distinct_vals; 
 }table;
 

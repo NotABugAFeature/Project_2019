@@ -1475,6 +1475,253 @@ void delete_counter_list(counter_list* list)
     free(list);
 }
 
+
+uint64_t power(uint64_t x, uint64_t y)
+{
+  uint64_t total = 0;
+  for(uint64_t i = 0; i < y; i++)
+  {
+    //total = total * 
+  }
+}
+
+void statistics_filters(query *q, predicate_filter *filter, table_index *index)
+{
+
+  table *table = get_table(index, q->table_ids[filter->r.table_id]);
+  if(table == NULL)
+  {
+    fprintf(stderr, "statistics_filters: Table not found\n");
+    return;
+  }
+
+  //Case A. Filter '='
+  if(filter->filter_type == Equal)
+  {
+    uint64_t initial_f_A = 0;
+
+    if(table->over_n)
+    {
+      int8_t b = table->distinct_vals[((filter->value - table->columns_stats[filter->r.column_id].i_A) % N)/8];
+      int position = ((filter->value - table->columns_stats[filter->r.column_id].i_A) % N)%8;
+
+      switch(position)
+      {
+        case 0:
+          b = b & 0x80;
+          break;
+        case 1:
+          b = b & 0x40;
+          break;
+        case 2:
+          b = b & 0x20;
+          break;
+        case 3:
+          b = b & 0x10;
+          break;
+        case 4:
+          b = b & 0x08;
+          break;
+        case 5:
+          b = b & 0x04;
+          break;
+        case 6:
+          b = b & 0x02;
+          break;
+        case 7:
+          b = b & 0x01;
+          break;
+      }
+
+      if(b > 0)
+      {
+        initial_f_A = table->columns_stats[filter->r.column_id].f_A;
+
+        table->columns_stats[filter->r.column_id].f_A = 
+            (table->columns_stats[filter->r.column_id].f_A)/table->columns_stats[filter->r.column_id].d_A;
+
+        table->columns_stats[filter->r.column_id].d_A = 1;
+      }
+      else
+      {
+        initial_f_A = table->columns_stats[filter->r.column_id].f_A;
+
+        table->columns_stats[filter->r.column_id].f_A = 0;
+        table->columns_stats[filter->r.column_id].d_A = 0;
+      }
+
+      table->columns_stats[filter->r.column_id].i_A = filter->value;
+      table->columns_stats[filter->r.column_id].u_A = filter->value;
+    }
+    else
+    {
+      int8_t b = table->distinct_vals[(filter->value - table->columns_stats[filter->r.column_id].i_A)/8];
+      int position = (filter->value - table->columns_stats[filter->r.column_id].i_A)%8;
+
+      switch(position)
+      {
+        case 0:
+          b = b & 0x80;
+          break;
+        case 1:
+          b = b & 0x40;
+          break;
+        case 2:
+          b = b & 0x20;
+          break;
+        case 3:
+          b = b & 0x10;
+          break;
+        case 4:
+          b = b & 0x08;
+          break;
+        case 5:
+          b = b & 0x04;
+          break;
+        case 6:
+          b = b & 0x02;
+          break;
+        case 7:
+          b = b & 0x01;
+          break;
+      }
+
+      if(b > 0)
+      {
+        table->columns_stats[filter->r.column_id].f_A = 
+            (table->columns_stats[filter->r.column_id].f_A)/table->columns_stats[filter->r.column_id].d_A;
+
+        table->columns_stats[filter->r.column_id].d_A = 1;
+      }
+      else
+      {
+        table->columns_stats[filter->r.column_id].f_A = 0;
+        table->columns_stats[filter->r.column_id].d_A = 0;
+      }
+
+      table->columns_stats[filter->r.column_id].i_A = filter->value;
+      table->columns_stats[filter->r.column_id].u_A = filter->value;
+    }
+
+    for(uint64_t i = 0; i < table->columns; i++)
+    {
+      if(i == filter->r.column_id)
+        continue;
+
+      //todo
+      // table->columns_stats[i].d_A = table->columns_stats[i].d_A * 
+      //     (1 - (1 - (table->columns_stats[filter->r.column_id].f_A)/(initial_f_A)))
+    }
+  }
+  //Case B. Filter '<' or '<='
+  else if(filter->filter_type == Less_Equal || filter->filter_type == Less)
+  {
+    //keep initial u_A and i_A
+    uint64_t initial_u_A = table->columns_stats[filter->r.column_id].u_A;
+    uint64_t initial_i_A = table->columns_stats[filter->r.column_id].i_A;
+
+    //if filter->value < u_A (max) then update..else keep the initial u_A
+    if(filter->value < table->columns_stats[filter->r.column_id].u_A)
+      table->columns_stats[filter->r.column_id].u_A = filter->value;
+
+    //if filter->value < i_A (min) then set min = max = 0..else keep the initial i_A
+    if(filter->value < table->columns_stats[filter->r.column_id].i_A)
+    {
+      table->columns_stats[filter->r.column_id].u_A = 0;
+      table->columns_stats[filter->r.column_id].i_A = 0;
+    }
+
+    //update d_A double?
+    table->columns_stats[filter->r.column_id].d_A = table->columns_stats[filter->r.column_id].d_A * 
+      ((table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));
+
+    //update f_A
+    table->columns_stats[filter->r.column_id].f_A = table->columns_stats[filter->r.column_id].f_A * 
+      ((table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));     
+  
+    //update rest?
+  }
+  //Case C. Filter '>' or '>='
+  else if(filter->filter_type == Greater_Equal || filter->filter_type == Greater)
+  {
+    //keep initial u_A and i_A
+    uint64_t initial_u_A = table->columns_stats[filter->r.column_id].u_A;
+    uint64_t initial_i_A = table->columns_stats[filter->r.column_id].i_A;
+
+    //if filter->value > i_A (min) then update..else keep the initial i_A
+    if(filter->value > table->columns_stats[filter->r.column_id].i_A)
+      table->columns_stats[filter->r.column_id].i_A = filter->value;
+
+    //if filter->value > u_A (max) then set min = max = 0..else keep the initial u_A
+    if(filter->value > table->columns_stats[filter->r.column_id].u_A)
+    {
+      table->columns_stats[filter->r.column_id].u_A = 0;
+      table->columns_stats[filter->r.column_id].i_A = 0;
+    }
+
+    //update d_A double?
+    table->columns_stats[filter->r.column_id].d_A = table->columns_stats[filter->r.column_id].d_A * 
+      ((table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));
+
+    //update f_A
+    table->columns_stats[filter->r.column_id].f_A = table->columns_stats[filter->r.column_id].f_A * 
+      ((table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));     
+  
+    //update rest?
+  }
+
+}
+
+void statistics_self_joins(query *q, predicate_join *join, table_index *index)
+{
+  table *table = get_table(index, q->table_ids[join->r.table_id]);
+  if(table == NULL)
+  {
+    fprintf(stderr, "execute_query: Table not found\n");
+    return;
+  }
+
+  if(join->r.column_id == join->s.column_id)
+  {
+    table->columns_stats[join->r.column_id].f_A = (uint64_t)((long double) (table->columns_stats[join->r.column_id].u_A)*
+      (table->columns_stats[join->r.column_id].u_A))/(table->columns_stats[join->r.column_id].u_A - table->columns_stats[join->r.column_id].i_A + 1);
+  
+    for(uint64_t i = 0; i < table->columns; i++)
+    {
+      if(i == join->r.column_id)
+        continue;
+
+      table->columns_stats[i].f_A = table->columns_stats[join->r.column_id].f_A;
+    }
+  }
+  else
+  {
+    uint64_t val_A = table->columns_stats[join->r.column_id].i_A;
+    uint64_t val_B = table->columns_stats[join->s.column_id].i_A;
+
+    table->columns_stats[join->r.column_id].i_A = (val_A > val_B) ? val_A : val_B;
+    table->columns_stats[join->s.column_id].i_A = (val_A > val_B) ? val_A : val_B;
+
+    val_A = table->columns_stats[join->r.column_id].u_A;
+    val_B = table->columns_stats[join->s.column_id].u_A;
+
+    table->columns_stats[join->r.column_id].u_A = (val_A < val_B) ? val_A : val_B;
+    table->columns_stats[join->s.column_id].u_A = (val_A < val_B) ? val_A : val_B;
+
+    table->columns_stats[join->r.column_id].f_A = (uint64_t)((long double) (table->columns_stats[join->r.column_id].f_A))/
+        (table->columns_stats[join->r.column_id].u_A - table->columns_stats[join->r.column_id].i_A + 1);
+
+    table->columns_stats[join->s.column_id].f_A = table->columns_stats[join->r.column_id].f_A;
+
+    //d_A
+
+    //rest
+  }
+}
+
+
+
+
 int optimize_query(query*q, table_index* ti)
 {
     //Check the parameters
@@ -1483,62 +1730,74 @@ int optimize_query(query*q, table_index* ti)
        q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
        q->projections==NULL)
     {
-        fprintf(stderr, "optimize_query: Error with the parameters\n");
-        return -1;
+      fprintf(stderr, "optimize_query: Error with the parameters\n");
+      return -1;
     }
+
     counter_list*c_list=create_counter_list();
     if(c_list==NULL)
     {
-        return -2;
+      return -2;
     }
+
     uint64_t* table_row_count=malloc(sizeof(uint64_t)*q->number_of_tables);
     if(table_row_count==NULL)
     {
-        perror("optimize_query: malloc error");
-        delete_counter_list(c_list);
-        return -3;
+      perror("optimize_query: malloc error");
+      delete_counter_list(c_list);
+      return -3;
     }
+
     //Store the column count of the tables
     for(uint32_t i=0; i<q->number_of_tables; i++)
     {
-        table_row_count[i]=(get_table(ti, q->table_ids[i]))->rows;
+      table_row_count[i]=(get_table(ti, q->table_ids[i]))->rows;
     }
+
     //First put the filters and count the join/self joins
     uint32_t j=0;
     for(uint32_t i=0; i<q->number_of_predicates; i++)
     {
-        //If Filter move to beginning
-        if(q->predicates[i].type==Filter)
+      //If Filter move to beginning
+      if(q->predicates[i].type==Filter)
+      {
+
+        //update statistics
+        statistics_filters(q, (predicate_filter *) q->predicates[i].p, ti);
+
+        swap_predicates(&q->predicates[j], &q->predicates[i]);
+        j++;
+      }
+      else if(q->predicates[i].type==Join)//Count the table.rowid pairs
+      {
+        if(counter_list_append(c_list, &(((predicate_join*) (q->predicates[i].p))->r)/*,((predicate_join*)(q->predicates[i].p))*/)!=0)
         {
-            swap_predicates(&q->predicates[j], &q->predicates[i]);
-            j++;
+          delete_counter_list(c_list);
+          free(table_row_count);
+          printf("optimize_query: counter_list_append error");
+          return -5;
         }
-        else if(q->predicates[i].type==Join)//Count the table.rowid pairs
+        if(counter_list_append(c_list, &(((predicate_join*) (q->predicates[i].p))->s)/*,((predicate_join*)(q->predicates[i].p))*/)!=0)
         {
-            if(counter_list_append(c_list, &(((predicate_join*) (q->predicates[i].p))->r)/*,((predicate_join*)(q->predicates[i].p))*/)!=0)
-            {
-                delete_counter_list(c_list);
-                free(table_row_count);
-                printf("optimize_query: counter_list_append error");
-                return -5;
-            }
-            if(counter_list_append(c_list, &(((predicate_join*) (q->predicates[i].p))->s)/*,((predicate_join*)(q->predicates[i].p))*/)!=0)
-            {
-                delete_counter_list(c_list);
-                free(table_row_count);
-                printf("optimize_query: counter_list_append error");
-                return -6;
-            }
+          delete_counter_list(c_list);
+          free(table_row_count);
+          printf("optimize_query: counter_list_append error");
+          return -6;
         }
+      }
     }
+
     //Then the self joins
     for(uint32_t i=j; i<q->number_of_predicates; i++)
     {
         //If Filter move to Beginning
         if(q->predicates[i].type==Self_Join)
         {
-            swap_predicates(&q->predicates[j], &q->predicates[i]);
-            j++;
+            //update statistics
+          statistics_self_joins(q, (predicate_join *) q->predicates[i].p, ti);
+
+          swap_predicates(&q->predicates[j], &q->predicates[i]);
+          j++;
         }
     }
     //Then the joins

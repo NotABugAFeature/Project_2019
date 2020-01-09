@@ -1,9 +1,10 @@
-#ifndef middleLIST_H
-#define middleLIST_H
+#ifndef MIDDLELIST_H
+#define MIDDLELIST_H
 
 #include <inttypes.h>
 
 #define middle_LIST_BUCKET_SIZE (1048576/(2*sizeof(uint64_t)))
+//#define middle_LIST_BUCKET_SIZE (262144/(sizeof(uint64_t)))
 
 typedef struct middle_list_bucket middle_list_bucket;
 typedef struct middle_list_node middle_list_node;
@@ -17,7 +18,6 @@ typedef struct middle_list middle_list;
 typedef struct middle_list_bucket
 {
     uint64_t row_ids[middle_LIST_BUCKET_SIZE];
-    uint64_t gaps_before;
     unsigned int index_to_add_next;
 } middle_list_bucket;
 
@@ -125,7 +125,14 @@ unsigned int middle_list_get_number_of_buckets(middle_list*);
  * @return uint64_t The number of records
  */
 uint64_t middle_list_get_number_of_records(middle_list*);
-
-middle_list_bucket **construct_lookup_table(middle_list*);
-
-#endif /*CLIENTLIST_H*/
+typedef struct lookup_table
+{
+    middle_list_bucket **lookup_table;  //Pointers to the list nodes
+    uint64_t size;                      //The number of nodes
+    uint64_t* min;                      //The min rowid in each node
+    uint64_t* max;                      //The max rowid in each node
+}lookup_table;
+lookup_table *construct_lookup_table(middle_list*);
+void delete_lookup_table (lookup_table*);
+//middle_list_bucket **construct_lookup_table(middle_list*);
+#endif /*MIDDLELIST_H*/

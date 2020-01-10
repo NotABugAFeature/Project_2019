@@ -9,7 +9,7 @@ job_fifo_node* create_job_fifo_node()
     new_node=malloc(sizeof(job_fifo_node));
     if(new_node==NULL)
     {
-        perror("job_fifo_node: error in malloc");
+        perror("create_job_fifo_node: error in malloc");
         return NULL;
     }
     //Initialize empty
@@ -40,6 +40,7 @@ int append_to_job_fifo_bucket(job_fifo_bucket* b, job* j)
     }
     return 1;
 }
+//TODO Remove 
 void print_job_fifo_bucket(job_fifo_bucket* b)
 {
     if(b==NULL)
@@ -52,7 +53,7 @@ void print_job_fifo_bucket(job_fifo_bucket* b)
     printf("index_to_remove_next: %" PRIu32 "\n", b->index_to_remove_next);
     for(uint32_t i=0; i<b->index_to_add_next; i++)
     {
-        print_job(b->jobs[i]);
+//        b->jobs[i]->print(b->jobs[i]->parameters);
     }
 }
 job_fifo* create_job_fifo()
@@ -94,7 +95,7 @@ void delete_job_fifo(job_fifo* fifo)
                 if(temp->bucket.jobs[i]!=NULL)
                 {
                     fprintf(stderr, "delete_job_fifo: job not deleted\n");
-                    delete_job(temp->bucket.jobs[i]);
+                    temp->bucket.jobs[i]->destroy(temp->bucket.jobs[i]->parameters);
                     temp->bucket.jobs[i]=NULL;
                 }
             }

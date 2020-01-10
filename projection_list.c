@@ -4,15 +4,23 @@
 #include "projection_list.h"
 typedef struct projection_node
 {
-    uint64_t query_id;
-    uint32_t number_of_projections;
-    uint64_t* projections;
-    projection_node* next;
-
+    uint64_t query_id; //The query id (used for sorting the nodes)
+    uint32_t number_of_projections; //The number of projections of the query
+    uint64_t* projections; //The array of the projection results
+    projection_node* next; //Pointer to the next node
 } projection_node;
+/**
+ * Creates and initializes a projection node with the parameters given
+ * @param uint64_t the query id of the node
+ * @param uint32_t the number of projections of the node
+ * @param uint32_t the projection index to store the projection result
+ * @param uint64_t the projection result
+ * @return projection_node* the projection node created or NULL
+ */
 projection_node* create_projection_node(uint64_t query_id, uint32_t number_of_projections
                                         , uint32_t projection_index, uint64_t projection_sum)
 {
+    //Check the parameters given
     if(number_of_projections==0||projection_index>=number_of_projections)
     {
         fprintf(stderr, "create_projection_node: Error with the parameters\n");
@@ -36,10 +44,18 @@ projection_node* create_projection_node(uint64_t query_id, uint32_t number_of_pr
     }
     new_node->query_id=query_id;
     new_node->number_of_projections=number_of_projections;
+    for(uint32_t i=0; i<new_node->number_of_projections; i++)
+    {
+        new_node->projections[i]=0;
+    }
     new_node->projections[projection_index]=projection_sum;
     new_node->next=NULL;
     return new_node;
 }
+/**
+ * Deletes the projection node given
+ * @param projection_node the node to delete
+ */
 void delete_projection_node(projection_node* node)
 {
     if(node==NULL)
@@ -55,6 +71,10 @@ void delete_projection_node(projection_node* node)
     free(node);
     node=NULL;
 }
+/**
+ * Prints the projection results inside the node in the stderr with color
+ * @param projection_node* the node to print
+ */
 void print_projection_node(projection_node* node)
 {
     if(node==NULL||node->projections==NULL)
@@ -62,15 +82,20 @@ void print_projection_node(projection_node* node)
         fprintf(stderr, "delete_projection_node: NULL parameter\n");
         return;
     }
+    //Print all the projections
     for(uint32_t i=0; i<node->number_of_projections; i++)
     {
         if(node->projections[i]==0)
         {
-            fprintf(stderr, "\e[1;33mNULL \e[0m");
+            fprintf(stderr, "\e[1;33mNULL\e[0m");
         }
         else
         {
-            fprintf(stderr, "\e[1;33m%" PRIu64 " \e[0m", node->projections[i]);
+            fprintf(stderr, "\e[1;33m%" PRIu64 "\e[0m", node->projections[i]);
+        }
+        if(i<node->number_of_projections-1)
+        {
+            fprintf(stderr, "\e[1;33m \e[0m");
         }
     }
     fprintf(stderr, "\n");
@@ -83,6 +108,12 @@ projection_list* create_projection_list(void)
     if(new_list==NULL)
     {
         perror("create_projection_list: error in malloc");
+        return NULL;
+    }
+    if(pthread_mutex_init(&new_list->mutex, NULL)!=0)
+    {
+        perror("create_projection_list: mutex initialization");
+        free(new_list);
         return NULL;
     }
     //Initialize empty
@@ -108,6 +139,7 @@ void delete_projection_list(projection_list* list)
         temp=list->head;
         list->number_of_nodes--;
     }
+    pthread_mutex_destroy(&list->mutex);
     free(list);
 }
 void print_projection_list(projection_list* list)
@@ -117,7 +149,7 @@ void print_projection_list(projection_list* list)
         fprintf(stderr, "print_projection_list: NULL list pointer\n");
         return;
     }
-    printf("Total queries: %"PRIu32"\n",list->number_of_nodes);
+    printf("Total queries: %"PRIu32"\n", list->number_of_nodes);
     projection_node* temp=list->head;
     while(temp!=NULL)//Visit All The Nodes And Print Them
     {
@@ -126,11 +158,11 @@ void print_projection_list(projection_list* list)
     }
 }
 int append_to_projection_list(projection_list* list, uint64_t query_id,
-    uint32_t number_of_projections,uint32_t projection_index, uint64_t projection_sum)
+                              uint32_t number_of_projections, uint32_t projection_index, uint64_t projection_sum)
 {
     if(list->head==NULL)//Append as first node
     {
-        projection_node* newnode=create_projection_node(query_id,number_of_projections,projection_index,projection_sum);
+        projection_node* newnode=create_projection_node(query_id, number_of_projections, projection_index, projection_sum);
         if(newnode==NULL)
         {
             return -1;
@@ -151,11 +183,12 @@ int append_to_projection_list(projection_list* list, uint64_t query_id,
         {
             if(list->tail->query_id<query_id)
             {//Append as last node
-                projection_node* newnode=create_projection_node(query_id,number_of_projections,projection_index,projection_sum);
+                projection_node* newnode=create_projection_node(query_id, number_of_projections, projection_index, projection_sum);
                 if(newnode==NULL)
                 {
                     return -1;
                 }
+                list->tail->next=newnode;
                 list->tail=newnode;
                 list->number_of_nodes++;
                 return 0;
@@ -177,7 +210,7 @@ int append_to_projection_list(projection_list* list, uint64_t query_id,
             temp=list->head;
             if(temp->query_id>query_id)//Check if newnode<head
             {
-                projection_node* newnode=create_projection_node(query_id,number_of_projections,projection_index,projection_sum);
+                projection_node* newnode=create_projection_node(query_id, number_of_projections, projection_index, projection_sum);
                 if(newnode==NULL)
                 {
                     return -1;
@@ -204,7 +237,7 @@ int append_to_projection_list(projection_list* list, uint64_t query_id,
             {
                 if(temp->next->query_id>query_id)
                 {//Append node
-                    projection_node* newnode=create_projection_node(query_id,number_of_projections,projection_index,projection_sum);
+                    projection_node* newnode=create_projection_node(query_id, number_of_projections, projection_index, projection_sum);
                     if(newnode==NULL)
                     {
                         return -1;

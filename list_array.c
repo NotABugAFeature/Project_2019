@@ -68,6 +68,7 @@ void append_middle_list(middle_list *main_list, middle_list *list)
 	}
 	main_list->tail = list->tail;
 	main_list->number_of_nodes += list->number_of_nodes;
+	main_list->number_of_records += list->number_of_records;
 }
 
 /**
@@ -95,6 +96,7 @@ void append_middle_list_no_gaps(middle_list *main_list, middle_list *list)
 		main_list->head = list->head;
 		main_list->tail = list->tail;
 		main_list->number_of_nodes += list->number_of_nodes;
+		main_list->number_of_records += list->number_of_records;
 		return;
 	}
 	
@@ -122,8 +124,10 @@ void merge_middle_lists(list_array *la, middle_list *final_r, middle_list *final
 {
 	for(int i=0; i<la->num_lists; i++)
 	{
-		append_middle_list_no_gaps(final_r, la->lists[i][0]);
-		append_middle_list_no_gaps(final_s, la->lists[i][1]);
+//		append_middle_list_no_gaps(final_r, la->lists[i][0]);
+		append_middle_list(final_r, la->lists[i][0]);
+//		append_middle_list_no_gaps(final_s, la->lists[i][1]);
+		append_middle_list(final_s, la->lists[i][1]);
 	}
 }
 

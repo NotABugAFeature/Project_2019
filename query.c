@@ -1486,14 +1486,14 @@ long double power(long double x, uint64_t y)
   return total;
 }
 
-void statistics_filters(query *q, predicate_filter *filter, table_index *index)
+int statistics_filters(query *q, predicate_filter *filter, table_index *index)
 {
 
   table *table = get_table(index, q->table_ids[filter->r.table_id]);
   if(table == NULL)
   {
     fprintf(stderr, "statistics_filters: Table not found\n");
-    return;
+    return 1;
   }
 
   //Case A. Filter '='
@@ -1697,15 +1697,16 @@ void statistics_filters(query *q, predicate_filter *filter, table_index *index)
     }
   }
 
+  return 0;
 }
 
-void statistics_self_joins(query *q, predicate_join *join, table_index *index)
+int statistics_self_joins(query *q, predicate_join *join, table_index *index)
 {
   table *table = get_table(index, q->table_ids[join->r.table_id]);
   if(table == NULL)
   {
     fprintf(stderr, "execute_query: Table not found\n");
-    return;
+    return 1;
   }
 
   //Case A. autocorrelation
@@ -1771,6 +1772,8 @@ void statistics_self_joins(query *q, predicate_join *join, table_index *index)
       table->columns_stats[i].f_A = table->columns_stats[join->r.column_id].f_A;
     }
   }
+
+  return 0;
 }
 
 
@@ -1817,7 +1820,11 @@ int optimize_query(query*q, table_index* ti)
       {
 
         //update statistics
-        statistics_filters(q, (predicate_filter *) q->predicates[i].p, ti);
+        if(statistics_filters(q, (predicate_filter *) q->predicates[i].p, ti))
+        {
+          fprintf(stderr, "optimize_query: error in statistics_filters\n");
+          return -4;
+        }
 
         swap_predicates(&q->predicates[j], &q->predicates[i]);
         j++;
@@ -1847,8 +1854,12 @@ int optimize_query(query*q, table_index* ti)
         //If Filter move to Beginning
         if(q->predicates[i].type==Self_Join)
         {
-            //update statistics
-          statistics_self_joins(q, (predicate_join *) q->predicates[i].p, ti);
+          //update statistics
+          if(statistics_self_joins(q, (predicate_join *) q->predicates[i].p, ti))
+          {
+            fprintf(stderr, "optimize_query: error in statistics_self_joins\n");
+            return -7;
+          }
 
           swap_predicates(&q->predicates[j], &q->predicates[i]);
           j++;

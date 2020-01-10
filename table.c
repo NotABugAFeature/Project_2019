@@ -145,37 +145,35 @@ int table_from_file(table *t, char *filename)
           }
         }
 
-        int8_t *distinct_vals;
-        uint64_t num_vals;
         uint64_t min_max = t->columns_stats[i].u_A - t->columns_stats[i].i_A + 1;
         if(min_max > N) 
         {
-          num_vals = (N%8 > 0) ? (N/8 + 1): (N/8);
+          t->num_vals = (N%8 > 0) ? (N/8 + 1): (N/8);
           t->over_n = true;
         }
         else
         {
-          num_vals = (min_max%8 > 0) ? (min_max/8 + 1): (min_max/8);
+          t->num_vals = (min_max%8 > 0) ? (min_max/8 + 1): (min_max/8);
           t->over_n = false;
         }
 
-        distinct_vals = malloc(num_vals * sizeof(int8_t));
+        t->distinct_vals = malloc(t->num_vals * sizeof(int8_t));
           
-        if(distinct_vals == NULL)
+        if(t->distinct_vals == NULL)
         {
           fprintf(stderr, "table_from_file: malloc error\n");
           fclose(fp);
           return -5;
         }
 
-        for(uint64_t j = 0; j < num_vals; j++)
-          distinct_vals[j] = 0;
+        for(uint64_t j = 0; j < t->num_vals; j++)
+          t->distinct_vals[j] = 0;
 
         for(uint64_t j = 0; j < rows; j++)
         {
           if(t->over_n)
           {
-            int8_t b = distinct_vals[((t->array[i][j] - t->columns_stats[i].i_A) % N)/8];
+            int8_t b = t->distinct_vals[((t->array[i][j] - t->columns_stats[i].i_A) % N)/8];
             int position = ((t->array[i][j] - t->columns_stats[i].i_A) % N)%8;
 
             switch(position)
@@ -206,11 +204,11 @@ int table_from_file(table *t, char *filename)
                 break;
             }
 
-            distinct_vals[((t->array[i][j] - t->columns_stats[i].i_A) % N)/8] = b;
+            t->distinct_vals[((t->array[i][j] - t->columns_stats[i].i_A) % N)/8] = b;
           }
           else
           {
-            int8_t b = distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A)/8];
+            int8_t b = t->distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A)/8];
             int position = (t->array[i][j] - t->columns_stats[i].i_A)%8;
 
             switch(position)
@@ -241,13 +239,13 @@ int table_from_file(table *t, char *filename)
                 break;
             }
 
-            distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A)/8] = b;
+            t->distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A)/8] = b;
           }
         }
 
-        for(uint64_t j = 0; j < num_vals; j++)
+        for(uint64_t j = 0; j < t->num_vals; j++)
         {
-          int8_t b = distinct_vals[j];
+          int8_t b = t->distinct_vals[j];
           for(int k = 0; k < 8; k++)
           {
             if(b < 0)

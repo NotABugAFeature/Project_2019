@@ -1487,20 +1487,26 @@ long double power(long double x, uint64_t y)
 }
 
 int statistics_filters(query *q, predicate_filter *filter, table_index *index)
-{
+{printf("statistics_filters\n");
+
+  if(q == NULL || filter == NULL || index == NULL)
+  {
+    fprintf(stderr, "statistics_filters: null parameters\n");
+    return 1;
+  }
 
   table *table = get_table(index, q->table_ids[filter->r.table_id]);
   if(table == NULL)
   {
     fprintf(stderr, "statistics_filters: Table not found\n");
-    return 1;
+    return 2;
   }
 
   //Case A. Filter '='
   if(filter->filter_type == Equal)
   {
     uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
-
+printf("ok1: %d\n", table->over_n);
     if(table->over_n)
     {
       int8_t b = table->distinct_vals[((filter->value - table->columns_stats[filter->r.column_id].i_A) % N)/8];
@@ -1582,7 +1588,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
           b = b & 0x01;
           break;
       }
-
+printf("ok2\n");
       if(b > 0)
       {
         table->columns_stats[filter->r.column_id].f_A = 
@@ -1616,7 +1622,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
   }
   //Case B. Filter '<' or '<='
   else if(filter->filter_type == Less_Equal || filter->filter_type == Less)
-  {
+  {printf("less\n");
     //keep initial u_A, i_A, f_A values
     uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
     uint64_t initial_u_A = table->columns_stats[filter->r.column_id].u_A;
@@ -1632,7 +1638,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
       table->columns_stats[filter->r.column_id].u_A = 0;
       table->columns_stats[filter->r.column_id].i_A = 0;
     }
-
+printf("ok\n");
     //update d_A double?
     table->columns_stats[filter->r.column_id].d_A = table->columns_stats[filter->r.column_id].d_A * 
       ((table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));
@@ -1657,7 +1663,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
   }
   //Case C. Filter '>' or '>='
   else if(filter->filter_type == Greater_Equal || filter->filter_type == Greater)
-  {
+  {printf("ok\n");
     //keep initial u_A, i_A, f_A values
     uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
     uint64_t initial_u_A = table->columns_stats[filter->r.column_id].u_A;
@@ -1673,11 +1679,11 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
       table->columns_stats[filter->r.column_id].u_A = 0;
       table->columns_stats[filter->r.column_id].i_A = 0;
     }
-
+printf("ok1\n");
     //update d_A double?
     table->columns_stats[filter->r.column_id].d_A = table->columns_stats[filter->r.column_id].d_A * 
       ((table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));
-
+printf("ok2\n");
     //update f_A
     table->columns_stats[filter->r.column_id].f_A = table->columns_stats[filter->r.column_id].f_A * 
       ((table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));     
@@ -1701,7 +1707,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
 }
 
 int statistics_self_joins(query *q, predicate_join *join, table_index *index)
-{
+{printf("statistics_self_joins\n");
   table *table = get_table(index, q->table_ids[join->r.table_id]);
   if(table == NULL)
   {
@@ -1777,7 +1783,7 @@ int statistics_self_joins(query *q, predicate_join *join, table_index *index)
 }
 
 int statistics_joins(query *q, predicate_join *join, table_index *index)
-{
+{printf("statistics_joins\n");
   table *table_r = get_table(index, q->table_ids[join->r.table_id]);
   if(table_r == NULL)
   {
@@ -1869,6 +1875,80 @@ int optimize_query(query*q, table_index* ti)
       return -1;
     }
 
+    table_index *temp_index = malloc(sizeof(table_index));
+    if(temp_index == NULL)
+    {
+      perror("optimize_query: malloc error");
+      return -2;
+    }
+
+    temp_index->num_tables = ti->num_tables;
+    temp_index->tables = malloc(temp_index->num_tables*sizeof(table));
+    if(temp_index->tables == NULL)
+    {
+      perror("optimize_query: malloc error");
+      return -2;
+    }
+
+    for(uint64_t i = 0; i < temp_index->num_tables; i++)
+    {
+      temp_index->tables[i].table_id = ti->tables[i].table_id;
+      temp_index->tables[i].rows = ti->tables[i].rows;
+      temp_index->tables[i].columns = ti->tables[i].columns;
+      temp_index->tables[i].over_n = ti->tables[i].over_n;
+      temp_index->tables[i].num_vals = ti->tables[i].num_vals;
+
+      temp_index->tables[i].columns_stats = malloc(temp_index->tables[i].columns * sizeof(statistics));
+      if(temp_index->tables[i].columns_stats == NULL)
+      {
+        perror("optimize_query: malloc error");
+        return -2;
+      }
+
+      memcpy(temp_index->tables[i].columns_stats, ti->tables[i].columns_stats, temp_index->tables[i].columns * sizeof(statistics));
+
+      temp_index->tables[i].distinct_vals = malloc(temp_index->tables[i].num_vals * sizeof(int8_t));
+      if(temp_index->tables[i].distinct_vals == NULL)
+      {
+        fprintf(stderr, "optimize_query: malloc error\n");
+        return -2;
+      }
+
+      memcpy(temp_index->tables[i].distinct_vals, ti->tables[i].distinct_vals, temp_index->tables[i].num_vals * sizeof(int8_t));
+
+    }
+
+    //initialize neighbors list
+    neighbor_list nl;
+    nl.neighbors_list = malloc(MAX_QUERY_NUM *sizeof(int *));
+    if(nl.neighbors_list == NULL)
+    {
+      perror("optimize_query: malloc error");
+      return -2;
+    }
+
+    for(int i = 0; i < MAX_QUERY_NUM; i++)
+    {
+      nl.neighbors_list[i] = malloc(MAX_QUERY_NUM * sizeof(int));
+      if(nl.neighbors_list[i] == NULL)
+      {
+        perror("optimize_query: malloc error");
+        return -2;
+      }
+    }
+
+    nl.neighbors_num = malloc(MAX_QUERY_NUM * sizeof(int));
+    if(nl.neighbors_num == NULL)
+    {
+      perror("optimize_query: malloc error");
+      return -2;
+    }
+
+    for(int i = 0; i < MAX_QUERY_NUM; i++)
+      nl.neighbors_num[i] = 0;
+
+    ////////////////////////////////////////////////
+
     counter_list*c_list=create_counter_list();
     if(c_list==NULL)
     {
@@ -1898,7 +1978,7 @@ int optimize_query(query*q, table_index* ti)
       {
 
         //update statistics
-        if(statistics_filters(q, (predicate_filter *) q->predicates[i].p, ti))
+        if(statistics_filters(q, (predicate_filter *) q->predicates[i].p, temp_index))
         {
           fprintf(stderr, "optimize_query: error in statistics_filters\n");
           return -4;
@@ -1909,6 +1989,31 @@ int optimize_query(query*q, table_index* ti)
       }
       else if(q->predicates[i].type==Join)//Count the table.rowid pairs
       {
+        predicate_join *join = q->predicates[i].p;
+
+        //search if r is related with s in the neighbors list
+        bool flag = 1;
+        for(int i = 0; i < nl.neighbors_num[join->r.table_id]; i++)
+        {
+          if(nl.neighbors_list[join->r.table_id][i] == join->s.table_id)
+          {
+            flag = 0;
+            break;
+          }
+        }
+
+        //if r and s are not related then add each one in the other's list
+        if(flag)
+        {
+          int pos = nl.neighbors_num[join->r.table_id];
+          nl.neighbors_list[join->r.table_id][pos] = join->s.table_id;
+          nl.neighbors_num[join->r.table_id]++;
+
+          pos = nl.neighbors_num[join->s.table_id];
+          nl.neighbors_list[join->s.table_id][pos] = join->r.table_id;
+          nl.neighbors_num[join->s.table_id]++;
+        }
+
         if(counter_list_append(c_list, &(((predicate_join*) (q->predicates[i].p))->r)/*,((predicate_join*)(q->predicates[i].p))*/)!=0)
         {
           delete_counter_list(c_list);
@@ -1926,6 +2031,19 @@ int optimize_query(query*q, table_index* ti)
       }
     }
 
+    // printf("NEIGHBOR LIST\n\n");
+    // for(int i = 0; i < MAX_QUERY_NUM; i++)
+    // {
+
+    //   for(int j = 0; j < nl.neighbors_num[i]; j++)
+    //   {
+    //     printf("%d  ", nl.neighbors_list[i][j]);
+    //   }
+    //   printf("\n");
+    // }
+////////////////
+    return 0;
+    /////////////////////////
     //Then the self joins
     for(uint32_t i=j; i<q->number_of_predicates; i++)
     {
@@ -1933,7 +2051,7 @@ int optimize_query(query*q, table_index* ti)
         if(q->predicates[i].type==Self_Join)
         {
           //update statistics
-          if(statistics_self_joins(q, (predicate_join *) q->predicates[i].p, ti))
+          if(statistics_self_joins(q, (predicate_join *) q->predicates[i].p, temp_index))
           {
             fprintf(stderr, "optimize_query: error in statistics_self_joins\n");
             return -7;

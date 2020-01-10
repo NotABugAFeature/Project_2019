@@ -1,6 +1,8 @@
 #ifndef QUERY_H
 #define QUERY_H
 
+#define MAX_QUERY_NUM 4
+
 #include "middle_list.h"
 #include "table.h"
 typedef enum predicate_type
@@ -137,7 +139,11 @@ typedef struct{
   middle_table *tables;
 }middleman;
 
-
+typedef struct
+{
+  int **neighbors_list;
+  int *neighbors_num;
+}neighbor_list;
 
 /**
  * Executes a query

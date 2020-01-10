@@ -94,30 +94,35 @@ int main(void)
             }
 	    	free(query_str);
 
-            //printf("After analyzing: ");
-            //print_query_like_an_str(q);
+            printf("After analyzing: ");
+            print_query_like_an_str(q);
             if(validate_query(q,ti)!=0)
             {
                 delete_query(q);
                 continue;
             }
 
-            //printf("After validation: ");
-            //print_query_like_an_str(q);
+            printf("After validation: ");
+            print_query_like_an_str(q);
             if(optimize_query(q,ti)!=0)
             {
                 delete_query(q);
                 continue;
             }
 
-            //printf("After optimizing: ");
-            //print_query_like_an_str(q);
+            printf("After optimizing: ");
+            print_query_like_an_str(q);
             bool* bool_array=NULL;
             if(create_sort_array(q,&bool_array)!=0)
             {
                 delete_query(q);
                 continue;
             }
+            
+            //////////////////////////////////////////
+            continue;
+            //////////////////////////////////////////
+
 
             //printf("After creating bool array: ");
             //print_query_like_an_str(q);

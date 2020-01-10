@@ -1776,7 +1776,85 @@ int statistics_self_joins(query *q, predicate_join *join, table_index *index)
   return 0;
 }
 
+int statistics_joins(query *q, predicate_join *join, table_index *index)
+{
+  table *table_r = get_table(index, q->table_ids[join->r.table_id]);
+  if(table_r == NULL)
+  {
+    fprintf(stderr, "execute_query: Table not found\n");
+    return 1;
+  }
 
+  table *table_s = get_table(index, q->table_ids[join->s.table_id]);
+  if(table_s == NULL)
+  {
+    fprintf(stderr, "execute_query: Table not found\n");
+    return 1;
+  }
+
+  uint64_t initial_d_A_at_R = table_r->columns_stats[join->r.column_id].d_A;
+  uint64_t initial_d_A_at_S = table_s->columns_stats[join->s.column_id].d_A;
+
+  uint64_t val_A = table_r->columns_stats[join->r.column_id].i_A;
+  uint64_t val_B = table_s->columns_stats[join->s.column_id].i_A;
+
+  //new i_A, new i_B = max(initial i_A, initial i_B)
+  table_r->columns_stats[join->r.column_id].i_A = (val_A > val_B) ? val_A : val_B;
+  table_s->columns_stats[join->s.column_id].i_A = (val_A > val_B) ? val_A : val_B;
+
+  val_A = table_r->columns_stats[join->r.column_id].u_A;
+  val_B = table_s->columns_stats[join->s.column_id].u_A;
+
+  //new u_A, new u_B = min(initial u_A, initial u_B)
+  table_r->columns_stats[join->r.column_id].u_A = (val_A < val_B) ? val_A : val_B;
+  table_s->columns_stats[join->s.column_id].u_A = (val_A < val_B) ? val_A : val_B;
+
+  //new f_A = (initial f_A * initial f_B) / n
+  uint64_t n = table_r->columns_stats[join->r.column_id].u_A - table_r->columns_stats[join->r.column_id].i_A + 1;
+
+  table_r->columns_stats[join->r.column_id].f_A = (table_r->columns_stats[join->r.column_id].f_A * 
+      table_s->columns_stats[join->s.column_id].f_A)/(n);
+
+  //new f_B = new f_A
+  table_s->columns_stats[join->s.column_id].f_A = table_r->columns_stats[join->r.column_id].f_A;
+
+  //new d_A = (initial d_A * initial d_B) / n
+  table_r->columns_stats[join->r.column_id].d_A = (table_r->columns_stats[join->r.column_id].d_A * 
+      table_s->columns_stats[join->s.column_id].d_A)/(n);
+
+  //new d_B = new d_A
+  table_s->columns_stats[join->s.column_id].d_A = table_r->columns_stats[join->r.column_id].d_A;
+
+  //update the rest columns of the table_r
+  for(uint64_t i = 0; i < table_r->columns; i++)
+  {
+    if(i == join->r.column_id)
+      continue;
+
+    long double parenthesis = power((1 - ((long double)table_r->columns_stats[join->r.column_id].d_A)/initial_d_A_at_R),
+        table_r->columns_stats[i].f_A/table_r->columns_stats[i].d_A); 
+
+    table_r->columns_stats[i].d_A = (uint64_t) (table_r->columns_stats[i].d_A * (long double)(1 - parenthesis));
+
+    table_r->columns_stats[i].f_A = table_r->columns_stats[join->r.column_id].f_A;
+  }
+
+  //update the rest columns of the table_s
+  for(uint64_t i = 0; i < table_s->columns; i++)
+  {
+    if(i == join->s.column_id)
+      continue;
+
+    long double parenthesis = power((1 - ((long double)table_s->columns_stats[join->s.column_id].d_A)/initial_d_A_at_S),
+        table_s->columns_stats[i].f_A/table_s->columns_stats[i].d_A); 
+
+    table_s->columns_stats[i].d_A = (uint64_t) (table_s->columns_stats[i].d_A * (long double)(1 - parenthesis));
+
+    table_s->columns_stats[i].f_A = table_s->columns_stats[join->s.column_id].f_A;
+  }
+
+  return 0;
+}
 
 
 int optimize_query(query*q, table_index* ti)
@@ -1865,6 +1943,7 @@ int optimize_query(query*q, table_index* ti)
           j++;
         }
     }
+
     //Then the joins
     bool next_join=false;
     table_column*next_tc=NULL;

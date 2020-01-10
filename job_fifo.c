@@ -40,22 +40,6 @@ int append_to_job_fifo_bucket(job_fifo_bucket* b, job* j)
     }
     return 1;
 }
-//TODO Remove 
-void print_job_fifo_bucket(job_fifo_bucket* b)
-{
-    if(b==NULL)
-    {
-        fprintf(stderr, "print_job_fifo_bucket: NULL Parameter\n");
-        return;
-    }
-    //Print the array inside the bucket
-    printf("index_to_add_next: %" PRIu32 "\n", b->index_to_add_next);
-    printf("index_to_remove_next: %" PRIu32 "\n", b->index_to_remove_next);
-    for(uint32_t i=0; i<b->index_to_add_next; i++)
-    {
-//        b->jobs[i]->print(b->jobs[i]->parameters);
-    }
-}
 job_fifo* create_job_fifo()
 {
     //Create the fifo
@@ -106,30 +90,6 @@ void delete_job_fifo(job_fifo* fifo)
         fifo->number_of_nodes--;
     }
     free(fifo);
-}
-void print_job_fifo(job_fifo* fifo)
-{
-    if(fifo==NULL)
-    {
-        fprintf(stderr, "print_job_fifo: NULL fifo pointer\n");
-        return;
-    }
-    uint32_t index=0;
-    job_fifo_node*temp=fifo->head;
-    printf("Number Of Buckets: %"PRIu32"\n", fifo->number_of_nodes);
-    printf("Number Of Records: %"PRIu64"\n", fifo->number_of_jobs);
-    while(temp!=NULL)//Visit all the nodes and print them
-    {
-        printf("Bucket Index: %"PRIu32, index);
-        if(fifo->append_node==temp)
-        {
-            printf("\tAppend Node");
-        }
-        printf("\n");
-        print_job_fifo_bucket(&(temp->bucket));
-        index++;
-        temp=temp->next;
-    }
 }
 int append_to_job_fifo(job_fifo* fifo, job* j)
 {
@@ -261,7 +221,7 @@ job* pop_from_job_fifo(job_fifo* fifo)
                 fifo->tail->next=temp;
                 fifo->tail=fifo->tail->next;
                 fifo->tail->next=NULL;
-//                fifo->number_of_nodes--;
+                //                fifo->number_of_nodes--;
                 fifo->tail->bucket.index_to_add_next=0;
                 fifo->tail->bucket.index_to_remove_next=0;
             }

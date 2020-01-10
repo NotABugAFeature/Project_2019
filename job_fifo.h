@@ -2,7 +2,7 @@
 #define JOB_FIFO_H
 #include <inttypes.h>
 #include <stdbool.h>
-#define JOB_FIFO_BUCKET_SIZE 4
+#define JOB_FIFO_BUCKET_SIZE 256
 typedef struct job job;
 typedef struct job_fifo_bucket
 {
@@ -29,14 +29,12 @@ typedef struct job_fifo
  * @return job_fifo_node* The new node
  */
 job_fifo_node* create_job_fifo_node();
-
 /**
  * Checks if the bucket given is full
  * @param job_fifo_bucket The bucket to check
  * @return bool true if the bucket is full else false
  */
 bool is_job_fifo_bucket_full(job_fifo_bucket*);
-
 /**
  * Appends the rowids given to the bucket.
  * @param job_fifo_bucket* the bucket
@@ -44,27 +42,22 @@ bool is_job_fifo_bucket_full(job_fifo_bucket*);
  * @return 0 if successful
  */
 int append_to_job_fifo_bucket(job_fifo_bucket*, job*);
-
 /**
  * Prints the contents of the bucket (index and array)
  * @param job_fifo_bucket the bucket to print
  */
 void print_job_fifo_bucket(job_fifo_bucket*);
-
 /**
  * Creates an empty job fifo and returns a pointer to that fifo
  * @return job_fifo* The new fifo
  */
 job_fifo* create_job_fifo();
-
-
 /**
  * Deletes all the nodes of the job_fifo given. If a job is not NULL then a
  * message is printed
  * @param job_fifo* the list to delete
  */
 void delete_job_fifo(job_fifo*);
-
 /**
  * Adds a job in the fifo.
  * @param job_fifo* The fifo to add the job
@@ -72,20 +65,17 @@ void delete_job_fifo(job_fifo*);
  * @return int 0 If Successful
  */
 int append_to_job_fifo(job_fifo*, job*);
-
 /**
  * Prints all the nodes and buckets of the fifo from first to last.
  * @param job_fifo* The job_fifo to print
  */
 void print_job_fifo(job_fifo*);
-
 /**
  * Returns if the job_fifo is empty.
  * @param job_fifo* the fifo
  * @return bool true if empty else false
  */
 bool is_job_fifo_empty(job_fifo*);
-
 /**
  * Returns the next job from the fifo.
  * @param job_fifo* The fifo to remove the job

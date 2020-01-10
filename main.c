@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <unistd.h>
 #include "query.h"
 #include "string_list.h"
 #include "execute_query.h"

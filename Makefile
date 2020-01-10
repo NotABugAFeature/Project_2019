@@ -10,9 +10,9 @@ all: queries tests
 
 notests: queries
 
-queries_fast: execute_query.c middle_list.c main.c query.c queue.c quicksort.c radix_sort.c relation.c sort_merge_join.c string_list.c table.c
-	$(CC) -O3 -o queries execute_query.c middle_list.c main.c query.c queue.c quicksort.c radix_sort.c relation.c sort_merge_join.c string_list.c table.c
-
+queries_fast: execute_query.c middle_list.c main.c query.c queue.c quicksort.c radix_sort.c relation.c sort_merge_join.c string_list.c table.c job_fifo.c job_scheduler.c projection_list.c list_array.c
+	$(CC) -O3 -g -Wall -o queries execute_query.c middle_list.c main.c query.c queue.c quicksort.c radix_sort.c relation.c sort_merge_join.c string_list.c table.c job_fifo.c job_scheduler.c projection_list.c list_array.c -lpthread
+	
 tests: tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o
 	$(CC) -o tests tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o $(TESTFLAGS)
 

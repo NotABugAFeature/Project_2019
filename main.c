@@ -5,11 +5,12 @@
 #include <inttypes.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include <unistd.h>
+#include <time.h>
 #include "query.h"
 #include "string_list.h"
 #include "execute_query.h"
 #include "job_scheduler.h"
+#define THREAD_LIMIT 128
 /**
  * Reads queries from stdin and returns them in a list
  * @return string_list of the queries
@@ -57,31 +58,38 @@ string_list *read_batch(void)
     }
     return list;
 }
-
-bool th_term=false; //Used to signal the thread termination
 /**
  * The thread function
  * @param void* (thread_parameters) The Thread Parameters
  */
 void *Thread_Function(void* thr_arg);
-
 //We can use this struct instead of global
 //The Parameters To Pass To The Threads 
 typedef struct
 {
-    //    pthread_mutex_t*
-    //    sem*
     job_scheduler* jobs;
 } thread_parameters;
 int main(int argc, char** argv)
 {
-    //TODO command line args
-    //TODO change positions of some parts of the code
-    //TODO create the query job and delete the execute code here
-    //Initialize The Semaphores
-    //TODO destroy sem/mutexes
-    uint16_t worker_th=10; //argv
-    job_scheduler* scheduler=create_job_scheduler();
+    if(argc!=2)
+    {
+        printf("Please give the number of threads to create\n");
+        return 1;
+    }
+    uint32_t worker_th=atoi(argv[1]);
+    if(worker_th==0)
+    {
+        printf("The number of threads given is 0\n");
+        return 1;
+    }
+    if(worker_th>THREAD_LIMIT)
+    {
+        printf("The number of threads given > limit\n");
+        return 1;
+    }
+    printf("The program will create %"PRIu32" threads\n",worker_th);
+    
+    job_scheduler* scheduler=create_job_scheduler(worker_th);
     if(scheduler==NULL)
     {
         return 1;
@@ -90,16 +98,26 @@ int main(int argc, char** argv)
     tp.jobs=scheduler;
     pthread_t threads[worker_th];
     //Start The Threads
-    for(int i=0; i<worker_th; i++)
+    for(uint32_t i=0; i<worker_th; i++)
     {
         if((pthread_create(&threads[i], NULL, Thread_Function, &tp)))
         {//ERROR
             fprintf(stderr, "Pthread_create error\n");
+            if(i==0)
+            {
+                scheduler->thread_count=i;
+            }
+            else
+            {
+                scheduler->thread_count=i-1;
+            }
+            destroy_job_scheduler(scheduler);
             return 2;
         }
     }
-    /***********************Will we change the code later**********************/
     string_list *list=read_tables();
+    struct timespec begin, end;
+    clock_gettime(CLOCK_MONOTONIC, &begin);
     printf("List of names:\n");
     string_list_print(list);
     table_index *ti=insert_tables_from_list(list);
@@ -108,7 +126,10 @@ int main(int argc, char** argv)
     {
         printf("ti->tables[%d].table_id: %" PRIu32 " - ti->tables[%d].columns: %" PRIu64 " - ti->tables[%d].rows: %" PRIu64 "\n", i, ti->tables[i].table_id, i, ti->tables[i].columns, i, ti->tables[i].rows);
     }
-    uint64_t queries_count=0;
+    uint32_t queries_count=0;
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    printf("Time to load the tables = %f seconds\n",(end.tv_nsec-begin.tv_nsec)/1000000000.0+(end.tv_sec-begin.tv_sec));
+    clock_gettime(CLOCK_MONOTONIC, &begin);
     while(1)
     {
         list=read_batch();
@@ -121,74 +142,73 @@ int main(int argc, char** argv)
         while(list->num_nodes>1)
         {
             query_str=string_list_remove(list);
-            job* newjob=create_query_job(scheduler,query_str,ti,queries_count);
+            job* newjob=create_query_job(scheduler, query_str, ti, queries_count);
             if(newjob==NULL)
             {
                 break;
             }
-//            pthread_mutex_lock(&scheduler->job_fifo_mutex);
-            //Append to fifo
             //TODO Add checks
-            schedule_job(scheduler,newjob);
-//            pthread_mutex_unlock(&job_fifo_mutex);
-//            sem_post(&fifo_job_counter_sem);
+            schedule_job(scheduler, newjob);
             queries_count++;
         }
         query_str=string_list_remove(list);
         if(strcmp(query_str, "Done")==0||strcmp(query_str, "done")==0)
         {
+            free(query_str);
             string_list_delete(list);
             break;
         }
+        free(query_str);
         string_list_delete(list);
     }
-    /**************************************************************************/
-    sleep(100);
-
-    th_term=true;
-    for(int i=0;i<worker_th;i++)
-    {//Inform All Thread To Exit
-        sem_post(&scheduler->fifo_job_counter_sem);
+    for(uint32_t i=0; i<queries_count; i++)
+    {
+        sem_wait(&scheduler->fifo_query_executing_sem);
     }
-    for(int i=0;i<worker_th;i++)
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    printf("Time to execute all queries = %f seconds\n",(end.tv_nsec-begin.tv_nsec)/1000000000.0+(end.tv_sec-begin.tv_sec));
+    printf("Total jobs: %"PRIu32"\n",scheduler->job_count);
+    print_projection_list(scheduler->projection_list);
+    destroy_job_scheduler(scheduler);
+    for(int i=0; i<worker_th; i++)
     {
         if(pthread_join(threads[i], NULL))
         {//ERROR
-            fprintf(stderr,"Pthread_join error\n");
+            fprintf(stderr, "Pthread_join error\n");
         }
-        printf("Thread %d Exited\n",i);
+        printf("Thread %d Exited\n", i);
     }
-    delete_job_scheduler(scheduler);
     delete_table_index(ti);
-//    sem_destroy(&fifo_job_counter_sem);
+    //TODO add fifo tests to test file
     return 0;
 }
 void *Thread_Function(void * thr_arg)
 {
     //Read the parameters if needed
     thread_parameters* tp=(thread_parameters *) (thr_arg);
-    while(true&&!th_term)
+    if(tp==NULL||tp->jobs==NULL)
     {
-        //Pop A Job From The Buffer
-//        sem_wait(&fifo_job_counter_sem);
-//        if(th_term)
-//        {
-//            break;
-//        }
-        //TODO Add checks
-//        pthread_mutex_lock(&job_fifo_mutex);
-        //Pop job from fifo
+        fprintf(stderr, "Thread parameters error\n");
+        pthread_exit(NULL);
+    }
+    while(true)
+    {
+        //Pop job from the scheduler's fifo
         job* j=get_job(tp->jobs);
-//        pthread_mutex_unlock(&job_fifo_mutex);
         if(j!=NULL)
         {
-            j->run(j->parameters);
+            //Execute the job
+            if(j->run(j->parameters))
+            {
+                fprintf(stderr, "Thread run error\n");
+                break;
+            }
         }
         else
         {
             break;
         }
-        //Ecexute the job
     }
+    sem_post(&tp->jobs->threads_finished_sem);
     pthread_exit(NULL);
 }

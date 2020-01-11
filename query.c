@@ -1912,18 +1912,18 @@ int join_enumeration(query *q, table_index *index, neighbor_list *nl)
 
   for(uint32_t i = 0; i < q->number_of_tables; i++)  
   {printf("now pos %d\n", pos);
-    //for every R_j (j belongs {0,1,2,3}) that does not belong to S
+    //Step 1. for every R_j (j belongs {0,1,2,3}) that does not belong to S
     if((S & pos) == 0)
     {printf("table with index %d not in S\n", pos);
       temp_S = S << 4;
 
-      //find the index of the relations participating 
+      //Step 2. find the index of the relations participating 
       for(int8_t j = 0; j < 4; j++)
       {
         //if temp_S < 0 then the 1st bit is 1 and index->tables[j] participates in S
         if(temp_S < 0)
         {printf("table with decimal index %d found in S\n", j);
-          //search if table j is related with other tables
+          //step 3. search if table j is related with other tables
           for(int k = 0; k < nl->neighbors_num[j]; k++)
           {
             //convert neighbor position to binary repensentation
@@ -1938,8 +1938,8 @@ int join_enumeration(query *q, table_index *index, neighbor_list *nl)
             else if(nl->neighbors_list[j][k] == 3)
               neighbor_pos = 1;
 
-            //check if neighbor is not already in S
-            if((neighbor_pos & S) == 0)
+            //check if neighbor is not already in S and neighbor = R_j
+            if((neighbor_pos & S) == 0 && pos == neighbor_pos)
             {
               printf("table with binary index %d is valid neighbor\n", neighbor_pos);
               uint8_t new_S = S | neighbor_pos;

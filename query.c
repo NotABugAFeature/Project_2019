@@ -1863,6 +1863,102 @@ int statistics_joins(query *q, predicate_join *join, table_index *index)
 }
 
 
+
+/**
+ * BIG ENDIAN
+ * 8 -> 1st most significant byte is 1, else 0 -> table with index 0
+ * 4 -> 2st most significant byte is 1, else 0 -> table with index 1
+ * 2 -> 3st most significant byte is 1, else 0 -> table with index 2
+ * 1 -> 4st most significant byte is 1, else 0 -> table with index 3
+ */
+
+
+int join_enumeration(query *q, table_index *index, neighbor_list *nl)
+{
+  best_tree btree;
+
+  // uint32_t best_tree_size = 1;
+  // for(uint32_t i = 0; i < q->number_of_tables; i++)  
+  // {
+  //   best_tree_size *=2;
+  // }
+
+  btree.relations = malloc(BEST_TREE_SIZE * sizeof(uint64_t));
+  if(btree.relations == NULL)
+  {
+    perror("join_enumeration: malloc error");
+    return 1;
+  }  
+
+  //initalize best tree with the sets of 1 element
+  //bid endian
+  int8_t pos = 8;  
+  for(uint32_t i = 0; i < q->number_of_tables; i++)  
+  {
+    table *table = get_table(index, q->table_ids[i]);
+    if(table == NULL)
+    {
+      fprintf(stderr, "join_enumeration: Table not found\n");
+      return 2;
+    }
+
+    btree.relations[pos] = table->columns_stats[i].f_A;
+    pos = pos >> 1;
+  }
+
+  //find optimal combination  
+  int8_t S = 8, temp_S;
+  pos = 8;
+
+  for(uint32_t i = 0; i < q->number_of_tables; i++)  
+  {printf("now pos %d\n", pos);
+    //for every R_j (j belongs {0,1,2,3}) that does not belong to S
+    if((S & pos) == 0)
+    {printf("table with index %d not in S\n", pos);
+      temp_S = S << 4;
+
+      //find the index of the relations participating 
+      for(int8_t j = 0; j < 4; j++)
+      {
+        //if temp_S < 0 then the 1st bit is 1 and index->tables[j] participates in S
+        if(temp_S < 0)
+        {printf("table with decimal index %d found in S\n", j);
+          //search if table j is related with other tables
+          for(int k = 0; k < nl->neighbors_num[j]; k++)
+          {
+            //convert neighbor position to binary repensentation
+            int neighbor_pos;
+
+            if(nl->neighbors_list[j][k] == 0)
+              neighbor_pos = 8;
+            else if(nl->neighbors_list[j][k] == 1)
+              neighbor_pos = 4;
+            else if(nl->neighbors_list[j][k] == 2)
+              neighbor_pos = 2;
+            else if(nl->neighbors_list[j][k] == 3)
+              neighbor_pos = 1;
+
+            //check if neighbor is not already in S
+            if((neighbor_pos & S) == 0)
+            {
+              printf("table with binary index %d is valid neighbor\n", neighbor_pos);
+              uint8_t new_S = S | neighbor_pos;
+            }
+          }
+
+        }
+
+        temp_S = temp_S << 1;
+      }
+    }
+
+    pos = pos >> 1;
+  }
+
+  return 0;
+}
+
+
 int optimize_query(query*q, table_index* ti)
 {
     //Check the parameters
@@ -2031,19 +2127,6 @@ int optimize_query(query*q, table_index* ti)
       }
     }
 
-    // printf("NEIGHBOR LIST\n\n");
-    // for(int i = 0; i < MAX_QUERY_NUM; i++)
-    // {
-
-    //   for(int j = 0; j < nl.neighbors_num[i]; j++)
-    //   {
-    //     printf("%d  ", nl.neighbors_list[i][j]);
-    //   }
-    //   printf("\n");
-    // }
-////////////////
-    return 0;
-    /////////////////////////
     //Then the self joins
     for(uint32_t i=j; i<q->number_of_predicates; i++)
     {
@@ -2062,6 +2145,22 @@ int optimize_query(query*q, table_index* ti)
         }
     }
 
+    printf("NEIGHBOR LIST\n\n");
+    for(int i = 0; i < MAX_QUERY_NUM; i++)
+    {
+
+      for(int j = 0; j < nl.neighbors_num[i]; j++)
+      {
+        printf("%d  ", nl.neighbors_list[i][j]);
+      }
+      printf("\n");
+    }
+//////////////
+
+    /////////////////////////
+
+    join_enumeration(q, temp_index, &nl);
+return 0;
     //Then the joins
     bool next_join=false;
     table_column*next_tc=NULL;

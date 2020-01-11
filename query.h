@@ -2,6 +2,7 @@
 #define QUERY_H
 
 #define MAX_QUERY_NUM 4
+#define BEST_TREE_SIZE 16
 
 #include "middle_list.h"
 #include "table.h"
@@ -144,6 +145,13 @@ typedef struct
   int **neighbors_list;
   int *neighbors_num;
 }neighbor_list;
+
+typedef struct
+{
+  //the relations are represented as bit vectors
+  //http://pi3.informatik.uni-mannheim.de/~moer/querycompiler.pdf (p.64) 
+  uint64_t *relations;
+}best_tree;
 
 /**
  * Executes a query

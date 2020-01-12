@@ -10,10 +10,17 @@
 #include "relation.h"
 #include "list_array.h"
 #include "projection_list.h"
+#define JOIN_TUPLES 16384
+#define FILTER_TUPLES 16384
+#define SELFJOIN_TUPLES 16384
+#define FILTER_MIDDLE_BUCKETS 10
+#define SELFJOIN_FILTER_MIDDLE_BUCKETS 10
 typedef struct job_scheduler
 {
-    job_fifo* fifo;                     //The fifo that holds the jobs
-    uint32_t job_count;                 //Counter of the jobs inside the fifo
+    job_fifo* fast_fifo;                //fifo that holds the fast jobs
+    job_fifo* slow_fifo;                //fifo that holds the fast jobs
+    uint64_t fast_job_count;            //Counter of the jobs inside the fast fifo
+    uint64_t slow_job_count;            //Counter of the jobs inside the slow fifo
     uint32_t thread_count;              //Counter of the threads using the fifo
     pthread_mutex_t job_fifo_mutex;     //Mutex for accessing the job fifo
     sem_t fifo_job_counter_sem;         //Semaphore that counts the items in the job fifo
@@ -313,12 +320,19 @@ job_scheduler* create_job_scheduler(uint32_t);
  */
 void destroy_job_scheduler(job_scheduler*);
 /**
- * Adds a job to the scheduler using a mutex
+ * Adds a fast job to the scheduler using a mutex
  * @param job_scheduler* the job scheduler to add the job
  * @param job* the job to add
  * @return int 0 if successful
  */
-int schedule_job(job_scheduler*, job*);
+int schedule_fast_job(job_scheduler*, job*);
+/**
+ * Adds a slow job to the scheduler using a mutex
+ * @param job_scheduler* the job scheduler to add the job
+ * @param job* the job to add
+ * @return int 0 if successful
+ */
+int schedule_slow_job(job_scheduler*, job*);
 /**
  * Returns the next job from the scheduler
  * @param job_scheduler* the scheduler

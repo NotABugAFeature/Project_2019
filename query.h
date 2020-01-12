@@ -140,9 +140,17 @@ typedef struct{
   middle_table *tables;
 }middleman;
 
+
+typedef struct neighbor_data
+{
+  uint32_t table_id;
+  uint64_t column_id;
+  uint64_t my_column_id;
+}neighbor_data;
+
 typedef struct
 {
-  int **neighbors_list;
+  neighbor_data **neighbors_list;
   int *neighbors_num;
 }neighbor_list;
 

@@ -77,6 +77,7 @@ int main(int argc, char** argv)
         return 1;
     }
     uint32_t worker_th=atoi(argv[1]);
+//    uint32_t worker_th=4;
     if(worker_th==0)
     {
         printf("The number of threads given is 0\n");
@@ -148,7 +149,7 @@ int main(int argc, char** argv)
                 break;
             }
             //TODO Add checks
-            schedule_job(scheduler, newjob);
+            schedule_fast_job(scheduler, newjob);
             queries_count++;
         }
         query_str=string_list_remove(list);
@@ -167,9 +168,11 @@ int main(int argc, char** argv)
     }
     clock_gettime(CLOCK_MONOTONIC, &end);
     printf("Time to execute all queries = %f seconds\n",(end.tv_nsec-begin.tv_nsec)/1000000000.0+(end.tv_sec-begin.tv_sec));
-    printf("Total jobs: %"PRIu32"\n",scheduler->job_count);
+    printf("Total fast jobs: %"PRIu64"\n",scheduler->fast_job_count);
+    printf("Total slow jobs: %"PRIu64"\n",scheduler->slow_job_count);
     print_projection_list(scheduler->projection_list);
     destroy_job_scheduler(scheduler);
+    delete_table_index(ti);
     for(int i=0; i<worker_th; i++)
     {
         if(pthread_join(threads[i], NULL))
@@ -178,7 +181,6 @@ int main(int argc, char** argv)
         }
         printf("Thread %d Exited\n", i);
     }
-    delete_table_index(ti);
     //TODO add fifo tests to test file
     return 0;
 }

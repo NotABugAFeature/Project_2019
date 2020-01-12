@@ -60,8 +60,8 @@ job_scheduler* create_job_scheduler(uint32_t thread_count)
         return NULL;
     }
     //Create the job fifo
-    js->fifo=create_job_fifo();
-    if(js->fifo==NULL)
+    js->fast_fifo=create_job_fifo();
+    if(js->fast_fifo==NULL)
     {
         delete_projection_list(js->projection_list);
         pthread_mutex_destroy(&js->job_fifo_mutex);
@@ -71,7 +71,20 @@ job_scheduler* create_job_scheduler(uint32_t thread_count)
         free(js);
         return NULL;
     }
-    js->job_count=0;
+    js->slow_fifo=create_job_fifo();
+    if(js->slow_fifo==NULL)
+    {
+        delete_projection_list(js->projection_list);
+        pthread_mutex_destroy(&js->job_fifo_mutex);
+        sem_destroy(&js->fifo_job_counter_sem);
+        sem_destroy(&js->fifo_query_executing_sem);
+        sem_destroy(&js->threads_finished_sem);
+        delete_job_fifo(js->fast_fifo);
+        free(js);
+        return NULL;
+    }
+    js->fast_job_count=0;
+    js->slow_job_count=0;
     js->thread_count=thread_count;
     js->terminate=false;
     return js;
@@ -91,7 +104,8 @@ void destroy_job_scheduler(job_scheduler* js)
     {//Wait for all the treads to exit
         sem_wait(&js->threads_finished_sem);
     }
-    delete_job_fifo(js->fifo);
+    delete_job_fifo(js->fast_fifo);
+    delete_job_fifo(js->slow_fifo);
     //Delete the projection list
     delete_projection_list(js->projection_list);
     //Destroy the semaphores/mutexes
@@ -102,9 +116,9 @@ void destroy_job_scheduler(job_scheduler* js)
     free(js);
     js=NULL;
 }
-int schedule_job(job_scheduler* js, job* j)
+int schedule_fast_job(job_scheduler* js, job* j)
 {
-    if(js==NULL||js->fifo==NULL||j==NULL)
+    if(js==NULL||js->fast_fifo==NULL||j==NULL)
     {
         fprintf(stderr, "schedule_job: NULL parameter\n");
         return -1;
@@ -112,9 +126,32 @@ int schedule_job(job_scheduler* js, job* j)
     //Aquire lock
     pthread_mutex_lock(&js->job_fifo_mutex);
     //Add it to the fifo
-    if(append_to_job_fifo(js->fifo, j)==0)
+    if(append_to_job_fifo(js->fast_fifo, j)==0)
     {
-        js->job_count++;
+        js->fast_job_count++;
+        //Release lock
+        pthread_mutex_unlock(&js->job_fifo_mutex);
+        //Inform the threads waiting for jobs
+        sem_post(&js->fifo_job_counter_sem);
+        return 0;
+    }
+    //Release lock
+    pthread_mutex_unlock(&js->job_fifo_mutex);
+    return -2;
+}
+int schedule_slow_job(job_scheduler* js, job* j)
+{
+    if(js==NULL||js->slow_fifo==NULL||j==NULL)
+    {
+        fprintf(stderr, "schedule_job: NULL parameter\n");
+        return -1;
+    }
+    //Aquire lock
+    pthread_mutex_lock(&js->job_fifo_mutex);
+    //Add it to the fifo
+    if(append_to_job_fifo(js->slow_fifo, j)==0)
+    {
+        js->slow_job_count++;
         //Release lock
         pthread_mutex_unlock(&js->job_fifo_mutex);
         //Inform the threads waiting for jobs
@@ -156,7 +193,7 @@ int store_projection_in_scheduler(job_scheduler* js, uint64_t query_id, uint32_t
 }
 job* get_job(job_scheduler* js)
 {
-    if(js==NULL||js->fifo==NULL)
+    if(js==NULL||js->fast_fifo==NULL||js->slow_fifo==NULL)
     {
         fprintf(stderr, "get_job: NULL parameter\n");
         return NULL;
@@ -174,10 +211,23 @@ job* get_job(job_scheduler* js)
     }
     else
     {
-        job* j=pop_from_job_fifo(js->fifo);
-        //Release the lock
+        if(js->fast_fifo->number_of_jobs>0)
+        {
+            job* j=pop_from_job_fifo(js->fast_fifo);
+            //Release the lock
+            pthread_mutex_unlock(&js->job_fifo_mutex);
+            return j;
+        }
+        else if(js->slow_fifo->number_of_jobs>0)
+        {
+            job* j=pop_from_job_fifo(js->slow_fifo);
+            //Release the lock
+            pthread_mutex_unlock(&js->job_fifo_mutex);
+            return j;
+        }
         pthread_mutex_unlock(&js->job_fifo_mutex);
-        return j;
+        fprintf(stderr, "get_job: both fifos empty\n");
+        return NULL;
     }
 }
 job* create_query_job(job_scheduler* jb, char* query_str, table_index* ti, uint64_t id)
@@ -317,6 +367,7 @@ int run_execute_job(void* parameters)
 }
 void destroy_query_job(void* parameters)
 {
+    printf("Destroy query job\n");
     //Free the resources
     job_query_parameters* p=(job_query_parameters*) parameters;
     if(p==NULL)
@@ -431,7 +482,7 @@ int run_prejoin_job(void* parameters)
         //Release lock
         pthread_mutex_unlock(&p->r_mutex);
         //Append this job to fifo
-        return schedule_job(p->this_job->scheduler, p->this_job);
+        return schedule_slow_job(p->this_job->scheduler, p->this_job);
     }
     //Release lock
     pthread_mutex_unlock(&p->r_mutex);
@@ -442,7 +493,7 @@ int run_prejoin_job(void* parameters)
         //Release lock
         pthread_mutex_unlock(&p->s_mutex);
         //Append this job to fifo
-        return schedule_job(p->this_job->scheduler, p->this_job);
+        return schedule_slow_job(p->this_job->scheduler, p->this_job);
     }
     //Release lock
     pthread_mutex_unlock(&p->s_mutex);
@@ -553,11 +604,14 @@ int run_prejoin_job(void* parameters)
     //    schedule_job(p->this_job->scheduler, p->this_job);
 
     //TODO Figure out size of parts
-    
-    uint64_t parts=10;
-    if(p->r->num_tuples<parts)
+    uint64_t parts;
+    if(p->r->num_tuples<JOIN_TUPLES)
     {
         parts=1;
+    }
+    else
+    {
+        parts=p->r->num_tuples/JOIN_TUPLES+1;
     }
     uint64_t small_size=p->r->num_tuples/parts;
     uint64_t extra=p->r->num_tuples%parts;
@@ -574,7 +628,14 @@ int run_prejoin_job(void* parameters)
     {
         p->r_counter=1;
         job *newjob=create_join_job(0, 0, 0, &p->r_counter, &p->r_mutex, la, 0, p);
-        schedule_job(p->this_job->scheduler, newjob);
+        schedule_fast_job(p->this_job->scheduler, newjob);
+        return 0;
+    }
+    if(parts==1)
+    {
+        p->r_counter=1;
+        job *newjob=create_join_job(0, p->r->num_tuples, 0, &p->r_counter, &p->r_mutex, la, 0, p);
+        schedule_fast_job(p->this_job->scheduler, newjob);
         return 0;
     }
     uint64_t start_r, end_r=0, start_s=0;
@@ -592,7 +653,7 @@ int run_prejoin_job(void* parameters)
         }
         //Create and schedule the join job
         job *newjob=create_join_job(start_r, end_r, start_s, &p->r_counter, &p->r_mutex, la, i, p);
-        schedule_job(p->this_job->scheduler, newjob);
+        schedule_fast_job(p->this_job->scheduler, newjob);
     }
     return 0;
 }
@@ -704,7 +765,7 @@ int run_filter_table_job(void * parameters)
         job_query_parameters *exe_params=p->exe_params;
         exe_params->pred_index++;
         exe_params->this_job->run=run_execute_job;
-        schedule_job(exe_params->this_job->scheduler, exe_params->this_job);
+        schedule_fast_job(exe_params->this_job->scheduler, exe_params->this_job);
         delete_list_array(p->lists);
         //        free(p->lists->lists);
         //        free(p->lists);
@@ -809,7 +870,7 @@ int run_filter_middle_job(void * parameters)
         job_query_parameters *exe_params=p->exe_params;
         exe_params->pred_index++;
         exe_params->this_job->run=run_execute_job;
-        schedule_job(exe_params->this_job->scheduler, exe_params->this_job);
+        schedule_fast_job(exe_params->this_job->scheduler, exe_params->this_job);
         delete_list_array(p->lists);
         //        free(p->lists->lists);
         //        free(p->lists);
@@ -869,7 +930,7 @@ int run_original_self_join_table_job(void * parameters)
         job_query_parameters *exe_params=p->exe_params;
         exe_params->pred_index++;
         exe_params->this_job->run=run_execute_job;
-        schedule_job(exe_params->this_job->scheduler, exe_params->this_job);
+        schedule_fast_job(exe_params->this_job->scheduler, exe_params->this_job);
         delete_list_array(p->lists);
         //        free(p->lists->lists);
         //        free(p->lists);
@@ -927,7 +988,7 @@ int run_original_self_join_middle_job(void * parameters)
         job_query_parameters *exe_params=p->exe_params;
         exe_params->pred_index++;
         exe_params->this_job->run=run_execute_job;
-        schedule_job(exe_params->this_job->scheduler, exe_params->this_job);
+        schedule_fast_job(exe_params->this_job->scheduler, exe_params->this_job);
         delete_list_array(p->lists);
         //        free(p->lists->lists);
         //        free(p->lists);
@@ -1069,7 +1130,7 @@ int run_join_job(void * parameters)
         update_related_lists(exe_params->pred_index, exe_params->query, exe_params->joined_tables, exe_params->middle, delete_r, delete_s, result_R, result_S, NULL);
         exe_params->pred_index++;
         exe_params->this_job->run=run_execute_job;
-        schedule_job(exe_params->this_job->scheduler, exe_params->this_job);
+        schedule_fast_job(exe_params->this_job->scheduler, exe_params->this_job);
         delete_list_array(p->lists);
         //        free(p->lists->lists);
         //        free(p->lists);
@@ -1297,7 +1358,7 @@ int run_presort_job(void* parameters)
         pthread_mutex_lock(p->mutex);
         *(p->unsorted_rows)=(*p->r)->num_tuples;
         pthread_mutex_unlock(p->mutex);
-        schedule_job(p->this_job->scheduler, newjob);
+        schedule_fast_job(p->this_job->scheduler, newjob);
         destroy_presort_job(parameters);
         return 0;
     }
@@ -1398,7 +1459,7 @@ int run_sort_job(void* parameters)
                     return -1;
                 }
                 //TODO Add if
-                schedule_job(p->this_job->scheduler, newjob);
+                schedule_fast_job(p->this_job->scheduler, newjob);
             }
             if(hist[i]+p->win.start>p->win.end)
             {

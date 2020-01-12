@@ -1146,7 +1146,15 @@ int execute_query_parallel(job_query_parameters* p)
             {
                 //A.2.1 If it is empty we need to filter the data of the original table..
                 //TODO Figure out size of parts
-                uint64_t parts=10;
+                uint64_t parts;
+                if(original_table->rows<FILTER_TUPLES)
+                {
+                    parts=1;
+                }
+                else
+                {
+                    parts=original_table->rows/FILTER_TUPLES+1;
+                }
                 uint64_t small_size=original_table->rows/parts;
                 uint64_t extra=original_table->rows%parts;
                 p->r_counter=parts;
@@ -1168,7 +1176,7 @@ int execute_query_parallel(job_query_parameters* p)
                     }
                     //Create and schedule the filter job
                     job *newjob=create_filter_table_job(original_table,start_index,end_index,&p->r_counter,&p->r_mutex,la,i,p);
-                    schedule_job(p->this_job->scheduler, newjob);
+                    schedule_fast_job(p->this_job->scheduler, newjob);
                 }
                 return 0;
             }
@@ -1176,10 +1184,14 @@ int execute_query_parallel(job_query_parameters* p)
             {
                 //A.2.2 ..else we filter the data of the middleman's list
                 //TODO Figure out size of parts
-                uint64_t parts=5;
-                if(p->middle->tables[filter->r.table_id].list->number_of_nodes<5)
+                uint64_t parts;
+                if(p->middle->tables[filter->r.table_id].list->number_of_nodes<FILTER_MIDDLE_BUCKETS)
                 {
                     parts=1;
+                }
+                else
+                {
+                    parts=p->middle->tables[filter->r.table_id].list->number_of_nodes/FILTER_MIDDLE_BUCKETS+1;
                 }
                 uint64_t small_size=p->middle->tables[filter->r.table_id].list->number_of_nodes/parts;
                 uint64_t extra=p->middle->tables[filter->r.table_id].list->number_of_nodes%parts;
@@ -1203,7 +1215,7 @@ int execute_query_parallel(job_query_parameters* p)
                     }
                     //Create and schedule the filter job
                     job *newjob=create_filter_middle_job(original_table,job_node,node_count,&p->r_counter,&p->r_mutex,la,i,p);
-                    schedule_job(p->this_job->scheduler, newjob);
+                    schedule_fast_job(p->this_job->scheduler, newjob);
                     temp_node=job_node;
                     while(node_count>0)
                     {
@@ -1230,7 +1242,7 @@ int execute_query_parallel(job_query_parameters* p)
             }
             //Append to fifo
             //TODO Add checks
-            schedule_job(p->this_job->scheduler, newjob_r);
+            schedule_fast_job(p->this_job->scheduler, newjob_r);
             job* newjob_s=create_presort_job(p, &p->s, &join->s, &p->s_mutex, p->bool_array[p->b_index], &(p->s_counter));
             p->b_index++;
             if(newjob_s==NULL)
@@ -1239,9 +1251,9 @@ int execute_query_parallel(job_query_parameters* p)
                 return -2;
             }
             //TODO Add checks
-            schedule_job(p->this_job->scheduler, newjob_s);
+            schedule_fast_job(p->this_job->scheduler, newjob_s);
             p->this_job->run=run_prejoin_job;
-            schedule_job(p->this_job->scheduler, p->this_job);
+            schedule_slow_job(p->this_job->scheduler, p->this_job);
             return 0;
         }
         else if((p->query->predicates[p->pred_index].type==Self_Join&&
@@ -1332,7 +1344,15 @@ int execute_query_parallel(job_query_parameters* p)
             if(p->middle->tables[join->r.table_id].list==NULL)
             {
                 //TODO Figure out size of parts
-                uint64_t parts=10;
+                uint64_t parts;
+                if(original_table->rows<SELFJOIN_TUPLES)
+                {
+                    parts=1;
+                }
+                else
+                {
+                    parts=original_table->rows/SELFJOIN_TUPLES+1;
+                }
                 uint64_t small_size=original_table->rows/parts;
                 uint64_t extra=original_table->rows%parts;
                 p->r_counter=parts;
@@ -1356,17 +1376,21 @@ int execute_query_parallel(job_query_parameters* p)
                     //TODO Check all job creations
                     job *newjob=create_filter_table_job(original_table,start_index,end_index,&p->r_counter,&p->r_mutex,la,i,p);
                     newjob->run=run_original_self_join_table_job;
-                    schedule_job(p->this_job->scheduler, newjob);
+                    schedule_fast_job(p->this_job->scheduler, newjob);
                 }
                 return 0;
             }
             else
             {
                 //TODO Figure out size of parts
-                uint64_t parts=5;
+                uint64_t parts;
                 if(p->middle->tables[join->r.table_id].list->number_of_nodes<5)
                 {
                     parts=1;
+                }
+                else
+                {
+                    parts=p->middle->tables[join->r.table_id].list->number_of_nodes/SELFJOIN_FILTER_MIDDLE_BUCKETS+1;
                 }
                 uint64_t small_size=p->middle->tables[join->r.table_id].list->number_of_nodes/parts;
                 uint64_t extra=p->middle->tables[join->r.table_id].list->number_of_nodes%parts;
@@ -1391,7 +1415,7 @@ int execute_query_parallel(job_query_parameters* p)
                     //Create and schedule the filter job
                     job *newjob=create_filter_middle_job(original_table,job_node,node_count,&p->r_counter,&p->r_mutex,la,i,p);
                     newjob->run=run_original_self_join_middle_job;
-                    schedule_job(p->this_job->scheduler, newjob);
+                    schedule_fast_job(p->this_job->scheduler, newjob);
                     temp_node=job_node;
                     while(node_count>0)
                     {
@@ -1423,7 +1447,7 @@ int execute_query_parallel(job_query_parameters* p)
         }
         //Append to fifo
         //TODO Add checks
-        schedule_job(p->this_job->scheduler, newjob);
+        schedule_fast_job(p->this_job->scheduler, newjob);
         //        projection *pr=&p->query->projections[i];
         //        if(p->middle->tables[pr->column_to_project.table_id].list==NULL||p->middle->tables[pr->column_to_project.table_id].list->number_of_nodes==0)
         //        {

@@ -1980,7 +1980,7 @@ uint32_t convert_to_decimal(uint32_t binary)
  */
 
 
-int join_enumeration(query *q, table_index *index, neighbor_list *nl)
+best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
 {
   best_tree btree;
 
@@ -1989,21 +1989,21 @@ int join_enumeration(query *q, table_index *index, neighbor_list *nl)
   if(btree.relations == NULL)
   {
     perror("join_enumeration: malloc error");
-    return 1;
+    //return 1;
   }  
 
   btree.join_stats = malloc(BEST_TREE_SIZE * sizeof(ui_stats));
   if(btree.join_stats == NULL)
   {
     perror("join_enumeration: malloc error");
-    return 1;
+   // return 1;
   } 
 
   btree.order = malloc(BEST_TREE_SIZE * sizeof(best_order));
   if(btree.order == NULL)
   {
     perror("join_enumeration: malloc error");
-    return 1;
+   // return 1;
   } 
 
   //initialize
@@ -2023,7 +2023,7 @@ int join_enumeration(query *q, table_index *index, neighbor_list *nl)
     if(table == NULL)
     {
       fprintf(stderr, "join_enumeration: Table not found\n");
-      return 2;
+    //  return 2;
     }
 
     btree.relations[pos] = table->columns_stats[i].f_A;
@@ -2044,7 +2044,7 @@ int join_enumeration(query *q, table_index *index, neighbor_list *nl)
   if(members_in_S == NULL)
   {
     fprintf(stderr, "join_enumeration: malloc error\n");
-    return 1;
+  //  return 1;
   }
 
 
@@ -2151,7 +2151,7 @@ printf("i %d and binary S %hu\n", i, S);
               if(res)
               {
                 fprintf(stderr, "join_enumeration: error in calculate_join\n");
-                return 1;
+          //      return 1;
               }
 
               int8_t new_S = S | neighbor_pos;
@@ -2233,7 +2233,7 @@ printf("i %d and binary S %hu\n", i, S);
       printf("%d ", btree.order[members_in_S[counter]].array[z]);
     }
     printf("\n");
-return 0;
+return btree.order[members_in_S[counter]];
   //C. find optimal combination
   // pos = 8;
 
@@ -2282,7 +2282,7 @@ return 0;
   //   pos = pos >> 1;
   // }
 
-  return 0;
+  //return 0;
 }
 
 
@@ -2488,8 +2488,34 @@ int optimize_query(query*q, table_index* ti)
     }
 
     /////////////////////////
+    int order_counter = 0;
+    best_order order = join_enumeration(q, temp_index, &nl);
 
-    join_enumeration(q, temp_index, &nl);
+    ///
+    for(uint32_t i = j; i < q->number_of_predicates; i++)
+    {
+      printf("left: %d right: %d\n", order.array[order_counter],  order.array[order_counter + 1]);
+      for(uint32_t k = j; k < q->number_of_predicates; k++)
+      {
+        //remove for to work ---------------------------> fix
+        for(uint32_t m = order_counter; m >= 0; m--)
+        {
+          if(q->predicates[k].type == Join && 
+              (((predicate_join *)q->predicates[k].p)->r.table_id == order.array[m] &&
+              ((predicate_join *)q->predicates[k].p)->s.table_id == order.array[order_counter + 1]) || 
+              (((predicate_join *)q->predicates[k].p)->s.table_id == order.array[m] &&
+              ((predicate_join *)q->predicates[k].p)->r.table_id == order.array[order_counter + 1])
+            )
+          {
+            swap_predicates(&q->predicates[j], &q->predicates[k]);
+            j++;
+            break;
+          }
+        }
+      }
+      order_counter++;
+    }
+
 return 0;
     //Then the joins
     bool next_join=false;

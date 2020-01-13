@@ -159,6 +159,7 @@ typedef struct
   //the relations are represented as bit vectors
   //http://pi3.informatik.uni-mannheim.de/~moer/querycompiler.pdf (p.64) 
   uint64_t *relations;
+  ui_stats *join_stats;
 }best_tree;
 
 /**

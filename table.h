@@ -33,11 +33,11 @@ typedef struct
 
 typedef struct
 {
-  uint32_t table_id;
-  uint64_t column_id;
-  //min value
+  uint32_t r_table_id;
+  uint64_t r_column_id;
+  uint32_t s_table_id;
+  uint64_t s_column_id;
   uint64_t i_A;
-  //max value
   uint64_t u_A;
 }ui_stats;
 

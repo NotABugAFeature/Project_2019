@@ -1891,6 +1891,60 @@ uint64_t statistics_joins(query *q, predicate_join *join, table_index *index)
 }
 
 
+int calculate_join(query *q, predicate_join *join, table_index *index, statistics *stats, statistics *results)
+{
+  table *table_r = get_table(index, q->table_ids[join->r.table_id]);
+  if(table_r == NULL)
+  {
+    fprintf(stderr, "execute_query: Table not found\n");
+    return 1;//TODO
+  }
+
+  table *table_s = get_table(index, q->table_ids[join->s.table_id]);
+  if(table_s == NULL)
+  {
+    fprintf(stderr, "execute_query: Table not found\n");
+    return 1;//TODO
+  }
+
+  if(stats != NULL)
+  {
+    //new i_A, new i_B = max(initial i_A, initial i_B)
+    results->i_A = (stats->i_A > table_s->columns_stats[join->s.column_id].i_A) ? 
+        stats->i_A : table_s->columns_stats[join->s.column_id].i_A;
+
+    //new u_A, new u_B = min(initial u_A, initial u_B)
+    results->new_u = (stats->u_A < table_s->columns_stats[join->s.column_id].u_A) ? 
+        stats->u_A : table_s->columns_stats[join->s.column_id].u_A;
+
+    //new f_A = (initial f_A * initial f_B) / n
+    results->new_f = ((double)(stats->f_A * table_s->columns_stats[join->s.column_id].f_A))/(new_u - new_i + 1);
+  }
+  else
+  {
+    uint64_t val_A = table_r->columns_stats[join->r.column_id].i_A;
+    uint64_t val_B = table_s->columns_stats[join->s.column_id].i_A;
+
+    //new i_A, new i_B = max(initial i_A, initial i_B)
+    results->i_A = (val_A > val_B) ? val_A : val_B;
+
+    val_A = table_r->columns_stats[join->r.column_id].u_A;
+    val_B = table_s->columns_stats[join->s.column_id].u_A;
+
+    //new u_A, new u_B = min(initial u_A, initial u_B)
+    results->new_u = (val_A < val_B) ? val_A : val_B;
+
+    //new f_A = (initial f_A * initial f_B) / n
+    uint64_t n = table_r->columns_stats[join->r.column_id].u_A - table_r->columns_stats[join->r.column_id].i_A + 1;
+
+    results->new_f = ((double)(table_r->columns_stats[join->r.column_id].f_A * table_s->columns_stats[join->s.column_id].f_A))/(n);
+  }
+
+  return 0;
+    
+}
+
+
 
 uint32_t convert_to_binary(uint32_t decimal)
 {
@@ -1962,14 +2016,14 @@ int join_enumeration(query *q, table_index *index, neighbor_list *nl)
     pos = pos >> 1;
   }
 
-  //B.1 allocate memory for neighbors of S
-
-  // table_column *neighbors = malloc(BEST_TREE_SIZE * sizeof(table_column));
-  // if(neighbors == NULL)
-  // {
-  //   fprintf(stderr, "join_enumeration: malloc error\n");
-  //   return 1;
-  // }
+  //B.1 allocate memory for storing statistics
+  int ui_counter = 0;
+  ui_stats *stats = malloc((2*q->number_of_predicates) * sizeof(ui_stats));
+  if(stats == NULL)
+  {
+    fprintf(stderr, "join_enumeration: malloc error\n");
+    return 1;
+  }
 
   uint8_t *members_in_S = malloc(6 * sizeof(uint8_t));
   if(members_in_S == NULL)
@@ -1979,37 +2033,55 @@ int join_enumeration(query *q, table_index *index, neighbor_list *nl)
   }
 
 
-  for(uint32_t i = 0; i < q->number_of_tables - 1; i++) 
-  {//------------------------------------------------------->>>fix
+  for(uint32_t i = 0; i < q->number_of_tables; i++) 
+  {
+    uint8_t members = 0;
     if(i == 0)
     {
+      //S with 1 member
       members_in_S[0] = 8;
       members_in_S[1] = 4;
       members_in_S[2] = 2;
       members_in_S[3] = 1;
+      members = 4;
+      printf("s with 1 member\n");
     }
     else if(i == 1)
     {
+      //S with 2 members
       members_in_S[0] = 3;
       members_in_S[1] = 5;
       members_in_S[2] = 6;
       members_in_S[3] = 9;
       members_in_S[4] = 10;
       members_in_S[5] = 12;
+      members = 6;printf("s with 2 members\n");
     }
     else if(i == 2)
     {
+      //S with 3 members
       members_in_S[0] = 7;
       members_in_S[1] = 11;
       members_in_S[2] = 13;
       members_in_S[3] = 14;
+      members = 4;printf("s with 3 members\n");
+    }
+    else
+    {
+      printf("end\n");return 0;
     }
 
-    for(int8_t m = 0; m < q->number_of_tables; m++)
+    for(int8_t m = 0; m < members; m++)
     {
       int8_t S = members_in_S[m];
+
+      if((int64_t)btree.relations[S] == -1)
+        {printf("skipping bin %d\n", S);
+        continue;
+      }
+
       int8_t temp_S = S << 4;
-printf("i %d and decimal S %d\n", i, convert_to_decimal(S));
+printf("i %d and binary S %hu\n", i, S);
       //B.2 find neighbors of every relation in S
       for(int8_t j = 0; j < 4; j++)
       {
@@ -2020,7 +2092,7 @@ printf("i %d and decimal S %d\n", i, convert_to_decimal(S));
           for(int k = 0; k < nl->neighbors_num[j]; k++)
           {
             //convert neighbor position to binary repensentation
-            int neighbor_pos = convert_to_binary(nl->neighbors_list[j][k].table_id);
+            int8_t neighbor_pos = convert_to_binary(nl->neighbors_list[j][k].table_id);
 
             //if neighbor is not already in S then add it to the neighbors list
             if((neighbor_pos & S) == 0)
@@ -2036,18 +2108,29 @@ printf("i %d and decimal S %d\n", i, convert_to_decimal(S));
               pj.s.table_id = nl->neighbors_list[j][k].table_id;
               pj.s.column_id = nl->neighbors_list[j][k].column_id;
 
-              uint64_t cost = statistics_joins(q, &pj, index);
-              printf("%" PRIu8 "\n", cost);
-              // if(cost == 0)
-              // {
-              //   fprintf(stderr, "join_enumeration: error in statistics_joins\n");
-              //   return 1;
-              // }
+              //search if r or s (table_id, column_id) have been joined before
+              for(int b = 0; b < ui_counter; b++)
+              {
+                if(ui_stats[b].table_id == pj.r.table_id && ui_stats[b].column_id == pj.r.column_id)
+                {
 
+                }
+                else if(ui_stats[b].table_id == pj.s.table_id && ui_stats[b].column_id == pj.s.column_id)
+                {
+
+                }
+              }
+
+              if(calculate_join(q, &join, index, statistics *stats, statistics *results))
+              {
+                fprintf(stderr, "join_enumeration: error in calculate_join\n");
+                return 1;
+              }
+int cost= 0;
               int8_t new_S = S | neighbor_pos;
 
               if(((int64_t) btree.relations[new_S] == -1) || btree.relations[new_S] > cost)
-              {
+              { printf("adding binary %hu\n", new_S);
                 btree.relations[new_S] = cost;
               }
 
@@ -2308,17 +2391,16 @@ int optimize_query(query*q, table_index* ti)
         }
     }
 
-    // printf("NEIGHBOR LIST\n\n");
-    // for(int i = 0; i < MAX_QUERY_NUM; i++)
-    // {
+    printf("NEIGHBOR LIST\n\n");
+    for(int i = 0; i < MAX_QUERY_NUM; i++)
+    {
 
-    //   for(int j = 0; j < nl.neighbors_num[i]; j++)
-    //   {
-    //     printf("t:%d  col: %d  my_col: %d\t", nl.neighbors_list[i][j].table_id, nl.neighbors_list[i][j].column_id, nl.neighbors_list[i][j].my_column_id);
-    //   }
-    //   printf("\n");
-    // }
-//////////////
+      for(int j = 0; j < nl.neighbors_num[i]; j++)
+      {
+        printf("t:%d  col: %d  my_col: %d\t", nl.neighbors_list[i][j].table_id, nl.neighbors_list[i][j].column_id, nl.neighbors_list[i][j].my_column_id);
+      }
+      printf("\n");
+    }
 
     /////////////////////////
 

@@ -31,6 +31,16 @@ typedef struct
   uint64_t d_A;
 }statistics;
 
+typedef struct
+{
+  uint32_t table_id;
+  uint64_t column_id;
+  //min value
+  uint64_t i_A;
+  //max value
+  uint64_t u_A;
+}ui_stats;
+
 
 /** 
  * Type definition for a table as read from a file

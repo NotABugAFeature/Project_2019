@@ -2088,7 +2088,7 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
       members = 1;
     }
 
-    for(int8_t m = 0; m < members; m++)
+    for(uint8_t m = 0; m < members; m++)
     {
       int8_t S = members_in_S[m];
 
@@ -2193,9 +2193,9 @@ printf("i %d and binary S %hu\n", i, S);
     }
   }
 
-  int counter = 0;
+  uint8_t qw = 0;
   uint64_t min;
-  for(int8_t m = 0; m < members; m++)
+  for(uint8_t m = 0; m < members; m++)
   {
     int8_t S = members_in_S[m];
 
@@ -2205,14 +2205,15 @@ printf("i %d and binary S %hu\n", i, S);
     if(m == 0)
     {
       min = btree.relations[S];
-      counter = m;
+      printf("NOW MIN AT %hu\n", m);
+      qw = m;
     }
     else
     {
       if(btree.relations[S] < min)
       {
         min = btree.relations[S];
-        counter = m;
+        qw = m;printf("NOW MIN AT %hu\n", m);
       }
     }
     printf("f_A: %d\t", btree.relations[S]);
@@ -2224,16 +2225,18 @@ printf("i %d and binary S %hu\n", i, S);
     printf("\n");
 
   }
+printf("COUNTER IS  %hu\n", qw);
+  int8_t ss = members_in_S[qw];
 
   printf("\nRESULT\n");
-  printf("f_A: %d\t", btree.relations[members_in_S[counter]]);
+  printf("f_A: %d\t", btree.relations[ss]);
 
     for(int z = 0; z < q->number_of_tables; z++)
     {
-      printf("%d ", btree.order[members_in_S[counter]].array[z]);
+      printf("%d ", btree.order[ss].array[z]);
     }
     printf("\n");
-return btree.order[members_in_S[counter]];
+return btree.order[ss];
   //C. find optimal combination
   // pos = 8;
 
@@ -2492,27 +2495,60 @@ int optimize_query(query*q, table_index* ti)
     best_order order = join_enumeration(q, temp_index, &nl);
 
     ///
-    for(uint32_t i = j; i < q->number_of_predicates; i++)
+    for(uint32_t i = 0; i < q->number_of_tables-1; i++)
     {
       printf("left: %d right: %d\n", order.array[order_counter],  order.array[order_counter + 1]);
       for(uint32_t k = j; k < q->number_of_predicates; k++)
-      {
-        //remove for to work ---------------------------> fix
-        for(uint32_t m = order_counter; m >= 0; m--)
+      {printf("CHECKING: %d.%d  %d.%d\n", ((predicate_join *)q->predicates[k].p)->r.table_id, ((predicate_join *)q->predicates[k].p)->r.column_id,((predicate_join *)q->predicates[k].p)->s.table_id,((predicate_join *)q->predicates[k].p)->s.column_id);
+
+        bool r = false, s = false;
+
+        if(q->predicates[k].type == Join && 
+               (((predicate_join *)q->predicates[k].p)->r.table_id == order.array[order_counter] ||
+               ((predicate_join *)q->predicates[k].p)->r.table_id == order.array[order_counter + 1]))
         {
-          if(q->predicates[k].type == Join && 
-              (((predicate_join *)q->predicates[k].p)->r.table_id == order.array[m] &&
-              ((predicate_join *)q->predicates[k].p)->s.table_id == order.array[order_counter + 1]) || 
-              (((predicate_join *)q->predicates[k].p)->s.table_id == order.array[m] &&
-              ((predicate_join *)q->predicates[k].p)->r.table_id == order.array[order_counter + 1])
-            )
+          r = true;
+        }
+
+        if(q->predicates[k].type == Join && 
+               (((predicate_join *)q->predicates[k].p)->s.table_id == order.array[order_counter] ||
+               ((predicate_join *)q->predicates[k].p)->s.table_id == order.array[order_counter + 1]))
+        {
+          s = true;
+        }
+
+printf("r=%d s=%d\n", r,s);
+        if(r == true && s == true)
+        {printf("r s true\n");
+          swap_predicates(&q->predicates[j], &q->predicates[k]);
+          j++;
+        }
+        else if(r == true && s == false)
+        {printf("r true s false\n");
+          for(int m = order_counter; m >= 0; m--)
+          {printf("m=%d\n", m);
+            if(((predicate_join *)q->predicates[k].p)->s.table_id == order.array[m])
+            {printf("s found in %d\n", m);
+              swap_predicates(&q->predicates[j], &q->predicates[k]);
+              j++;
+              break;
+            }
+          }
+        }
+        else if(r == false && s == true)
+        {printf("r false s true\n");
+          for(int m = order_counter; m >= 0; m--)
           {
-            swap_predicates(&q->predicates[j], &q->predicates[k]);
-            j++;
-            break;
+            if(((predicate_join *)q->predicates[k].p)->r.table_id == order.array[m])
+            {printf("r found in %d \n", m);
+              swap_predicates(&q->predicates[j], &q->predicates[k]);
+              j++;
+              break;
+            }
           }
         }
       }
+
       order_counter++;
     }
 

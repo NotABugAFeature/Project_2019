@@ -1488,7 +1488,7 @@ double power(double x, uint64_t y)
 }
 
 int statistics_filters(query *q, predicate_filter *filter, table_index *index)
-{printf("statistics_filters\n");
+{//printf("statistics_filters\n");
 
   if(q == NULL || filter == NULL || index == NULL)
   {
@@ -1555,7 +1555,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
         table->columns_stats[filter->r.column_id].d_A = 1;
       }
       else
-      {printf("found 0 - over n\n");
+      {//printf("found 0 - over n\n");
         table->columns_stats[filter->r.column_id].f_A = 0;
         table->columns_stats[filter->r.column_id].d_A = 0;
       }
@@ -1604,7 +1604,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
         table->columns_stats[filter->r.column_id].d_A = 1;
       }
       else
-      {printf("found 0\n");
+      {//printf("found 0\n");
         table->columns_stats[filter->r.column_id].f_A = 0;
         table->columns_stats[filter->r.column_id].d_A = 0;
       }
@@ -1629,7 +1629,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
   }
   //Case B. Filter '<' or '<='
   else if(filter->filter_type == Less_Equal || filter->filter_type == Less)
-  {printf("less\n");
+  {//printf("less\n");
     //keep initial u_A, i_A, f_A values
     uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
     uint64_t initial_u_A = table->columns_stats[filter->r.column_id].u_A;
@@ -1719,7 +1719,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
 }
 
 int statistics_self_joins(query *q, predicate_join *join, table_index *index)
-{printf("statistics_self_joins\n");
+{//printf("statistics_self_joins\n");
   table *table = get_table(index, q->table_ids[join->r.table_id]);
   if(table == NULL)
   {
@@ -1910,7 +1910,7 @@ int calculate_join(query *q, predicate_join *join,
   }
 
   if(exists)
-  {printf("\033[1;31m EXISTS ACTIVATED \033[0m; i=%d u=%d\n", i_A, u_A);
+  {//printf("\033[1;31m EXISTS ACTIVATED \033[0m; i=%d u=%d\n", i_A, u_A);
     //new i_A, new i_B = max(initial i_A, initial i_B)
     results->i_A = (i_A > table_s->columns_stats[join->s.column_id].i_A) ? 
         i_A : table_s->columns_stats[join->s.column_id].i_A;
@@ -2060,7 +2060,7 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
       members_in_S[2] = 2;
       members_in_S[3] = 1;
       members = 4;
-      printf("s with 1 member\n");
+    //  printf("s with 1 member\n");
     }
     else if(i == 1)
     {
@@ -2071,7 +2071,7 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
       members_in_S[3] = 9;
       members_in_S[4] = 10;
       members_in_S[5] = 12;
-      members = 6;printf("s with 2 members\n");
+      members = 6;//printf("s with 2 members\n");
     }
     else if(i == 2)
     {
@@ -2080,7 +2080,7 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
       members_in_S[1] = 11;
       members_in_S[2] = 13;
       members_in_S[3] = 14;
-      members = 4;printf("s with 3 members\n");
+      members = 4;//printf("s with 3 members\n");
     }
     else if(i == 3)
     {
@@ -2094,18 +2094,18 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
 
       if((int64_t)btree.relations[S] == -1)
       {
-        printf("skipping bin %d\n", S);
+      //  printf("skipping bin %d\n", S);
         continue;
       }
 
       int8_t temp_S = S << 4;
-printf("i %d and binary S %hu\n", i, S);
+//printf("i %d and binary S %hu\n", i, S);
       //B.2 find neighbors of every relation in S
       for(int8_t j = 0; j < 4; j++)
       {
         //if temp_S < 0 then the 1st bit is 1 and index->tables[j] participates in S
         if(temp_S < 0)
-        {printf("table with decimal index %d found in S\n", j);
+        {//printf("table with decimal index %d found in S\n", j);
           
           for(int k = 0; k < nl->neighbors_num[j]; k++)
           {
@@ -2116,7 +2116,7 @@ printf("i %d and binary S %hu\n", i, S);
             if((neighbor_pos & S) == 0)
             {
 
-              printf("table with decimal index %d is valid neighbor\n", nl->neighbors_list[j][k].table_id);
+             // printf("table with decimal index %d is valid neighbor\n", nl->neighbors_list[j][k].table_id);
 
               predicate_join pj;
               statistics results;
@@ -2158,11 +2158,11 @@ printf("i %d and binary S %hu\n", i, S);
 
               if(((int64_t) btree.relations[new_S] == -1) || btree.relations[new_S] > results.f_A)
               { 
-                printf("adding binary %hu with res %d\n", new_S, results.f_A);
+                //printf("adding binary %hu with res %d\n", new_S, results.f_A);
                 btree.relations[new_S] = results.f_A;
 
-                printf("\033[1;31m STORING VALUUES \033[0m; i=%d u=%d at %d.%d %d.%d\n", results.i_A, results.u_A, j,
-                  nl->neighbors_list[j][k].my_column_id,nl->neighbors_list[j][k].table_id, nl->neighbors_list[j][k].column_id );
+                //printf("\033[1;31m STORING VALUUES \033[0m; i=%d u=%d at %d.%d %d.%d\n", results.i_A, results.u_A, j,
+                //  nl->neighbors_list[j][k].my_column_id,nl->neighbors_list[j][k].table_id, nl->neighbors_list[j][k].column_id );
 
                 btree.join_stats[new_S].i_A = results.i_A;
                 btree.join_stats[new_S].u_A = results.u_A;
@@ -2178,10 +2178,10 @@ printf("i %d and binary S %hu\n", i, S);
 
                 btree.order[new_S].array[i+1] = nl->neighbors_list[j][k].table_id;
 
-                printf("\norder:\n");
-                for(int z = 0; z < MAX_QUERY_NUM; z++)
-                  printf("%d ", btree.order[new_S].array[z]);
-                printf("\n\n");
+                // printf("\norder:\n");
+                // for(int z = 0; z < MAX_QUERY_NUM; z++)
+                //   printf("%d ", btree.order[new_S].array[z]);
+                // printf("\n\n");
               }
             }
           }
@@ -2193,7 +2193,7 @@ printf("i %d and binary S %hu\n", i, S);
     }
   }
 
-  uint8_t qw = 0;
+  uint8_t min_pos = 0;
   uint64_t min;
   for(uint8_t m = 0; m < members; m++)
   {
@@ -2205,31 +2205,31 @@ printf("i %d and binary S %hu\n", i, S);
     if(m == 0)
     {
       min = btree.relations[S];
-      printf("NOW MIN AT %hu\n", m);
-      qw = m;
+     // printf("NOW MIN AT %hu\n", m);
+      min_pos = m;
     }
     else
     {
       if(btree.relations[S] < min)
       {
         min = btree.relations[S];
-        qw = m;printf("NOW MIN AT %hu\n", m);
+        min_pos = m;
+        //printf("NOW MIN AT %hu\n", m);
       }
     }
-    printf("f_A: %d\t", btree.relations[S]);
+    // printf("f_A: %d\t", btree.relations[S]);
 
-    for(int z = 0; z < q->number_of_tables; z++)
-    {
-      printf("%d ", btree.order[S].array[z]);
-    }
-    printf("\n");
+    // for(int z = 0; z < q->number_of_tables; z++)
+    // {
+    //   printf("%d ", btree.order[S].array[z]);
+    // }
+    // printf("\n");
 
   }
-printf("COUNTER IS  %hu\n", qw);
-  int8_t ss = members_in_S[qw];
+//printf("COUNTER IS  %hu\n", qw);
+  int8_t ss = members_in_S[min_pos];
 
-  printf("\nRESULT\n");
-  printf("f_A: %d\t", btree.relations[ss]);
+  printf("Best Tree Result (f_A): %d\tTables: ", btree.relations[ss]);
 
     for(int z = 0; z < q->number_of_tables; z++)
     {
@@ -2479,16 +2479,16 @@ int optimize_query(query*q, table_index* ti)
         }
     }
 
-    printf("NEIGHBOR LIST\n\n");
-    for(int i = 0; i < MAX_QUERY_NUM; i++)
-    {
+    // printf("NEIGHBOR LIST\n\n");
+    // for(int i = 0; i < MAX_QUERY_NUM; i++)
+    // {
 
-      for(int j = 0; j < nl.neighbors_num[i]; j++)
-      {
-        printf("t:%d  col: %d  my_col: %d\t", nl.neighbors_list[i][j].table_id, nl.neighbors_list[i][j].column_id, nl.neighbors_list[i][j].my_column_id);
-      }
-      printf("\n");
-    }
+    //   for(int j = 0; j < nl.neighbors_num[i]; j++)
+    //   {
+    //     printf("t:%d  col: %d  my_col: %d\t", nl.neighbors_list[i][j].table_id, nl.neighbors_list[i][j].column_id, nl.neighbors_list[i][j].my_column_id);
+    //   }
+    //   printf("\n");
+    // }
 
     /////////////////////////
     int order_counter = 0;
@@ -2497,9 +2497,9 @@ int optimize_query(query*q, table_index* ti)
     ///
     for(uint32_t i = 0; i < q->number_of_tables-1; i++)
     {
-      printf("left: %d right: %d\n", order.array[order_counter],  order.array[order_counter + 1]);
+      //printf("left: %d right: %d\n", order.array[order_counter],  order.array[order_counter + 1]);
       for(uint32_t k = j; k < q->number_of_predicates; k++)
-      {printf("CHECKING: %d.%d  %d.%d\n", ((predicate_join *)q->predicates[k].p)->r.table_id, ((predicate_join *)q->predicates[k].p)->r.column_id,((predicate_join *)q->predicates[k].p)->s.table_id,((predicate_join *)q->predicates[k].p)->s.column_id);
+      {//printf("CHECKING: %d.%d  %d.%d\n", ((predicate_join *)q->predicates[k].p)->r.table_id, ((predicate_join *)q->predicates[k].p)->r.column_id,((predicate_join *)q->predicates[k].p)->s.table_id,((predicate_join *)q->predicates[k].p)->s.column_id);
 
         bool r = false, s = false;
 
@@ -2517,18 +2517,18 @@ int optimize_query(query*q, table_index* ti)
           s = true;
         }
 
-printf("r=%d s=%d\n", r,s);
+//printf("r=%d s=%d\n", r,s);
         if(r == true && s == true)
-        {printf("r s true\n");
+        {//printf("r s true\n");
           swap_predicates(&q->predicates[j], &q->predicates[k]);
           j++;
         }
         else if(r == true && s == false)
-        {printf("r true s false\n");
+        {//printf("r true s false\n");
           for(int m = order_counter; m >= 0; m--)
-          {printf("m=%d\n", m);
+          {//printf("m=%d\n", m);
             if(((predicate_join *)q->predicates[k].p)->s.table_id == order.array[m])
-            {printf("s found in %d\n", m);
+            {//printf("s found in %d\n", m);
               swap_predicates(&q->predicates[j], &q->predicates[k]);
               j++;
               break;
@@ -2536,11 +2536,11 @@ printf("r=%d s=%d\n", r,s);
           }
         }
         else if(r == false && s == true)
-        {printf("r false s true\n");
+        {//printf("r false s true\n");
           for(int m = order_counter; m >= 0; m--)
           {
             if(((predicate_join *)q->predicates[k].p)->r.table_id == order.array[m])
-            {printf("r found in %d \n", m);
+            {//printf("r found in %d \n", m);
               swap_predicates(&q->predicates[j], &q->predicates[k]);
               j++;
               break;

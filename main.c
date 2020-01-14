@@ -120,20 +120,20 @@ int main(void)
             }
             
             //////////////////////////////////////////
-            continue;
+           // continue;
             //////////////////////////////////////////
 
 
             //printf("After creating bool array: ");
             //print_query_like_an_str(q);
-            if(optimize_query_memory(q)!=0)
-            {
-                delete_query(q);
-                continue;
-            }
+            // if(optimize_query_memory(q)!=0)
+            // {
+            //     delete_query(q);
+            //     continue;
+            // }
 
-            printf("After optimizing memory: ");
-            print_query_like_an_str(q);
+            // printf("After optimizing memory: ");
+            // print_query_like_an_str(q);
 
             /*
             for(uint32_t i=0; i<q->number_of_predicates*2; i++)

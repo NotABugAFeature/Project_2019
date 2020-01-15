@@ -1,8 +1,11 @@
 #ifndef MIDDLELIST_H
 #define MIDDLELIST_H
 #include <inttypes.h>
-//#define middle_LIST_BUCKET_SIZE ((1048576/4)/(2*sizeof(uint64_t)))
-#define middle_LIST_BUCKET_SIZE (131072/(sizeof(uint64_t)))
+#if defined(SERIAL_EXECUTION)||(defined(SERIAL_JOIN)&&defined(SERIAL_FILTER)&&defined(SERIAL_SELFJOIN))
+#define middle_LIST_BUCKET_SIZE ((1048576)/(sizeof(uint64_t)))
+#else
+#define middle_LIST_BUCKET_SIZE ((131072)/(sizeof(uint64_t)))
+#endif
 typedef struct middle_list_bucket middle_list_bucket;
 typedef struct middle_list_node middle_list_node;
 typedef struct middle_list middle_list;
@@ -103,6 +106,14 @@ unsigned int middle_list_get_number_of_buckets(middle_list*);
  * @return uint64_t The number of records
  */
 uint64_t middle_list_get_number_of_records(middle_list*);
+#if defined(SERIAL_EXECUTION)||(defined(SERIAL_JOIN)&&defined(SERIAL_FILTER)&&defined(SERIAL_SELFJOIN))
+/**
+ * Returns a lookup_table for the list given.
+ * @param middle_list* The middle list
+ * @return middle_list_bucket** The lookup table created
+ */
+middle_list_bucket **construct_lookup_table(middle_list*);
+#else
 typedef struct lookup_table
 {
     middle_list_bucket **lookup_table;  //Pointers to the list nodes
@@ -116,10 +127,10 @@ typedef struct lookup_table
  * @return lookup_table* The lookup table created
  */
 lookup_table *construct_lookup_table(middle_list*);
-//middle_list_bucket **construct_lookup_table(middle_list*);
 /**
  * Deletes the lookup_table given.
  * @param lookup_table* The lookup_table to delete
  */
 void delete_lookup_table(lookup_table*);
+#endif
 #endif /*MIDDLELIST_H*/

@@ -112,6 +112,26 @@ int table_from_file(table *t, char *filename)
       return -4;
     }
 
+    t->num_vals = malloc(columns * sizeof(uint64_t));
+    if(t->num_vals == NULL)
+    {
+      perror("table_from_file: malloc error");
+      return -5;
+    }
+
+    t->over_n = malloc(columns * sizeof(bool));
+    if(t->over_n == NULL)
+    {
+      perror("table_from_file: malloc error");
+      return -6;
+    }
+
+    t->distinct_vals = malloc(columns * sizeof(int8_t *));
+    if(t->distinct_vals == NULL)
+    {
+      perror("table_from_file: malloc error");
+      return -7;
+    }
 
     //read content
     for(uint64_t i = 0; i < columns; i++)
@@ -148,32 +168,31 @@ int table_from_file(table *t, char *filename)
         uint64_t min_max = t->columns_stats[i].u_A - t->columns_stats[i].i_A + 1;
         if(min_max > N) 
         {
-          t->num_vals = (N%8 > 0) ? (N/8 + 1): (N/8);
-          t->over_n = true;
+          t->num_vals[i] = (N%8 > 0) ? (N/8 + 1): (N/8);
+          t->over_n[i] = true;
         }
         else
         {
-          t->num_vals = (min_max%8 > 0) ? (min_max/8 + 1): (min_max/8);
-          t->over_n = false;
+          t->num_vals[i] = (min_max%8 > 0) ? (min_max/8 + 1): (min_max/8);
+          t->over_n[i] = false;
         }
 
-        t->distinct_vals = malloc(t->num_vals * sizeof(int8_t));
-          
-        if(t->distinct_vals == NULL)
+        t->distinct_vals[i] = malloc(t->num_vals[i] * sizeof(int8_t));
+        if(t->distinct_vals[i] == NULL)
         {
           fprintf(stderr, "table_from_file: malloc error\n");
           fclose(fp);
           return -5;
         }
-
-        for(uint64_t j = 0; j < t->num_vals; j++)
-          t->distinct_vals[j] = 0;
+ printf("min_max=%d num_vals=%d buckets, over_n=%d\n", min_max, t->num_vals[i],  t->over_n[i]);
+        for(uint64_t j = 0; j < t->num_vals[i]; j++)
+          t->distinct_vals[i][j] = 0;
 
         for(uint64_t j = 0; j < rows; j++)
         {
-          if(t->over_n)
+          if(t->over_n[i])
           {
-            int8_t b = t->distinct_vals[((t->array[i][j] - t->columns_stats[i].i_A) % N)/8];
+            int8_t b = t->distinct_vals[i][((t->array[i][j] - t->columns_stats[i].i_A) % N)/8];
             int position = ((t->array[i][j] - t->columns_stats[i].i_A) % N)%8;
 
             switch(position)
@@ -204,11 +223,11 @@ int table_from_file(table *t, char *filename)
                 break;
             }
 
-            t->distinct_vals[((t->array[i][j] - t->columns_stats[i].i_A) % N)/8] = b;
+            t->distinct_vals[i][((t->array[i][j] - t->columns_stats[i].i_A) % N)/8] = b;
           }
           else
           {
-            int8_t b = t->distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A)/8];
+            int8_t b = t->distinct_vals[i][(t->array[i][j] - t->columns_stats[i].i_A)/8];
             int position = (t->array[i][j] - t->columns_stats[i].i_A)%8;
 
             switch(position)
@@ -239,13 +258,13 @@ int table_from_file(table *t, char *filename)
                 break;
             }
 
-            t->distinct_vals[(t->array[i][j] - t->columns_stats[i].i_A)/8] = b;
+            t->distinct_vals[i][(t->array[i][j] - t->columns_stats[i].i_A)/8] = b;
           }
         }
 
-        for(uint64_t j = 0; j < t->num_vals; j++)
+        for(uint64_t j = 0; j < t->num_vals[i]; j++)
         {
-          int8_t b = t->distinct_vals[j];
+          int8_t b = t->distinct_vals[i][j];
           for(int k = 0; k < 8; k++)
           {
             if(b < 0)
@@ -254,7 +273,7 @@ int table_from_file(table *t, char *filename)
           }
         }
 
-        //printf("%llu\n%llu\n%llu\n%llu\n\n", t->columns_stats[i].i_A, t->columns_stats[i].u_A, t->columns_stats[i].f_A, t->columns_stats[i].d_A);
+        printf("%llu\n%llu\n%llu\n%llu\n\n", t->columns_stats[i].i_A, t->columns_stats[i].u_A, t->columns_stats[i].f_A, t->columns_stats[i].d_A);
     }
 
     fclose(fp);

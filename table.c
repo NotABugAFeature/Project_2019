@@ -297,6 +297,8 @@ void delete_table_contents(table*table_r)
             free(table_r->array[i]);
             table_r->array[i]=NULL;
         }
+        free(table_r->columns_stats);
+        free(table_r->distinct_vals);
         free(table_r->array);
         table_r->array=NULL;
     }

@@ -123,29 +123,31 @@ void print_middle_list(middle_list* list, FILE*output)
         temp=temp->next;
     }
 }
-//middle_list_bucket **construct_lookup_table(middle_list* list)
-//{
-//    if(list==NULL)
-//    {
-//        fprintf(stderr, "print_middle_list: NULL list pointer\n");
-//        return NULL;
-//    }
-//    middle_list_bucket **lookup=malloc(middle_list_get_number_of_buckets(list)*sizeof(middle_list_bucket *));
-//    if(lookup==NULL)
-//    {
-//        fprintf(stderr, "print_middle_list: NULL list pointer\n");
-//        return NULL;
-//    }
-//    unsigned int i=0;
-//    middle_list_node*temp=list->head;
-//    while(temp!=NULL)//Visit all the nodes and print them
-//    {
-//        lookup[i]= &(temp->bucket);
-//        temp=temp->next;
-//        i++;
-//    }
-//    return lookup;
-//}
+#if defined(SERIAL_EXECUTION)||(defined(SERIAL_JOIN)&&defined(SERIAL_FILTER)&&defined(SERIAL_SELFJOIN))
+middle_list_bucket **construct_lookup_table(middle_list* list)
+{
+    if(list==NULL)
+    {
+        fprintf(stderr, "print_middle_list: NULL list pointer\n");
+        return NULL;
+    }
+    middle_list_bucket **lookup=malloc(middle_list_get_number_of_buckets(list)*sizeof(middle_list_bucket *));
+    if(lookup==NULL)
+    {
+        fprintf(stderr, "print_middle_list: NULL list pointer\n");
+        return NULL;
+    }
+    unsigned int i=0;
+    middle_list_node*temp=list->head;
+    while(temp!=NULL)//Visit all the nodes and print them
+    {
+        lookup[i]= &(temp->bucket);
+        temp=temp->next;
+        i++;
+    }
+    return lookup;
+}
+#else
 lookup_table *construct_lookup_table(middle_list* list)
 {
     if(list==NULL)
@@ -225,6 +227,7 @@ void delete_lookup_table(lookup_table* lt)
     free(lt);
     lt=NULL;
 }
+#endif
 int append_to_middle_list(middle_list* list, uint64_t r_row_id)
 {
     if(list->head==NULL)//Create the first node

@@ -77,7 +77,6 @@ int main(int argc, char** argv)
         return 1;
     }
     uint32_t worker_th=atoi(argv[1]);
-//    uint32_t worker_th=4;
     if(worker_th==0)
     {
         printf("The number of threads given is 0\n");
@@ -89,7 +88,6 @@ int main(int argc, char** argv)
         return 1;
     }
     printf("The program will create %"PRIu32" threads\n",worker_th);
-    
     job_scheduler* scheduler=create_job_scheduler(worker_th);
     if(scheduler==NULL)
     {
@@ -151,6 +149,9 @@ int main(int argc, char** argv)
             //TODO Add checks
             schedule_fast_job(scheduler, newjob);
             queries_count++;
+            #if defined(ONE_QUERY_AT_A_TIME)
+            sem_wait(&scheduler->fifo_query_executing_sem);
+            #endif
         }
         query_str=string_list_remove(list);
         if(strcmp(query_str, "Done")==0||strcmp(query_str, "done")==0)
@@ -162,15 +163,18 @@ int main(int argc, char** argv)
         free(query_str);
         string_list_delete(list);
     }
+#if !defined(ONE_QUERY_AT_A_TIME)
     for(uint32_t i=0; i<queries_count; i++)
     {
         sem_wait(&scheduler->fifo_query_executing_sem);
     }
+#endif
     clock_gettime(CLOCK_MONOTONIC, &end);
     printf("Time to execute all queries = %f seconds\n",(end.tv_nsec-begin.tv_nsec)/1000000000.0+(end.tv_sec-begin.tv_sec));
     printf("Total fast jobs: %"PRIu64"\n",scheduler->fast_job_count);
-    printf("Total slow jobs: %"PRIu64"\n",scheduler->slow_job_count);
+#if defined(SORTED_PROJECTIONS)
     print_projection_list(scheduler->projection_list);
+#endif
     destroy_job_scheduler(scheduler);
     delete_table_index(ti);
     for(int i=0; i<worker_th; i++)

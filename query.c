@@ -1511,11 +1511,11 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
 
   //Case A. Filter '='
   if(filter->filter_type == Equal)
-  {printf("EQUAL\n");
+  {//printf("EQUAL\n");
     uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
 
     if(table->over_n)
-    {printf("over n\n");
+    {//printf("over n\n");
       int8_t b = table->distinct_vals[filter->r.column_id][((filter->value - table->columns_stats[filter->r.column_id].i_A) % N)/8];
       int position = ((filter->value - table->columns_stats[filter->r.column_id].i_A) % N)%8;
 
@@ -1564,7 +1564,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
       table->columns_stats[filter->r.column_id].u_A = filter->value;
     }
     else
-    {printf("under n, filter value: %d i.a=%d\n", filter->value, table->columns_stats[filter->r.column_id].i_A);
+    {//printf("under n, filter value: %d i.a=%d\n", filter->value, table->columns_stats[filter->r.column_id].i_A);
       int8_t b = table->distinct_vals[filter->r.column_id][(filter->value - table->columns_stats[filter->r.column_id].i_A)/8];
       printf("b= %hu\n", b);
       int position = (filter->value - table->columns_stats[filter->r.column_id].i_A)%8;
@@ -2268,35 +2268,78 @@ int optimize_query(query*q, table_index* ti)
     return -2;
   }
 
-  temp_index->num_tables = ti->num_tables;
-  temp_index->tables = malloc(temp_index->num_tables*sizeof(table));
+  temp_index->num_tables = q->number_of_tables;
+  temp_index->tables = malloc(temp_index->num_tables * sizeof(table));
   if(temp_index->tables == NULL)
   {
     perror("optimize_query: malloc error");
     return -2;
   }
 
-  for(uint64_t i = 0; i < temp_index->num_tables; i++)
+  for(uint64_t i = 0; i < q->number_of_tables; i++)
   {
-    // temp_index->tables[i].table_id = ti->tables[i].table_id;
-    // temp_index->tables[i].rows = ti->tables[i].rows;
-    // temp_index->tables[i].columns = ti->tables[i].columns;
-    // temp_index->tables[i].over_n = ti->tables[i].over_n;
-    // temp_index->tables[i].num_vals = ti->tables[i].num_vals;
+    table *table = get_table(ti, q->table_ids[i]);
+    if(table == NULL)
+    {
+      fprintf(stderr, "execute_query: Table not found\n");
+      return -1;
+    }
 
-    // temp_index->tables[i].columns_stats = malloc(temp_index->tables[i].columns * sizeof(statistics));
-    // if(temp_index->tables[i].columns_stats == NULL)
-    // {
-    //   perror("optimize_query: malloc error");
-    //   return -2;
-    // }
+    temp_index->tables[i].table_id = table->table_id;
+    temp_index->tables[i].rows = table->rows;
+    temp_index->tables[i].columns = table->columns;
+
+    temp_index->tables[i].columns_stats = malloc(temp_index->tables[i].columns * sizeof(statistics));
+    if(temp_index->tables[i].columns_stats == NULL)
+    {
+      perror("optimize_query: malloc error");
+      return -2;
+    }
 
     // for(uint64_t m = 0; m < temp_index->tables[i].columns; m++)
     // {
     //   temp_index->tables[i].columns_stats[m] = ti->tables[i].columns_stats[m];
     // }
 
-    // //memcpy(temp_index->tables[i].columns_stats, ti->tables[i].columns_stats, temp_index->tables[i].columns * sizeof(statistics));
+    memcpy(temp_index->tables[i].columns_stats, table->columns_stats, temp_index->tables[i].columns * sizeof(statistics));
+
+    temp_index->tables[i].num_vals = malloc(temp_index->tables[i].columns * sizeof(uint64_t));
+    if(temp_index->tables[i].num_vals == NULL)
+    {
+      perror("table_from_file: malloc error");
+      return -5;
+    }
+
+    memcpy(temp_index->tables[i].num_vals, table->num_vals, temp_index->tables[i].columns * sizeof(uint64_t));
+
+    temp_index->tables[i].over_n = malloc(temp_index->tables[i].columns * sizeof(bool));
+    if(temp_index->tables[i].over_n == NULL)
+    {
+      perror("table_from_file: malloc error");
+      return -6;
+    }
+
+    memcpy(temp_index->tables[i].over_n, table->over_n, temp_index->tables[i].columns * sizeof(bool));
+
+    temp_index->tables[i].distinct_vals = malloc(temp_index->tables[i].columns * sizeof(int8_t *));
+    if(temp_index->tables[i].distinct_vals == NULL)
+    {
+      perror("table_from_file: malloc error");
+      return -7;
+    }
+
+    for(uint64_t j = 0; j < temp_index->tables[i].columns; j++)
+    {
+      temp_index->tables[i].distinct_vals[j] = malloc(temp_index->tables[i].num_vals[j] * sizeof(int8_t));
+      if(temp_index->tables[i].distinct_vals[j] == NULL)
+      {
+        fprintf(stderr, "table_from_file: malloc error\n");
+        return -5;
+      }
+
+      memcpy(temp_index->tables[i].distinct_vals[j], table->distinct_vals[j], temp_index->tables[i].columns * sizeof(int8_t));
+
+    }
 
     // temp_index->tables[i].distinct_vals = malloc(temp_index->tables[i].num_vals * sizeof(int8_t));
     // if(temp_index->tables[i].distinct_vals == NULL)
@@ -2355,7 +2398,7 @@ int optimize_query(query*q, table_index* ti)
     {
 
       //update statistics
-      if(statistics_filters(q, (predicate_filter *) q->predicates[i].p, ti))
+      if(statistics_filters(q, (predicate_filter *) q->predicates[i].p, temp_index))
       {
         fprintf(stderr, "optimize_query: error in statistics_filters\n");
         return -4;
@@ -2414,7 +2457,7 @@ int optimize_query(query*q, table_index* ti)
         j++;
       }
   }
-return 0;
+
   // printf("NEIGHBOR LIST\n\n");
   // for(int i = 0; i < MAX_QUERY_NUM; i++)
   // {
@@ -2491,9 +2534,16 @@ return 0;
 
 
 
-  for(uint64_t i = 0; i < temp_index->num_tables; i++)
+  for(uint64_t i = 0; i < q->number_of_tables; i++)
   {
     free(temp_index->tables[i].columns_stats);
+    free(temp_index->tables[i].num_vals);
+    free(temp_index->tables[i].over_n);
+
+    for(uint64_t j = 0; j < temp_index->tables[i].columns; j++)
+    {
+      free(temp_index->tables[i].distinct_vals[j]);
+    }
     free(temp_index->tables[i].distinct_vals);
   }
   free(temp_index->tables);

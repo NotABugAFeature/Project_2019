@@ -134,6 +134,12 @@ void append_middle_list_no_gaps(middle_list *main_list, middle_list *list)
  */
 void merge_middle_lists(list_array *la, middle_list *final_r, middle_list *final_s)
 {
+	if(la==NULL || final_r==NULL || final_s==NULL)
+	{
+		fprintf(stderr, "merge_middle_lists: NULL parameters\n");
+		return;
+	}
+
     for(int i=0; i<la->num_lists; i++)
     {
         //append_middle_list_no_gaps(final_r, la->lists[i][0]);
@@ -149,6 +155,12 @@ void merge_middle_lists(list_array *la, middle_list *final_r, middle_list *final
  */
 void merge_middle_list(list_array *la, middle_list *final_list)
 {
+	if(la==NULL || final_list==NULL)
+	{
+		fprintf(stderr, "merge_middle_list: NULL parameters\n");
+		return;
+	}
+
     for(int i=0; i<la->num_lists; i++)
     {
 //        append_middle_list_no_gaps(final_list, la->lists[i][0]);

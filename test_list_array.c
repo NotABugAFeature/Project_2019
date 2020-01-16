@@ -60,7 +60,7 @@ void testAppend_middle_list()
     //Successful
     a=create_middle_list();
     middle_list_node *node;
-    int a_size = 20; b_size = 10;
+    int a_size = 20, b_size = 10;
 
     //Create two lists with 20 and 10 buckets
     a->head = NULL;

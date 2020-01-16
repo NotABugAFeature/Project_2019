@@ -2648,6 +2648,29 @@ int create_sort_array(query*q, bool**t_c_to_sort)
         perror("create_sort_array: malloc error");
         return -4;
     }
+    uint32_t temp_index=0;
+    for(uint32_t i=0; i<q->number_of_predicates; i++)
+    {
+        if(q->predicates[i].type==Join)
+        {
+            temp_index=i;
+            break;
+        }
+    }
+    for(uint32_t i=temp_index+1; i<q->number_of_predicates; i++)
+    {
+        if(q->predicates[i].type==Join)
+        {
+            if((((predicate_join*) (q->predicates[temp_index].p))->s.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id&&
+            ((predicate_join*) (q->predicates[temp_index].p))->s.column_id==((predicate_join*) (q->predicates[i].p))->s.column_id)||
+               (((predicate_join*) (q->predicates[temp_index].p))->s.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id&&
+            ((predicate_join*) (q->predicates[temp_index].p))->s.column_id==((predicate_join*) (q->predicates[i].p))->r.column_id))
+            {
+                swap_tc_in_predicate(&q->predicates[temp_index]);
+            }
+            temp_index=i;
+        }
+    }
     table_column* last_sorted=NULL;
     uint32_t bool_counter=0;
     for(uint32_t i=0; i<q->number_of_predicates; i++)
@@ -2786,40 +2809,40 @@ int optimize_query_memory(query*q)
         }
     }
     //Then the self joins to the left after the joins
-    for(uint32_t i=q->number_of_predicates-1; i>0; i--)
-    {
-        //If i a hidden self join
-        if(q->predicates[i].type==Self_Join&&((predicate_join*) (q->predicates[i].p))->r.table_id!=((predicate_join*) (q->predicates[i].p))->s.table_id)
-        {
-            //Find the min position after the join
-            uint32_t self_join_pos=i;
-            for(uint32_t j=i-1; j>0; j--)
-            {
-                if(q->predicates[j].type==Join)
-                {
-                    if((((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id)||
-                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
-                       (((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
-                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id))
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        self_join_pos--;
-                    }
-                }
-                else
-                {
-                    self_join_pos--;
-                }
-            }
-            if(i!=self_join_pos)
-            {
-                move_predicate(q, i, self_join_pos);
-                i++;
-            }
-        }
-    }
+//    for(uint32_t i=q->number_of_predicates-1; i>0; i--)
+//    {
+//        //If i a hidden self join
+//        if(q->predicates[i].type==Self_Join&&((predicate_join*) (q->predicates[i].p))->r.table_id!=((predicate_join*) (q->predicates[i].p))->s.table_id)
+//        {
+//            //Find the min position after the join
+//            uint32_t self_join_pos=i;
+//            for(uint32_t j=i-1; j>0; j--)
+//            {
+//                if(q->predicates[j].type==Join)
+//                {
+//                    if((((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id)||
+//                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
+//                       (((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
+//                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id))
+//                    {
+//                        break;
+//                    }
+//                    else
+//                    {
+//                        self_join_pos--;
+//                    }
+//                }
+//                else
+//                {
+//                    self_join_pos--;
+//                }
+//            }
+//            if(i!=self_join_pos)
+//            {
+//                move_predicate(q, i, self_join_pos);
+//                i++;
+//            }
+//        }
+//    }
     return 0;
 }

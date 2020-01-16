@@ -624,6 +624,8 @@ void testRelation_from_file5()
 	free(rel);
 }
 
+//TODO: relation_to_file
+
 
 /*
  * queue.c
@@ -1095,6 +1097,8 @@ void testRelation_from_file5()
      delete_middle_list(list_s);
  }
 
+ //TODO: final_join_parallel
+
 
 
 /* 
@@ -1174,6 +1178,7 @@ int append_to_middle_bucket(middle_list_bucket*, uint64_t);
      free(list);
  }
 
+//TODO: #if defined(SERIAL_EXECUTION)||(defined(SERIAL_JOIN)&&defined(SERIAL_FILTER)&&defined(SERIAL_SELFJOIN))
  void testConstruct_lookup_table()
  {
     middle_list_bucket **lookup_table;
@@ -1211,6 +1216,8 @@ int append_to_middle_bucket(middle_list_bucket*, uint64_t);
     delete_middle_list(list);
 
  }
+
+ //TODO: else ?
 
  void testAppend_to_middle_list()
  {
@@ -1434,6 +1441,8 @@ void testTable_from_File6()
         delete_table(t);
 }
 
+//TODO: insert_tables_from_list
+
 /**
  * Test case 1: Table index is NULL
  */
@@ -1494,7 +1503,12 @@ void testGet_table4()
         free(ti);
 }
 
+//TODO: insert_tables
 
+
+/*
+ * string_list.c
+ */
 void testString_list_create()
 {
     string_list *list = string_list_create();
@@ -1699,7 +1713,6 @@ void testInitialize_middleman2()
     free(m->tables);
     free(m);
 }
-
 
 /**
  * Test case 1: table NULL
@@ -1977,6 +1990,21 @@ void testConstruct_relation_from_middleman2()
 
 }
 
+//TODO: update_related_lists #ifdef
+//TODO: #ifdef update_middle_bucket
+//TODO: #else update_middle_bucket
+//TODO: self_join_middle_bucket
+//TODO: self_join_middle_bucket_parallel
+//TODO: filter_original_table_parallel
+//TODO: self_join_table_parallel
+//TODO: execute_query_parallel #ifdef
+//TODO: calculate_sum
+
+
+/*
+ * query.c
+ */
+
 void remove_extra_chars(char*, char);
 
 bool compare_queries(query* q1, query*q2)
@@ -2044,6 +2072,9 @@ bool compare_queries(query* q1, query*q2)
     }
     return true;
 }
+
+//TODO: create_query
+//TODO: parse_predicate
 
 void testRemove_extra_chars(void)
 {
@@ -2411,6 +2442,10 @@ void testAnalyze_query5(void)
     delete_query(q2);
     delete_query(q3);
 }
+
+//TODO: compare_predicates
+//TODO: swap_predicates
+//TODO: create_sort_array
 
 void move_predicate(query* q, uint32_t index_start, uint32_t index_end);
 
@@ -5283,6 +5318,63 @@ void testOriginal_self_join_middle_bucket()
     }
     free(table.array);
 }
+
+/*
+ * job_fifo.c
+ */
+
+//TODO: create_job_fifo_node
+//TODO: is_job_fifo_bucket_full
+//TODO: append_to_job_fifo_bucket
+//TODO: create_job_fifo
+//TODO: append_to_job_fifo
+//TODO: is_job_fifo_empty
+//TODO: pop_from_job_fifo
+
+/*
+ * job_scheduler.c
+ */
+
+//TODO: create_job_scheduler #ifdef
+//TODO: schedule_fast_job
+//TODO: store_projection_in_scheduler #ifdef
+//TODO: get_job
+//TODO: create_query_job
+//TODO: run_query_job
+//TODO: run_execute_job
+//TODO: run_prejoin_job #ifdef
+//TODO: create_join_job
+//TDOO: create_filter_table_job
+//TODO: run_filter_table_job
+//TODO: create_filter_middle_job
+//TODO: run_filter_middle_job
+//TODO: run_original_self_join_table_job
+//TODO: run_original_self_join_middle_job
+//TODO: run_join_job #ifdef
+//TODO: create_presort_job
+//TODO: create_sort_job
+//TODO: create_projection_job
+//TODO: run_presort_job #ifdef
+//TODO: run_sort_job
+//TODO: run_projection_job #ifdef
+
+/*
+ * list_array.c
+ */
+
+//TODO: create_list_array
+//TODO: append_middle_list
+//TODO: append_middle_list_no_gaps
+//TODO: merge_middle_lists
+//TODO: merge_middle_list
+
+/*
+ * projection_list.c
+ */
+
+//TODO: create_projection_node
+//TODO: create_projection_list
+//TODO: append_to_projection_list
 
 int main(void)
 {

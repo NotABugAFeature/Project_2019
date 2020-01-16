@@ -111,7 +111,15 @@ int table_from_file(table *t, char *filename)
       perror("table_from_file: malloc error");
       return -4;
     }
-
+/////////
+    for(uint64_t i = 0; i < columns; i++)
+    {
+      t->columns_stats[i].i_A = 0;
+      t->columns_stats[i].u_A = 0;
+      t->columns_stats[i].f_A = 0;
+      t->columns_stats[i].d_A = 0;
+    }
+//////////
     t->num_vals = malloc(columns * sizeof(uint64_t));
     if(t->num_vals == NULL)
     {

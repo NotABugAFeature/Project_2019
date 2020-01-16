@@ -1511,11 +1511,11 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
 
   //Case A. Filter '='
   if(filter->filter_type == Equal)
-  {//printf("EQUAL\n");
+  {printf("EQUAL\n");
     uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
 
-    if(table->over_n)
-    {//printf("over n\n");
+    if(table->over_n[filter->r.column_id])
+    {printf("over n\n");
       int8_t b = table->distinct_vals[filter->r.column_id][((filter->value - table->columns_stats[filter->r.column_id].i_A) % N)/8];
       int position = ((filter->value - table->columns_stats[filter->r.column_id].i_A) % N)%8;
 
@@ -1555,7 +1555,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
         table->columns_stats[filter->r.column_id].d_A = 1;
       }
       else
-      {//printf("found 0 - over n\n");
+      {printf("found 0 - over n\n");
         table->columns_stats[filter->r.column_id].f_A = 0;
         table->columns_stats[filter->r.column_id].d_A = 0;
       }
@@ -1564,7 +1564,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
       table->columns_stats[filter->r.column_id].u_A = filter->value;
     }
     else
-    {//printf("under n, filter value: %d i.a=%d\n", filter->value, table->columns_stats[filter->r.column_id].i_A);
+    {printf("under n, filter value: %d i.a=%d\n", filter->value, table->columns_stats[filter->r.column_id].i_A);
       int8_t b = table->distinct_vals[filter->r.column_id][(filter->value - table->columns_stats[filter->r.column_id].i_A)/8];
       printf("b= %hu\n", b);
       int position = (filter->value - table->columns_stats[filter->r.column_id].i_A)%8;
@@ -1605,7 +1605,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
         table->columns_stats[filter->r.column_id].d_A = 1;
       }
       else
-      {//printf("found 0\n");
+      {printf("found 0\n");
         table->columns_stats[filter->r.column_id].f_A = 0;
         table->columns_stats[filter->r.column_id].d_A = 0;
       }
@@ -1630,7 +1630,7 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
   }
   //Case B. Filter '<' or '<='
   else if(filter->filter_type == Less_Equal || filter->filter_type == Less)
-  {//printf("less\n");
+  {printf("less\n");
     //keep initial u_A, i_A, f_A values
     uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
     uint64_t initial_u_A = table->columns_stats[filter->r.column_id].u_A;
@@ -1671,16 +1671,16 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
   }
   //Case C. Filter '>' or '>='
   else if(filter->filter_type == Greater_Equal || filter->filter_type == Greater)
-  {
+  {printf(">=\n");
     //keep initial u_A, i_A, f_A values
     uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
     uint64_t initial_u_A = table->columns_stats[filter->r.column_id].u_A;
     uint64_t initial_i_A = table->columns_stats[filter->r.column_id].i_A;
-
+printf("\n\nfirst\n\n");
     //if filter->value > i_A (min) then update..else keep the initial i_A
     if(filter->value > table->columns_stats[filter->r.column_id].i_A)
       table->columns_stats[filter->r.column_id].i_A = filter->value;
-
+printf("\n\nsecond\n\n\n");
     //if filter->value > u_A (max) then set min = max = 0..else keep the initial u_A
     if(filter->value > table->columns_stats[filter->r.column_id].u_A)
     {
@@ -1698,10 +1698,10 @@ int statistics_filters(query *q, predicate_filter *filter, table_index *index)
   
     //update the rest columns of the table
     for(uint64_t i = 0; i < table->columns; i++)
-    {
+    {//printf("\n\nneighbors\n");
       if(i == filter->r.column_id)
         continue;
-
+printf("\nok\n");
       double parenthesis = power((1 - ((double)table->columns_stats[filter->r.column_id].f_A)/initial_f_A),
           table->columns_stats[i].f_A/table->columns_stats[i].d_A); 
 
@@ -2013,6 +2013,13 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
     btree.relations[i] = -1;
     for(int j = 0; j < MAX_QUERY_NUM; j++)  
       btree.order[i].array[j] = -1;
+
+    btree.join_stats[i].r_table_id = 0;
+    btree.join_stats[i].r_column_id = 0;
+    btree.join_stats[i].s_table_id = 0;
+    btree.join_stats[i].s_column_id = 0;
+    btree.join_stats[i].i_A = 0;
+    btree.join_stats[i].u_A = 0;
   }
 
   //A.2 initalize best tree with the sets of 1 element R_j, j at {0,1,2,3}
@@ -2026,7 +2033,7 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
       fprintf(stderr, "join_enumeration: Table not found\n");
     //  return 2;
     }
-
+////////////////////////////////////////////////////////////////////////// fix
     btree.relations[pos] = table->columns_stats[i].f_A;
     btree.order[pos].array[0] = i;
     pos = pos >> 1;
@@ -2121,7 +2128,7 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
 
               predicate_join pj;
               statistics results;
-              int res;
+              int res = 0;
 
               pj.r.table_id = j;
               pj.r.column_id = nl->neighbors_list[j][k].my_column_id;
@@ -2195,7 +2202,7 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
   }
 
   best_order best_result;
-  uint64_t min;
+  uint64_t min = 0;
   bool first = true;
   for(uint8_t m = 0; m < members; m++)
   {
@@ -2337,7 +2344,7 @@ int optimize_query(query*q, table_index* ti)
         return -5;
       }
 
-      memcpy(temp_index->tables[i].distinct_vals[j], table->distinct_vals[j], temp_index->tables[i].columns * sizeof(int8_t));
+      memcpy(temp_index->tables[i].distinct_vals[j], table->distinct_vals[j], temp_index->tables[i].num_vals[j] * sizeof(int8_t));
 
     }
 

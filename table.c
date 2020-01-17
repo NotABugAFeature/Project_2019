@@ -111,7 +111,7 @@ int table_from_file(table *t, char *filename)
       perror("table_from_file: malloc error");
       return -4;
     }
-/////////
+
     for(uint64_t i = 0; i < columns; i++)
     {
       t->columns_stats[i].i_A = 0;
@@ -119,7 +119,7 @@ int table_from_file(table *t, char *filename)
       t->columns_stats[i].f_A = 0;
       t->columns_stats[i].d_A = 0;
     }
-//////////
+
     t->num_vals = malloc(columns * sizeof(uint64_t));
     if(t->num_vals == NULL)
     {
@@ -192,7 +192,7 @@ int table_from_file(table *t, char *filename)
           fclose(fp);
           return -5;
         }
- printf("min_max=%d num_vals=%d buckets, over_n=%d\n", min_max, t->num_vals[i],  t->over_n[i]);
+ 
         for(uint64_t j = 0; j < t->num_vals[i]; j++)
           t->distinct_vals[i][j] = 0;
 
@@ -280,8 +280,6 @@ int table_from_file(table *t, char *filename)
             b = b<<1;
           }
         }
-
-        printf("%llu\n%llu\n%llu\n%llu\n\n", t->columns_stats[i].i_A, t->columns_stats[i].u_A, t->columns_stats[i].f_A, t->columns_stats[i].d_A);
     }
 
     fclose(fp);

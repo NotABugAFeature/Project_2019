@@ -1,9 +1,11 @@
 #ifndef QUERY_H
 #define QUERY_H
 
+#define MAX_QUERY_NUM 4
+#define BEST_TREE_SIZE 16
+
 #include "middle_list.h"
 #include "table.h"
-#include <stdbool.h>
 typedef enum predicate_type
 {
     Join, Self_Join, Filter
@@ -139,6 +141,34 @@ typedef struct{
 }middleman;
 
 
+typedef struct neighbor_data
+{
+  uint32_t table_id;
+  uint64_t column_id;
+  uint64_t my_column_id;
+}neighbor_data;
+
+typedef struct
+{
+  neighbor_data **neighbors_list;
+  int *neighbors_num;
+}neighbor_list;
+
+typedef struct
+{
+  //the relations are represented as bit vectors
+  //http://pi3.informatik.uni-mannheim.de/~moer/querycompiler.pdf (p.64) 
+  uint8_t array[MAX_QUERY_NUM];
+}best_order;
+
+typedef struct
+{
+  //the relations are represented as bit vectors
+  //http://pi3.informatik.uni-mannheim.de/~moer/querycompiler.pdf (p.64) 
+  uint64_t *relations;
+  ui_stats *join_stats;
+  best_order *order;
+}best_tree;
 
 /**
  * Executes a query

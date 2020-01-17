@@ -1475,179 +1475,1096 @@ void delete_counter_list(counter_list* list)
     free(list);
 }
 
+
+double power(double x, uint64_t y)
+{
+ // printf("in power: x=%f  y=%d\n", x,y);
+  double total = 1;
+  for(uint64_t i = 0; i < y; i++)
+  {
+    total *= x;
+  }
+  return total;
+}
+
+int statistics_filters(query *q, predicate_filter *filter, table_index *index)
+{printf("statistics_filters\n");
+
+  if(q == NULL || filter == NULL || index == NULL)
+  {
+    fprintf(stderr, "statistics_filters: null parameters\n");
+    return 1;
+  }
+
+  table *table = get_table(index, q->table_ids[filter->r.table_id]);
+  if(table == NULL)
+  {
+    fprintf(stderr, "statistics_filters: Table not found\n");
+    return 2;
+  }
+
+
+  // printf("i_A before %" PRIu8 "\n", table->columns_stats[filter->r.column_id].i_A);
+  // printf("u_A before %" PRIu8 "\n", table->columns_stats[filter->r.column_id].u_A);
+  // printf("f_A before %" PRIu8 "\n", table->columns_stats[filter->r.column_id].f_A);
+  // printf("d_A before %" PRIu8 "\n", table->columns_stats[filter->r.column_id].d_A);
+
+  //Case A. Filter '='
+  if(filter->filter_type == Equal)
+  {printf("EQUAL\n");
+    uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
+
+    if(table->over_n[filter->r.column_id])
+    {printf("over n\n");
+      int8_t b = table->distinct_vals[filter->r.column_id][((filter->value - table->columns_stats[filter->r.column_id].i_A) % N)/8];
+      int position = ((filter->value - table->columns_stats[filter->r.column_id].i_A) % N)%8;
+
+      switch(position)
+      {
+        case 0:
+          b = b & 0x80;
+          break;
+        case 1:
+          b = b & 0x40;
+          break;
+        case 2:
+          b = b & 0x20;
+          break;
+        case 3:
+          b = b & 0x10;
+          break;
+        case 4:
+          b = b & 0x08;
+          break;
+        case 5:
+          b = b & 0x04;
+          break;
+        case 6:
+          b = b & 0x02;
+          break;
+        case 7:
+          b = b & 0x01;
+          break;
+      }
+
+      if(b > 0)
+      {
+        table->columns_stats[filter->r.column_id].f_A = 
+            ((double)(table->columns_stats[filter->r.column_id].f_A))/table->columns_stats[filter->r.column_id].d_A;
+
+        table->columns_stats[filter->r.column_id].d_A = 1;
+      }
+      else
+      {printf("found 0 - over n\n");
+        table->columns_stats[filter->r.column_id].f_A = 0;
+        table->columns_stats[filter->r.column_id].d_A = 0;
+      }
+
+      table->columns_stats[filter->r.column_id].i_A = filter->value;
+      table->columns_stats[filter->r.column_id].u_A = filter->value;
+    }
+    else
+    {printf("under n, filter value: %d i.a=%d\n", filter->value, table->columns_stats[filter->r.column_id].i_A);
+      int8_t b = table->distinct_vals[filter->r.column_id][(filter->value - table->columns_stats[filter->r.column_id].i_A)/8];
+      printf("b= %hu\n", b);
+      int position = (filter->value - table->columns_stats[filter->r.column_id].i_A)%8;
+
+      switch(position)
+      {
+        case 0:
+          b = b & 0x80;
+          break;
+        case 1:
+          b = b & 0x40;
+          break;
+        case 2:
+          b = b & 0x20;
+          break;
+        case 3:
+          b = b & 0x10;
+          break;
+        case 4:
+          b = b & 0x08;
+          break;
+        case 5:
+          b = b & 0x04;
+          break;
+        case 6:
+          b = b & 0x02;
+          break;
+        case 7:
+          b = b & 0x01;
+          break;
+      }
+
+      if(b > 0)
+      {
+        table->columns_stats[filter->r.column_id].f_A = 
+            ((double)(table->columns_stats[filter->r.column_id].f_A))/table->columns_stats[filter->r.column_id].d_A;
+
+        table->columns_stats[filter->r.column_id].d_A = 1;
+      }
+      else
+      {printf("found 0\n");
+        table->columns_stats[filter->r.column_id].f_A = 0;
+        table->columns_stats[filter->r.column_id].d_A = 0;
+      }
+
+      table->columns_stats[filter->r.column_id].i_A = filter->value;
+      table->columns_stats[filter->r.column_id].u_A = filter->value;
+    }
+
+    //update the rest columns of the table
+    for(uint64_t i = 0; i < table->columns; i++)
+    {
+      if(i == filter->r.column_id)
+        continue;
+
+      double parenthesis = power((1 - ((double)table->columns_stats[filter->r.column_id].f_A)/initial_f_A),
+          table->columns_stats[i].f_A/table->columns_stats[i].d_A); 
+
+      table->columns_stats[i].d_A = (uint64_t) (table->columns_stats[i].d_A * (double)(1 - parenthesis) + 0.5);
+
+      table->columns_stats[i].f_A = table->columns_stats[filter->r.column_id].f_A;
+    }
+  }
+  //Case B. Filter '<' or '<='
+  else if(filter->filter_type == Less_Equal || filter->filter_type == Less)
+  {printf("less\n");
+    //keep initial u_A, i_A, f_A values
+    uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
+    uint64_t initial_u_A = table->columns_stats[filter->r.column_id].u_A;
+    uint64_t initial_i_A = table->columns_stats[filter->r.column_id].i_A;
+
+    //if filter->value < u_A (max) then update..else keep the initial u_A
+    if(filter->value < table->columns_stats[filter->r.column_id].u_A)
+      table->columns_stats[filter->r.column_id].u_A = filter->value;
+
+    //if filter->value < i_A (min) then set min = max = 0..else keep the initial i_A
+    if(filter->value < table->columns_stats[filter->r.column_id].i_A)
+    {
+      table->columns_stats[filter->r.column_id].u_A = 0;
+      table->columns_stats[filter->r.column_id].i_A = 0;
+    }
+
+    //update d_A
+    table->columns_stats[filter->r.column_id].d_A = table->columns_stats[filter->r.column_id].d_A * 
+      ((double)(table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));
+
+    //update f_A
+    table->columns_stats[filter->r.column_id].f_A = table->columns_stats[filter->r.column_id].f_A * 
+      ((double)(table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));     
+  
+    //update the rest columns of the table
+    for(uint64_t i = 0; i < table->columns; i++)
+    {
+      if(i == filter->r.column_id)
+        continue;
+
+      double parenthesis = power((1 - ((double)table->columns_stats[filter->r.column_id].f_A)/initial_f_A),
+          table->columns_stats[i].f_A/table->columns_stats[i].d_A); 
+
+      table->columns_stats[i].d_A = (uint64_t) (table->columns_stats[i].d_A * (double)(1 - parenthesis));
+
+      table->columns_stats[i].f_A = table->columns_stats[filter->r.column_id].f_A;
+    }
+  }
+  //Case C. Filter '>' or '>='
+  else if(filter->filter_type == Greater_Equal || filter->filter_type == Greater)
+  {printf(">=\n");
+    //keep initial u_A, i_A, f_A values
+    uint64_t initial_f_A = table->columns_stats[filter->r.column_id].f_A;
+    uint64_t initial_u_A = table->columns_stats[filter->r.column_id].u_A;
+    uint64_t initial_i_A = table->columns_stats[filter->r.column_id].i_A;
+printf("\n\nfirst\n\n");
+    //if filter->value > i_A (min) then update..else keep the initial i_A
+    if(filter->value > table->columns_stats[filter->r.column_id].i_A)
+      table->columns_stats[filter->r.column_id].i_A = filter->value;
+printf("\n\nsecond\n\n\n");
+    //if filter->value > u_A (max) then set min = max = 0..else keep the initial u_A
+    if(filter->value > table->columns_stats[filter->r.column_id].u_A)
+    {
+      table->columns_stats[filter->r.column_id].u_A = 0;
+      table->columns_stats[filter->r.column_id].i_A = 0;
+    }
+
+    //update d_A
+    table->columns_stats[filter->r.column_id].d_A = table->columns_stats[filter->r.column_id].d_A * 
+      ((double)(table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));
+
+    //update f_A
+    table->columns_stats[filter->r.column_id].f_A = table->columns_stats[filter->r.column_id].f_A * 
+      ((double)(table->columns_stats[filter->r.column_id].u_A - table->columns_stats[filter->r.column_id].i_A)/(initial_u_A - initial_i_A));     
+  
+    //update the rest columns of the table
+    for(uint64_t i = 0; i < table->columns; i++)
+    {//printf("\n\nneighbors\n");
+      if(i == filter->r.column_id)
+        continue;
+printf("\nok\n");
+      double parenthesis = power((1 - ((double)table->columns_stats[filter->r.column_id].f_A)/initial_f_A),
+          table->columns_stats[i].f_A/table->columns_stats[i].d_A); 
+
+      table->columns_stats[i].d_A = (uint64_t) (table->columns_stats[i].d_A * (double)(1 - parenthesis));
+
+      table->columns_stats[i].f_A = table->columns_stats[filter->r.column_id].f_A;
+    }
+  }
+
+  // printf("i_A after %" PRIu8 "\n", table->columns_stats[filter->r.column_id].i_A);
+  // printf("u_A after %" PRIu8 "\n", table->columns_stats[filter->r.column_id].u_A);
+  // printf("f_A after %" PRIu8 "\n", table->columns_stats[filter->r.column_id].f_A);
+  // printf("d_A after %" PRIu8 "\n", table->columns_stats[filter->r.column_id].d_A);
+
+  return 0;
+}
+
+int statistics_self_joins(query *q, predicate_join *join, table_index *index)
+{//printf("statistics_self_joins\n");
+  table *table = get_table(index, q->table_ids[join->r.table_id]);
+  if(table == NULL)
+  {
+    fprintf(stderr, "execute_query: Table not found\n");
+    return 1;
+  }
+
+  //Case A. autocorrelation
+  if(join->r.column_id == join->s.column_id)
+  {
+    table->columns_stats[join->r.column_id].f_A = (uint64_t)((double) (table->columns_stats[join->r.column_id].u_A)*
+      (table->columns_stats[join->r.column_id].u_A))/(table->columns_stats[join->r.column_id].u_A - table->columns_stats[join->r.column_id].i_A + 1);
+  
+    for(uint64_t i = 0; i < table->columns; i++)
+    {
+      if(i == join->r.column_id)
+        continue;
+
+      table->columns_stats[i].f_A = table->columns_stats[join->r.column_id].f_A;
+    }
+  }
+  //Case B. R.A = R.B
+  else
+  {
+    uint64_t initial_f_A = table->columns_stats[join->r.column_id].f_A;
+
+    uint64_t val_A = table->columns_stats[join->r.column_id].i_A;
+    uint64_t val_B = table->columns_stats[join->s.column_id].i_A;
+
+    //new i_A, new i_B = max(initial i_A, initial i_B)
+    table->columns_stats[join->r.column_id].i_A = (val_A > val_B) ? val_A : val_B;
+    table->columns_stats[join->s.column_id].i_A = (val_A > val_B) ? val_A : val_B;
+
+    val_A = table->columns_stats[join->r.column_id].u_A;
+    val_B = table->columns_stats[join->s.column_id].u_A;
+
+    //new u_A, new u_B = min(initial u_A, initial u_B)
+    table->columns_stats[join->r.column_id].u_A = (val_A < val_B) ? val_A : val_B;
+    table->columns_stats[join->s.column_id].u_A = (val_A < val_B) ? val_A : val_B;
+
+    //new f_A = initial f / n, where n = new u_A - new i_A + 1
+    table->columns_stats[join->r.column_id].f_A = (uint64_t)((double) (table->columns_stats[join->r.column_id].f_A))/
+        (table->columns_stats[join->r.column_id].u_A - table->columns_stats[join->r.column_id].i_A + 1);
+
+    //new f_B = new f_A
+    table->columns_stats[join->s.column_id].f_A = table->columns_stats[join->r.column_id].f_A;
+
+    //d_A
+    double parenthesis = power((1 - ((double)table->columns_stats[join->r.column_id].f_A)/initial_f_A),
+          table->columns_stats[join->r.column_id].f_A/table->columns_stats[join->r.column_id].d_A); 
+
+    table->columns_stats[join->r.column_id].d_A = 
+        (uint64_t) (table->columns_stats[join->r.column_id].d_A * (double)(1 - parenthesis));
+
+    table->columns_stats[join->s.column_id].d_A = table->columns_stats[join->r.column_id].d_A;
+
+    //update the rest columns of the table
+    for(uint64_t i = 0; i < table->columns; i++)
+    {
+      if(i == join->r.column_id)
+        continue;
+
+      double parenthesis = power((1 - ((double)table->columns_stats[join->r.column_id].f_A)/initial_f_A),
+          table->columns_stats[i].f_A/table->columns_stats[i].d_A); 
+
+      table->columns_stats[i].d_A = (uint64_t) (table->columns_stats[i].d_A * (double)(1 - parenthesis));
+
+      table->columns_stats[i].f_A = table->columns_stats[join->r.column_id].f_A;
+    }
+  }
+
+  return 0;
+}
+
+uint64_t statistics_joins(query *q, predicate_join *join, table_index *index)
+{printf("statistics_joins\n");
+
+  uint64_t cost;
+  table *table_r = get_table(index, q->table_ids[join->r.table_id]);
+  if(table_r == NULL)
+  {
+    fprintf(stderr, "execute_query: Table not found\n");
+    return 0;//TODO
+  }
+
+  table *table_s = get_table(index, q->table_ids[join->s.table_id]);
+  if(table_s == NULL)
+  {
+    fprintf(stderr, "execute_query: Table not found\n");
+    return 0;//TODO
+  }
+
+  // printf("\n\ni_A before %" PRIu8 "\n", table_r->columns_stats[join->r.column_id].i_A);
+  // printf("u_A before %" PRIu8 "\n", table_r->columns_stats[join->r.column_id].u_A);
+  // printf("f_A before %" PRIu8 "\n", table_r->columns_stats[join->r.column_id].f_A);
+  // printf("d_A before %" PRIu8 "\n\n\n", table_r->columns_stats[join->r.column_id].d_A);
+
+
+  // printf("i_A before %" PRIu8 "\n", table_s->columns_stats[join->s.column_id].i_A);
+  // printf("u_A before %" PRIu8 "\n", table_s->columns_stats[join->s.column_id].u_A);
+  // printf("f_A before %" PRIu8 "\n", table_s->columns_stats[join->s.column_id].f_A);
+  // printf("d_A before %" PRIu8 "\n", table_s->columns_stats[join->s.column_id].d_A);
+
+  uint64_t initial_d_A_at_R = table_r->columns_stats[join->r.column_id].d_A;
+  uint64_t initial_d_A_at_S = table_s->columns_stats[join->s.column_id].d_A;
+
+  uint64_t val_A = table_r->columns_stats[join->r.column_id].i_A;
+  uint64_t val_B = table_s->columns_stats[join->s.column_id].i_A;
+
+  //new i_A, new i_B = max(initial i_A, initial i_B)
+  table_r->columns_stats[join->r.column_id].i_A = (val_A > val_B) ? val_A : val_B;
+  table_s->columns_stats[join->s.column_id].i_A = (val_A > val_B) ? val_A : val_B;
+
+  val_A = table_r->columns_stats[join->r.column_id].u_A;
+  val_B = table_s->columns_stats[join->s.column_id].u_A;
+
+  //new u_A, new u_B = min(initial u_A, initial u_B)
+  table_r->columns_stats[join->r.column_id].u_A = (val_A < val_B) ? val_A : val_B;
+  table_s->columns_stats[join->s.column_id].u_A = (val_A < val_B) ? val_A : val_B;
+
+  //new f_A = (initial f_A * initial f_B) / n
+  uint64_t n = table_r->columns_stats[join->r.column_id].u_A - table_r->columns_stats[join->r.column_id].i_A + 1;
+
+  table_r->columns_stats[join->r.column_id].f_A = ((double)(table_r->columns_stats[join->r.column_id].f_A * 
+      table_s->columns_stats[join->s.column_id].f_A))/(n);
+
+  //new f_B = new f_A
+  table_s->columns_stats[join->s.column_id].f_A = table_r->columns_stats[join->r.column_id].f_A;
+
+  //save the cost
+  cost = table_r->columns_stats[join->r.column_id].f_A;
+
+  //new d_A = (initial d_A * initial d_B) / n
+  table_r->columns_stats[join->r.column_id].d_A = ((double)(table_r->columns_stats[join->r.column_id].d_A * 
+      table_s->columns_stats[join->s.column_id].d_A))/(n);
+
+  //new d_B = new d_A
+  table_s->columns_stats[join->s.column_id].d_A = table_r->columns_stats[join->r.column_id].d_A;
+
+  //update the rest columns of the table_r
+  for(uint64_t i = 0; i < table_r->columns; i++)
+  {
+    if(i == join->r.column_id)
+      continue;
+//------------------>problem
+    double parenthesis = power((1 - ((double)table_r->columns_stats[join->r.column_id].d_A)/initial_d_A_at_R),
+        table_r->columns_stats[i].f_A/table_r->columns_stats[i].d_A); 
+
+    table_r->columns_stats[i].d_A = (uint64_t) (table_r->columns_stats[i].d_A * (double)(1 - parenthesis) + 0.5);
+
+    table_r->columns_stats[i].f_A = table_r->columns_stats[join->r.column_id].f_A;
+  }
+
+  //update the rest columns of the table_s
+  for(uint64_t i = 0; i < table_s->columns; i++)
+  {
+    if(i == join->s.column_id)
+      continue;
+
+    double parenthesis = power((1 - ((double)table_s->columns_stats[join->s.column_id].d_A)/initial_d_A_at_S),
+        table_s->columns_stats[i].f_A/table_s->columns_stats[i].d_A); 
+
+    table_s->columns_stats[i].d_A = (uint64_t) (table_s->columns_stats[i].d_A * (double)(1 - parenthesis) + 0.5);
+
+    table_s->columns_stats[i].f_A = table_s->columns_stats[join->s.column_id].f_A;
+  }
+//printf("ok4\n");
+  return cost;
+}
+
+
+int calculate_join(query *q, predicate_join *join, 
+                   table_index *index, statistics *results, 
+                   uint64_t f_A, uint64_t i_A, uint64_t u_A, bool exists)
+{
+  table *table_r = get_table(index, q->table_ids[join->r.table_id]);
+  if(table_r == NULL)
+  {
+    fprintf(stderr, "execute_query: Table not found\n");
+    return 1;//TODO
+  }
+
+  table *table_s = get_table(index, q->table_ids[join->s.table_id]);
+  if(table_s == NULL)
+  {
+    fprintf(stderr, "execute_query: Table not found\n");
+    return 1;//TODO
+  }
+
+  if(exists)
+  {//printf("\033[1;31m EXISTS ACTIVATED \033[0m; i=%d u=%d\n", i_A, u_A);
+    //new i_A, new i_B = max(initial i_A, initial i_B)
+    results->i_A = (i_A > table_s->columns_stats[join->s.column_id].i_A) ? 
+        i_A : table_s->columns_stats[join->s.column_id].i_A;
+
+    //new u_A, new u_B = min(initial u_A, initial u_B)
+    results->u_A = (u_A < table_s->columns_stats[join->s.column_id].u_A) ? 
+        u_A : table_s->columns_stats[join->s.column_id].u_A;
+  }
+  else
+  {
+    uint64_t val_A = table_r->columns_stats[join->r.column_id].i_A;
+    uint64_t val_B = table_s->columns_stats[join->s.column_id].i_A;
+
+    //new i_A, new i_B = max(initial i_A, initial i_B)
+    results->i_A = (val_A > val_B) ? val_A : val_B;
+
+    val_A = table_r->columns_stats[join->r.column_id].u_A;
+    val_B = table_s->columns_stats[join->s.column_id].u_A;
+
+    //new u_A, new u_B = min(initial u_A, initial u_B)
+    results->u_A = (val_A < val_B) ? val_A : val_B;
+  }
+
+  //new f_A = (initial f_A * initial f_B) / n
+  results->f_A = ((double)(f_A * table_s->columns_stats[join->s.column_id].f_A))/(results->u_A - results->i_A + 1);
+
+  return 0;
+    
+}
+
+
+
+uint32_t convert_to_binary(uint32_t decimal)
+{
+  if(decimal == 0)
+    return 8;
+  else if(decimal == 1)
+    return 4;
+  else if(decimal == 2)
+    return 2;
+  else if(decimal == 3)
+    return 1;
+  else
+    return 0;
+}
+
+uint32_t convert_to_decimal(uint32_t binary)
+{
+  if(binary == 8)
+    return 0;
+  else if(binary == 4)
+    return 1;
+  else if(binary == 2)
+    return 2;
+  else if(binary == 1)
+    return 3;
+  else
+    return 0;
+}
+
+/**
+ * BIG ENDIAN
+ * 8 -> 1st most significant byte is 1, else 0 -> table with index 0
+ * 4 -> 2st most significant byte is 1, else 0 -> table with index 1
+ * 2 -> 3st most significant byte is 1, else 0 -> table with index 2
+ * 1 -> 4st most significant byte is 1, else 0 -> table with index 3
+ */
+
+
+best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
+{
+  best_tree btree;
+
+  //A.1 allocate memory best tree
+  btree.relations = malloc(BEST_TREE_SIZE * sizeof(uint64_t));
+  if(btree.relations == NULL)
+  {
+    perror("join_enumeration: malloc error");
+    //return 1;
+  }  
+
+  btree.join_stats = malloc(BEST_TREE_SIZE * sizeof(ui_stats));
+  if(btree.join_stats == NULL)
+  {
+    perror("join_enumeration: malloc error");
+   // return 1;
+  } 
+
+  btree.order = malloc(BEST_TREE_SIZE * sizeof(best_order));
+  if(btree.order == NULL)
+  {
+    perror("join_enumeration: malloc error");
+   // return 1;
+  } 
+
+  //initialize
+  for(int i = 0; i < BEST_TREE_SIZE; i++)  
+  {
+    btree.relations[i] = -1;
+    for(int j = 0; j < MAX_QUERY_NUM; j++)  
+      btree.order[i].array[j] = -1;
+
+    btree.join_stats[i].r_table_id = 0;
+    btree.join_stats[i].r_column_id = 0;
+    btree.join_stats[i].s_table_id = 0;
+    btree.join_stats[i].s_column_id = 0;
+    btree.join_stats[i].i_A = 0;
+    btree.join_stats[i].u_A = 0;
+  }
+
+  //A.2 initalize best tree with the sets of 1 element R_j, j at {0,1,2,3}
+  //bid endian
+  int8_t pos = 8;  
+  for(uint32_t i = 0; i < q->number_of_tables; i++)  
+  {
+    table *table = get_table(index, q->table_ids[i]);
+    if(table == NULL)
+    {
+      fprintf(stderr, "join_enumeration: Table not found\n");
+    //  return 2;
+    }
+////////////////////////////////////////////////////////////////////////// fix
+    btree.relations[pos] = table->columns_stats[i].f_A;
+    btree.order[pos].array[0] = i;
+    pos = pos >> 1;
+  }
+
+  //B.1 allocate memory for storing statistics
+  // int ui_counter = 0;
+  // ui_stats *stats = malloc((2*q->number_of_predicates) * sizeof(ui_stats));
+  // if(stats == NULL)
+  // {
+  //   fprintf(stderr, "join_enumeration: malloc error\n");
+  //   return 1;
+  // }
+
+  uint8_t *members_in_S = malloc(6 * sizeof(uint8_t));
+  if(members_in_S == NULL)
+  {
+    fprintf(stderr, "join_enumeration: malloc error\n");
+  //  return 1;
+  }
+
+
+  uint8_t members = 0;
+  for(uint32_t i = 0; i < q->number_of_tables; i++) 
+  {
+   // members = 0;
+    if(i == 0)
+    {
+      //S with 1 member (in order to become 2)
+      members_in_S[0] = 8;
+      members_in_S[1] = 4;
+      members_in_S[2] = 2;
+      members_in_S[3] = 1;
+      members = 4;
+    //  printf("s with 1 member\n");
+    }
+    else if(i == 1)
+    {
+      //S with 2 members (in order to become 3)
+      members_in_S[0] = 3;
+      members_in_S[1] = 5;
+      members_in_S[2] = 6;
+      members_in_S[3] = 9;
+      members_in_S[4] = 10;
+      members_in_S[5] = 12;
+      members = 6;//printf("s with 2 members\n");
+    }
+    else if(i == 2)
+    {
+      //S with 3 members (in order to become 4)
+      members_in_S[0] = 7;
+      members_in_S[1] = 11;
+      members_in_S[2] = 13;
+      members_in_S[3] = 14;
+      members = 4;//printf("s with 3 members\n");
+    }
+    else if(i == 3)
+    {
+      members_in_S[0] = 15;
+      members = 1;
+    }
+
+    for(uint8_t m = 0; m < members; m++)
+    {
+      int8_t S = members_in_S[m];
+
+      if((int64_t)btree.relations[S] == -1)
+      {
+      //  printf("skipping bin %d\n", S);
+        continue;
+      }
+
+      int8_t temp_S = S << 4;
+//printf("i %d and binary S %hu\n", i, S);
+      //B.2 find neighbors of every relation in S
+      for(int8_t j = 0; j < 4; j++)
+      {
+        //if temp_S < 0 then the 1st bit is 1 and index->tables[j] participates in S
+        if(temp_S < 0)
+        {//printf("table with decimal index %d found in S\n", j);
+          
+          for(int k = 0; k < nl->neighbors_num[j]; k++)
+          {
+            //convert neighbor position to binary repensentation
+            int8_t neighbor_pos = convert_to_binary(nl->neighbors_list[j][k].table_id);
+
+            //if neighbor is not already in S then add it to the neighbors list
+            if((neighbor_pos & S) == 0)
+            {
+
+             // printf("table with decimal index %d is valid neighbor\n", nl->neighbors_list[j][k].table_id);
+
+              predicate_join pj;
+              statistics results;
+              int res = 0;
+
+              pj.r.table_id = j;
+              pj.r.column_id = nl->neighbors_list[j][k].my_column_id;
+
+              pj.s.table_id = nl->neighbors_list[j][k].table_id;
+              pj.s.column_id = nl->neighbors_list[j][k].column_id;
+
+              //search if r or s (table_id, column_id) have been joined before
+              if((btree.join_stats[S].r_table_id == pj.r.table_id && 
+                  btree.join_stats[S].r_column_id == pj.r.column_id )||
+                 (btree.join_stats[S].s_table_id == pj.s.table_id && 
+                  btree.join_stats[S].s_column_id == pj.s.column_id) ||
+                 (btree.join_stats[S].s_table_id == pj.r.table_id && 
+                  btree.join_stats[S].s_column_id == pj.r.column_id )||
+                 (btree.join_stats[S].r_table_id == pj.s.table_id && 
+                  btree.join_stats[S].r_column_id == pj.s.column_id)
+                )
+              {
+                res = calculate_join(q, &pj, index, &results, btree.relations[S], btree.join_stats[S].i_A, 
+                    btree.join_stats[S].u_A, true);
+              }
+              else
+              {
+                res = calculate_join(q, &pj, index, &results, btree.relations[S], btree.join_stats[S].i_A, 
+                    btree.join_stats[S].u_A, false);
+              }
+
+              if(res)
+              {
+                fprintf(stderr, "join_enumeration: error in calculate_join\n");
+          //      return 1;
+              }
+
+              int8_t new_S = S | neighbor_pos;
+
+              if(((int64_t) btree.relations[new_S] == -1) || btree.relations[new_S] > results.f_A)
+              { 
+                //printf("adding binary %hu with res %d\n", new_S, results.f_A);
+                btree.relations[new_S] = results.f_A;
+
+                //printf("\033[1;31m STORING VALUUES \033[0m; i=%d u=%d at %d.%d %d.%d\n", results.i_A, results.u_A, j,
+                //  nl->neighbors_list[j][k].my_column_id,nl->neighbors_list[j][k].table_id, nl->neighbors_list[j][k].column_id );
+
+                btree.join_stats[new_S].i_A = results.i_A;
+                btree.join_stats[new_S].u_A = results.u_A;
+
+                btree.join_stats[new_S].r_table_id = j;
+                btree.join_stats[new_S].r_column_id = nl->neighbors_list[j][k].my_column_id;
+
+                btree.join_stats[new_S].s_table_id = nl->neighbors_list[j][k].table_id;
+                btree.join_stats[new_S].s_column_id = nl->neighbors_list[j][k].column_id;
+
+                for(int z = 0; z < MAX_QUERY_NUM; z++)
+                  btree.order[new_S].array[z] = btree.order[S].array[z];
+
+                btree.order[new_S].array[i+1] = nl->neighbors_list[j][k].table_id;
+
+                // printf("\norder:\n");
+                // for(int z = 0; z < MAX_QUERY_NUM; z++)
+                //   printf("%d ", btree.order[new_S].array[z]);
+                // printf("\n\n");
+              }
+            }
+          }
+        }
+
+        temp_S = temp_S << 1;
+      }
+
+    }
+  }
+
+  best_order best_result;
+  uint64_t min = 0;
+  bool first = true;
+  for(uint8_t m = 0; m < members; m++)
+  {
+    int8_t S = members_in_S[m];
+
+    if((int64_t)btree.relations[S] == -1)
+      continue;
+
+    if(first)
+    {
+      min = btree.relations[S];
+     // printf("NOW MIN AT %hu\n", m);
+      best_result = btree.order[S];
+      first = false;
+    }
+    else
+    {
+      if(btree.relations[S] < min)
+      {
+        min = btree.relations[S];
+        best_result = btree.order[S];
+        //printf("NOW MIN AT %hu\n", m);
+      }
+    }
+    printf("f_A: %d\t", btree.relations[S]);
+
+    for(int z = 0; z < q->number_of_tables; z++)
+    {
+      printf("%d ", btree.order[S].array[z]);
+    }
+    printf("\n");
+
+  }
+//printf("COUNTER IS  %hu\n", qw);
+
+ // printf("\033[1;31m Best Tree Result (f_A): %d\tTables: ", min);
+printf("Best Tree Result (f_A): %d\tTables: ", min);
+
+  for(int z = 0; z < q->number_of_tables; z++)
+  {
+    printf("%d ", best_result.array[z]);
+  }
+  printf("\n");
+
+  free(btree.relations);
+  free(btree.join_stats);
+  free(btree.order);
+  free(members_in_S);
+
+  return best_result;
+}
+
+
 int optimize_query(query*q, table_index* ti)
 {
-    //Check the parameters
-    if(q==NULL||ti==NULL||ti->num_tables==0||ti->tables==NULL||
-       q->number_of_tables==0||q->number_of_predicates==0||
-       q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
-       q->projections==NULL)
+  //Check the parameters
+  if(q==NULL||ti==NULL||ti->num_tables==0||ti->tables==NULL||
+     q->number_of_tables==0||q->number_of_predicates==0||
+     q->number_of_projections==0||q->table_ids==NULL||q->predicates==NULL||
+     q->projections==NULL)
+  {
+    fprintf(stderr, "optimize_query: Error with the parameters\n");
+    return -1;
+  }
+
+  table_index *temp_index = malloc(sizeof(table_index));
+  if(temp_index == NULL)
+  {
+    perror("optimize_query: malloc error");
+    return -2;
+  }
+
+  temp_index->num_tables = q->number_of_tables;
+  temp_index->tables = malloc(temp_index->num_tables * sizeof(table));
+  if(temp_index->tables == NULL)
+  {
+    perror("optimize_query: malloc error");
+    return -2;
+  }
+
+  for(uint64_t i = 0; i < q->number_of_tables; i++)
+  {
+    table *table = get_table(ti, q->table_ids[i]);
+    if(table == NULL)
     {
-        fprintf(stderr, "optimize_query: Error with the parameters\n");
-        return -1;
+      fprintf(stderr, "execute_query: Table not found\n");
+      return -1;
     }
-    counter_list*c_list=create_counter_list();
-    if(c_list==NULL)
+
+    temp_index->tables[i].table_id = table->table_id;
+    temp_index->tables[i].rows = table->rows;
+    temp_index->tables[i].columns = table->columns;
+
+    temp_index->tables[i].columns_stats = malloc(temp_index->tables[i].columns * sizeof(statistics));
+    if(temp_index->tables[i].columns_stats == NULL)
     {
-        return -2;
+      perror("optimize_query: malloc error");
+      return -2;
     }
-    uint64_t* table_row_count=malloc(sizeof(uint64_t)*q->number_of_tables);
-    if(table_row_count==NULL)
+
+    // for(uint64_t m = 0; m < temp_index->tables[i].columns; m++)
+    // {
+    //   temp_index->tables[i].columns_stats[m] = ti->tables[i].columns_stats[m];
+    // }
+
+    memcpy(temp_index->tables[i].columns_stats, table->columns_stats, temp_index->tables[i].columns * sizeof(statistics));
+
+    temp_index->tables[i].num_vals = malloc(temp_index->tables[i].columns * sizeof(uint64_t));
+    if(temp_index->tables[i].num_vals == NULL)
     {
-        perror("optimize_query: malloc error");
-        delete_counter_list(c_list);
-        return -3;
+      perror("table_from_file: malloc error");
+      return -5;
     }
-    //Store the column count of the tables
-    for(uint32_t i=0; i<q->number_of_tables; i++)
+
+    memcpy(temp_index->tables[i].num_vals, table->num_vals, temp_index->tables[i].columns * sizeof(uint64_t));
+
+    temp_index->tables[i].over_n = malloc(temp_index->tables[i].columns * sizeof(bool));
+    if(temp_index->tables[i].over_n == NULL)
     {
-        table_row_count[i]=(get_table(ti, q->table_ids[i]))->rows;
+      perror("table_from_file: malloc error");
+      return -6;
     }
-    //First put the filters and count the join/self joins
-    uint32_t j=0;
-    for(uint32_t i=0; i<q->number_of_predicates; i++)
+
+    memcpy(temp_index->tables[i].over_n, table->over_n, temp_index->tables[i].columns * sizeof(bool));
+
+    temp_index->tables[i].distinct_vals = malloc(temp_index->tables[i].columns * sizeof(int8_t *));
+    if(temp_index->tables[i].distinct_vals == NULL)
     {
-        //If Filter move to beginning
-        if(q->predicates[i].type==Filter)
+      perror("table_from_file: malloc error");
+      return -7;
+    }
+
+    for(uint64_t j = 0; j < temp_index->tables[i].columns; j++)
+    {
+      temp_index->tables[i].distinct_vals[j] = malloc(temp_index->tables[i].num_vals[j] * sizeof(int8_t));
+      if(temp_index->tables[i].distinct_vals[j] == NULL)
+      {
+        fprintf(stderr, "table_from_file: malloc error\n");
+        return -5;
+      }
+
+      memcpy(temp_index->tables[i].distinct_vals[j], table->distinct_vals[j], temp_index->tables[i].num_vals[j] * sizeof(int8_t));
+
+    }
+
+    // temp_index->tables[i].distinct_vals = malloc(temp_index->tables[i].num_vals * sizeof(int8_t));
+    // if(temp_index->tables[i].distinct_vals == NULL)
+    // {
+    //   fprintf(stderr, "optimize_query: malloc error\n");
+    //   return -2;
+    // }
+
+    // for(uint64_t m = 0; m < temp_index->tables[i].num_vals; m++)
+    // {
+    //   temp_index->tables[i].distinct_vals[m] = ti->tables[i].distinct_vals[m];
+    // }
+
+
+    //memcpy(temp_index->tables[i].distinct_vals, ti->tables[i].distinct_vals, temp_index->tables[i].num_vals * sizeof(int8_t));
+
+  }
+
+  //initialize neighbors list
+  neighbor_list nl;
+  nl.neighbors_list = malloc(MAX_QUERY_NUM *sizeof(neighbor_data *));
+  if(nl.neighbors_list == NULL)
+  {
+    perror("optimize_query: malloc error");
+    return -2;
+  }
+
+  for(int i = 0; i < MAX_QUERY_NUM; i++)
+  {
+    nl.neighbors_list[i] = malloc(MAX_QUERY_NUM * sizeof(neighbor_data));
+    if(nl.neighbors_list[i] == NULL)
+    {
+      perror("optimize_query: malloc error");
+      return -2;
+    }
+  }
+
+  nl.neighbors_num = malloc(MAX_QUERY_NUM * sizeof(int));
+  if(nl.neighbors_num == NULL)
+  {
+    perror("optimize_query: malloc error");
+    return -2;
+  }
+
+  for(int i = 0; i < MAX_QUERY_NUM; i++)
+    nl.neighbors_num[i] = 0;
+
+  ////////////////////////////////////////////////
+
+  //First put the filters and count the join/self joins
+  uint32_t j=0;
+  for(uint32_t i=0; i<q->number_of_predicates; i++)
+  {
+    //If Filter move to beginning
+    if(q->predicates[i].type==Filter)
+    {
+
+      //update statistics
+      if(statistics_filters(q, (predicate_filter *) q->predicates[i].p, temp_index))
+      {
+        fprintf(stderr, "optimize_query: error in statistics_filters\n");
+        return -4;
+      }
+
+      swap_predicates(&q->predicates[j], &q->predicates[i]);
+      j++;
+    }
+    else if(q->predicates[i].type==Join)//Count the table.rowid pairs
+    {
+      predicate_join *join = q->predicates[i].p;
+
+      //search if r is related with s in the neighbors list
+      bool flag = 1;
+      for(int i = 0; i < nl.neighbors_num[join->r.table_id]; i++)
+      {
+        if(nl.neighbors_list[join->r.table_id][i].table_id == join->s.table_id)
         {
-            swap_predicates(&q->predicates[j], &q->predicates[i]);
+          flag = 0;
+          break;
+        }
+      }
+
+      //if r and s are not related then add each one in the other's list
+      if(flag)
+      {
+        int pos = nl.neighbors_num[join->r.table_id];
+        nl.neighbors_list[join->r.table_id][pos].table_id = join->s.table_id;
+        nl.neighbors_list[join->r.table_id][pos].column_id = join->s.column_id;
+        nl.neighbors_list[join->r.table_id][pos].my_column_id = join->r.column_id;
+        nl.neighbors_num[join->r.table_id]++;
+
+        pos = nl.neighbors_num[join->s.table_id];
+        nl.neighbors_list[join->s.table_id][pos].table_id = join->r.table_id;
+        nl.neighbors_list[join->s.table_id][pos].column_id = join->r.column_id;
+        nl.neighbors_list[join->s.table_id][pos].my_column_id = join->s.column_id;
+        nl.neighbors_num[join->s.table_id]++;
+      }
+    }
+  }
+
+  //Then the self joins
+  for(uint32_t i=j; i<q->number_of_predicates; i++)
+  {
+      //If Filter move to Beginning
+      if(q->predicates[i].type==Self_Join)
+      {//-----------------------------------------------------------------------------
+        //update statistics
+        if(statistics_self_joins(q, (predicate_join *) q->predicates[i].p, temp_index))
+        {
+          fprintf(stderr, "optimize_query: error in statistics_self_joins\n");
+          return -7;
+        }
+
+        swap_predicates(&q->predicates[j], &q->predicates[i]);
+        j++;
+      }
+  }
+
+  // printf("NEIGHBOR LIST\n\n");
+  // for(int i = 0; i < MAX_QUERY_NUM; i++)
+  // {
+
+  //   for(int j = 0; j < nl.neighbors_num[i]; j++)
+  //   {
+  //     printf("t:%d  col: %d  my_col: %d\t", nl.neighbors_list[i][j].table_id, nl.neighbors_list[i][j].column_id, nl.neighbors_list[i][j].my_column_id);
+  //   }
+  //   printf("\n");
+  // }
+
+  /////////////////////////
+  int order_counter = 0;
+  best_order order = join_enumeration(q, temp_index, &nl);
+
+  ///
+  for(uint32_t i = 0; i < q->number_of_tables-1; i++)
+  {
+    //printf("left: %d right: %d\n", order.array[order_counter],  order.array[order_counter + 1]);
+    for(uint32_t k = j; k < q->number_of_predicates; k++)
+    {//printf("CHECKING: %d.%d  %d.%d\n", ((predicate_join *)q->predicates[k].p)->r.table_id, ((predicate_join *)q->predicates[k].p)->r.column_id,((predicate_join *)q->predicates[k].p)->s.table_id,((predicate_join *)q->predicates[k].p)->s.column_id);
+
+      bool r = false, s = false;
+
+      if(q->predicates[k].type == Join && 
+             (((predicate_join *)q->predicates[k].p)->r.table_id == order.array[order_counter] ||
+             ((predicate_join *)q->predicates[k].p)->r.table_id == order.array[order_counter + 1]))
+      {
+        r = true;
+      }
+
+      if(q->predicates[k].type == Join && 
+             (((predicate_join *)q->predicates[k].p)->s.table_id == order.array[order_counter] ||
+             ((predicate_join *)q->predicates[k].p)->s.table_id == order.array[order_counter + 1]))
+      {
+        s = true;
+      }
+
+//printf("r=%d s=%d\n", r,s);
+      if(r == true && s == true)
+      {//printf("r s true\n");
+        swap_predicates(&q->predicates[j], &q->predicates[k]);
+        j++;
+      }
+      else if(r == true && s == false)
+      {//printf("r true s false\n");
+        for(int m = order_counter; m >= 0; m--)
+        {//printf("m=%d\n", m);
+          if(((predicate_join *)q->predicates[k].p)->s.table_id == order.array[m])
+          {//printf("s found in %d\n", m);
+            swap_predicates(&q->predicates[j], &q->predicates[k]);
             j++;
+            break;
+          }
         }
-        else if(q->predicates[i].type==Join)//Count the table.rowid pairs
+      }
+      else if(r == false && s == true)
+      {//printf("r false s true\n");
+        for(int m = order_counter; m >= 0; m--)
         {
-            if(counter_list_append(c_list, &(((predicate_join*) (q->predicates[i].p))->r)/*,((predicate_join*)(q->predicates[i].p))*/)!=0)
-            {
-                delete_counter_list(c_list);
-                free(table_row_count);
-                printf("optimize_query: counter_list_append error");
-                return -5;
-            }
-            if(counter_list_append(c_list, &(((predicate_join*) (q->predicates[i].p))->s)/*,((predicate_join*)(q->predicates[i].p))*/)!=0)
-            {
-                delete_counter_list(c_list);
-                free(table_row_count);
-                printf("optimize_query: counter_list_append error");
-                return -6;
-            }
-        }
-    }
-    //Then the self joins
-    for(uint32_t i=j; i<q->number_of_predicates; i++)
-    {
-        //If Filter move to Beginning
-        if(q->predicates[i].type==Self_Join)
-        {
-            swap_predicates(&q->predicates[j], &q->predicates[i]);
+          if(((predicate_join *)q->predicates[k].p)->r.table_id == order.array[m])
+          {//printf("r found in %d \n", m);
+            swap_predicates(&q->predicates[j], &q->predicates[k]);
             j++;
+            break;
+          }
         }
+      }
     }
-    //Then the joins
-    bool next_join=false;
-    table_column*next_tc=NULL;
-    for(uint32_t i=j; i<q->number_of_predicates&&c_list->number_of_nodes>0; i=j+1)
+
+    order_counter++;
+  }
+
+
+
+
+  for(uint64_t i = 0; i < q->number_of_tables; i++)
+  {
+    free(temp_index->tables[i].columns_stats);
+    free(temp_index->tables[i].num_vals);
+    free(temp_index->tables[i].over_n);
+
+    for(uint64_t j = 0; j < temp_index->tables[i].columns; j++)
     {
-        //Find the pair that is used most often
-        uint32_t max_value=c_list->head->counter;
-        if(!next_join||next_tc==NULL)
-        {
-            uint64_t lowest_row_count=table_row_count[c_list->head->tc.table_id];
-            counter_node* temp=c_list->head->next;
-            next_tc=&c_list->head->tc;
-            for(uint32_t z=1; z<c_list->number_of_nodes; z++)
-            {
-                if(max_value<temp->counter||((max_value==temp->counter)&&(lowest_row_count>table_row_count[temp->tc.table_id])))
-                {
-                    max_value=temp->counter;
-                    next_tc=&temp->tc;
-                    lowest_row_count=table_row_count[temp->tc.table_id];
-                }
-                temp=temp->next;
-            }
-        }
-        else
-        {
-            max_value=counter_list_get_counter(c_list, next_tc);
-            if(max_value==0)
-            {
-                delete_counter_list(c_list);
-                free(table_row_count);
-                printf("optimize_query: qet value error");
-                return -7;
-            }
-        }
-        uint32_t p_index_to_swap=j;
-        //Add all the predicates in the beginning
-        for(uint32_t z=0; z<max_value; z++)
-        {
-            //Find the predicate that has a tc that is used the least ammount of times
-            //Or if counter==1 the greater value
-            for(uint32_t i=j; i<q->number_of_predicates; i++)
-            {
-                if(((predicate_join*) q->predicates[i].p)->r.table_id==next_tc->table_id&&((predicate_join*) q->predicates[i].p)->r.column_id==next_tc->column_id)
-                {//S is different
-                    if(counter_list_get_counter(c_list, &((predicate_join*) q->predicates[i].p)->s)>1)
-                    {
-                        if(z==max_value-1)//Last occurance of max
-                        {
-                            next_join=true;
-                            swap_tc_in_predicate(&q->predicates[i]);
-                            next_tc=&((predicate_join*) q->predicates[i].p)->r;
-                            p_index_to_swap=i;
-                            break;
-                        }
-                        else
-                        {
-                            next_join=false;
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        next_join=false;
-                        p_index_to_swap=i;
-                        break;
-                    }
-                }
-                else if(((predicate_join*) q->predicates[i].p)->s.table_id==next_tc->table_id&&((predicate_join*) q->predicates[i].p)->s.column_id==next_tc->column_id)
-                {//R is different
-                    if(z!=max_value-1&&counter_list_get_counter(c_list, &((predicate_join*) q->predicates[i].p)->r)==1)//Not the last occurance of max
-                    {
-                        swap_tc_in_predicate(&q->predicates[i]);
-                        p_index_to_swap=i;
-                        next_join=false;
-                        break;
-                    }
-                    else if(counter_list_get_counter(c_list, &((predicate_join*) q->predicates[i].p)->r)==1)
-                    {
-                        p_index_to_swap=i;
-                        next_join=false;
-                        break;
-                    }
-                }
-            }
-            //Remove from list
-            if(counter_list_remove(c_list, &((predicate_join*) q->predicates[p_index_to_swap].p)->r)!=0)
-            {
-                delete_counter_list(c_list);
-                free(table_row_count);
-                fprintf(stderr, "optimize_query: counter_list_remove error");
-                return -7;
-            }
-            if(counter_list_remove(c_list, &((predicate_join*) q->predicates[p_index_to_swap].p)->s)!=0)
-            {
-                delete_counter_list(c_list);
-                free(table_row_count);
-                fprintf(stderr, "optimize_query: counter_list_remove error");
-                return -7;
-            }
-            swap_predicates(&q->predicates[j], &q->predicates[p_index_to_swap]);
-            j++;
-        }
+      free(temp_index->tables[i].distinct_vals[j]);
     }
-    //Create the bool table
-    delete_counter_list(c_list);
-    free(table_row_count);
-    return 0;
+    free(temp_index->tables[i].distinct_vals);
+  }
+  free(temp_index->tables);
+  free(temp_index);
+
+  for(int i = 0; i < MAX_QUERY_NUM; i++)
+  {
+    free(nl.neighbors_list[i]);
+  }
+  free(nl.neighbors_list);
+  free(nl.neighbors_num);
+
+  return 0;
+   
 }
 
 int create_sort_array(query*q, bool**t_c_to_sort)
@@ -1730,6 +2647,29 @@ int create_sort_array(query*q, bool**t_c_to_sort)
     {
         perror("create_sort_array: malloc error");
         return -4;
+    }
+    uint32_t temp_index=0;
+    for(uint32_t i=0; i<q->number_of_predicates; i++)
+    {
+        if(q->predicates[i].type==Join)
+        {
+            temp_index=i;
+            break;
+        }
+    }
+    for(uint32_t i=temp_index+1; i<q->number_of_predicates; i++)
+    {
+        if(q->predicates[i].type==Join)
+        {
+            if((((predicate_join*) (q->predicates[temp_index].p))->s.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id&&
+            ((predicate_join*) (q->predicates[temp_index].p))->s.column_id==((predicate_join*) (q->predicates[i].p))->s.column_id)||
+               (((predicate_join*) (q->predicates[temp_index].p))->s.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id&&
+            ((predicate_join*) (q->predicates[temp_index].p))->s.column_id==((predicate_join*) (q->predicates[i].p))->r.column_id))
+            {
+                swap_tc_in_predicate(&q->predicates[temp_index]);
+            }
+            temp_index=i;
+        }
     }
     table_column* last_sorted=NULL;
     uint32_t bool_counter=0;
@@ -1869,40 +2809,40 @@ int optimize_query_memory(query*q)
         }
     }
     //Then the self joins to the left after the joins
-    for(uint32_t i=q->number_of_predicates-1; i>0; i--)
-    {
-        //If i a hidden self join
-        if(q->predicates[i].type==Self_Join&&((predicate_join*) (q->predicates[i].p))->r.table_id!=((predicate_join*) (q->predicates[i].p))->s.table_id)
-        {
-            //Find the min position after the join
-            uint32_t self_join_pos=i;
-            for(uint32_t j=i-1; j>0; j--)
-            {
-                if(q->predicates[j].type==Join)
-                {
-                    if((((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id)||
-                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
-                       (((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
-                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id))
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        self_join_pos--;
-                    }
-                }
-                else
-                {
-                    self_join_pos--;
-                }
-            }
-            if(i!=self_join_pos)
-            {
-                move_predicate(q, i, self_join_pos);
-                i++;
-            }
-        }
-    }
+//    for(uint32_t i=q->number_of_predicates-1; i>0; i--)
+//    {
+//        //If i a hidden self join
+//        if(q->predicates[i].type==Self_Join&&((predicate_join*) (q->predicates[i].p))->r.table_id!=((predicate_join*) (q->predicates[i].p))->s.table_id)
+//        {
+//            //Find the min position after the join
+//            uint32_t self_join_pos=i;
+//            for(uint32_t j=i-1; j>0; j--)
+//            {
+//                if(q->predicates[j].type==Join)
+//                {
+//                    if((((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id)||
+//                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
+//                       (((predicate_join*) (q->predicates[j]).p)->r.table_id==((predicate_join*) (q->predicates[i].p))->s.table_id)||
+//                       (((predicate_join*) (q->predicates[j]).p)->s.table_id==((predicate_join*) (q->predicates[i].p))->r.table_id))
+//                    {
+//                        break;
+//                    }
+//                    else
+//                    {
+//                        self_join_pos--;
+//                    }
+//                }
+//                else
+//                {
+//                    self_join_pos--;
+//                }
+//            }
+//            if(i!=self_join_pos)
+//            {
+//                move_predicate(q, i, self_join_pos);
+//                i++;
+//            }
+//        }
+//    }
     return 0;
 }

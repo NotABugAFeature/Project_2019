@@ -2007,6 +2007,12 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
             {
               predicate_join pj;
               statistics results;
+
+              results.i_A = 0;
+              results.u_A = 0;
+              results.f_A = 0;
+              results.d_A = 0;
+
               int res = 0;
 
               pj.r.table_id = j;

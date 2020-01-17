@@ -2106,13 +2106,13 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
   }
 
   //print optimal result
-  printf("Best Tree Result (f_A): %" PRIu64 "\tTables: ", min);
+  //printf("Best Tree Result (f_A): %" PRIu64 "\tTables: ", min);
 
-  for(int z = 0; z < q->number_of_tables; z++)
-  {
-    printf("%" PRIu8 " ", best_result.array[z]);
-  }
-  printf("\n");
+  //for(int z = 0; z < q->number_of_tables; z++)
+  //{
+  //  printf("%" PRIu8 " ", best_result.array[z]);
+  //}
+  //printf("\n");
 
   //free memory
   free(btree.relations);

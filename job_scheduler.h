@@ -18,13 +18,13 @@
 typedef struct job_scheduler
 {
     job_fifo* fast_fifo;                //fifo that holds the fast jobs
-    job_fifo* slow_fifo;                //fifo that holds the fast jobs
     uint64_t fast_job_count;            //Counter of the jobs inside the fast fifo
-    uint64_t slow_job_count;            //Counter of the jobs inside the slow fifo
     uint32_t thread_count;              //Counter of the threads using the fifo
     pthread_mutex_t job_fifo_mutex;     //Mutex for accessing the job fifo
     sem_t fifo_job_counter_sem;         //Semaphore that counts the items in the job fifo
+#if defined(SORTED_PROJECTIONS)
     projection_list* projection_list;   //A sorted list that holds the projection results
+#endif
     sem_t fifo_query_executing_sem;     //Semaphore that counts the queries in the job fifo
     sem_t threads_finished_sem;         //Semaphore that counts the finished threads
     bool terminate;                     //The execution is finished
@@ -49,6 +49,8 @@ typedef struct job_query_parameters //For each query one is created
     uint32_t pred_index;        //Which predicate is executed
     relation* r;                //R relation (needed in join)
     relation* s;                //S relation (needed in join)
+    pthread_mutex_t q_mutex;    //A mutex used in scheduling the prejoin job
+    bool is_prejoin_scheduled;  //used in scheduling the prejoin job
     pthread_mutex_t r_mutex;    //A mutex used in sorting/join/projections
     pthread_mutex_t s_mutex;    //A mutex used in sorting
     uint64_t r_counter;         //A counter used in sorting/join/projections
@@ -61,11 +63,9 @@ typedef struct job_presort_parameters
     relation* r_s;              //The auxiliary
     bool sort;                  //If we need to sort the relation
     pthread_mutex_t *mutex;     //mutex to inform the sorting is done
-    uint64_t* unsorted_rows;  //Counter of the rows not sorted
-    query* query;               //The query
+    uint64_t* unsorted_rows;    //Counter of the rows not sorted
     table_column* join;         //The table id and column id to sort
-    table_index* tables;
-    middleman* middle;
+    job_query_parameters *q_params;
     job* this_job;
 } job_presort_parameters;
 typedef struct job_sort_parameters
@@ -75,6 +75,7 @@ typedef struct job_sort_parameters
     pthread_mutex_t *mutex;     //mutex to inform the sorting is done
     uint64_t* unsorted_rows;  //Counter of the rows not sorted
     job* this_job;
+    job_query_parameters *q_params;
     window win;                 //The window to sort
 } job_sort_parameters;
 typedef struct job_join_parameters
@@ -248,7 +249,7 @@ job* create_query_job(job_scheduler*, char*, table_index*, uint64_t);
 job* create_presort_job(job_query_parameters*, relation**, table_column*, pthread_mutex_t*, bool, uint64_t*);
 /**
  * Creates and returns a sort job
- * @param job_scheduler* scheduler in which the query will be added later
+ * @param job_query_parameters* the query parameters
  * @param relation* the relation to sort
  * @param relation* the auxiliary relation
  * @param pthread_mutex_t* mutex used for accessing the unsorted rows counter
@@ -258,7 +259,7 @@ job* create_presort_job(job_query_parameters*, relation**, table_column*, pthrea
  * @param end the ending index to sort the relation
  * @return job* the job or NULL
  */
-job* create_sort_job(job_scheduler*, relation*, relation*, pthread_mutex_t*, uint64_t*, unsigned short, uint64_t, uint64_t);
+job* create_sort_job(job_query_parameters*, relation*, relation*, pthread_mutex_t*, uint64_t*, unsigned short, uint64_t, uint64_t);
 /**
  * Creates and returns a join job
  * @param uint64_t staring index of the r relation for the join
@@ -327,16 +328,21 @@ void destroy_job_scheduler(job_scheduler*);
  */
 int schedule_fast_job(job_scheduler*, job*);
 /**
- * Adds a slow job to the scheduler using a mutex
- * @param job_scheduler* the job scheduler to add the job
- * @param job* the job to add
- * @return int 0 if successful
- */
-int schedule_slow_job(job_scheduler*, job*);
-/**
  * Returns the next job from the scheduler
  * @param job_scheduler* the scheduler
  * @return job* the next job for execution
  */
 job* get_job(job_scheduler*);
+#if defined(SORTED_PROJECTIONS)
+/**
+ * Add a projection result to the scheduler
+ * @param job_scheduler* The job scheduler
+ * @param uint64_t the query id
+ * @param uint32_t the number of projections of the query
+ * @param uint32_t the projection index
+ * @param uint64_t the projection result
+ * @return int 0 if successful
+ */
+int store_projection_in_scheduler(job_scheduler* js, uint64_t query_id, uint32_t number_of_projections, uint32_t projection_index, uint64_t projection_sum);
+#endif
 #endif /* JOB_SCHEDULER_H */

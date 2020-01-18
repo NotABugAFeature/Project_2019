@@ -6,6 +6,7 @@ typedef struct projection_node
 {
     uint64_t query_id; //The query id (used for sorting the nodes)
     uint32_t number_of_projections; //The number of projections of the query
+    uint32_t number_of_projections_stored; //The number of projections stored in the node
     uint64_t* projections; //The array of the projection results
     projection_node* next; //Pointer to the next node
 } projection_node;
@@ -50,6 +51,7 @@ projection_node* create_projection_node(uint64_t query_id, uint32_t number_of_pr
     }
     new_node->projections[projection_index]=projection_sum;
     new_node->next=NULL;
+    new_node->number_of_projections_stored=1;
     return new_node;
 }
 /**
@@ -82,23 +84,31 @@ void print_projection_node(projection_node* node)
         fprintf(stderr, "delete_projection_node: NULL parameter\n");
         return;
     }
-    //Print all the projections
-    for(uint32_t i=0; i<node->number_of_projections; i++)
+    if(node->number_of_projections_stored>=node->number_of_projections)
     {
-        if(node->projections[i]==0)
+        //Print all the projections
+        for(uint32_t i=0; i<node->number_of_projections; i++)
         {
-            fprintf(stderr, "\e[1;33mNULL\e[0m");
+            if(node->projections[i]==0)
+            {
+                fprintf(stderr, "\e[1;33mNULL\e[0m");
+            }
+            else
+            {
+                fprintf(stderr, "\e[1;33m%" PRIu64 "\e[0m", node->projections[i]);
+            }
+            if(i<node->number_of_projections-1)
+            {
+                fprintf(stderr, "\e[1;33m \e[0m");
+            }
         }
-        else
-        {
-            fprintf(stderr, "\e[1;33m%" PRIu64 "\e[0m", node->projections[i]);
-        }
-        if(i<node->number_of_projections-1)
-        {
-            fprintf(stderr, "\e[1;33m \e[0m");
-        }
+        fprintf(stderr, "\n");
     }
-    fprintf(stderr, "\n");
+    else
+    {
+        fprintf(stderr, "delete_projection_node: error cannot print the node\n");
+        return;
+    }
 }
 projection_list* create_projection_list(void)
 {
@@ -120,6 +130,7 @@ projection_list* create_projection_list(void)
     new_list->head=NULL;
     new_list->tail=NULL;
     new_list->number_of_nodes=0;
+    new_list->query_id_to_print=0;
     return new_list;
 }
 void delete_projection_list(projection_list* list)
@@ -149,12 +160,26 @@ void print_projection_list(projection_list* list)
         fprintf(stderr, "print_projection_list: NULL list pointer\n");
         return;
     }
-    printf("Total queries: %"PRIu32"\n", list->number_of_nodes);
-    projection_node* temp=list->head;
-    while(temp!=NULL)//Visit All The Nodes And Print Them
+    while(list->head!=NULL)//Visit All The Nodes And Print Them
     {
-        print_projection_node(temp);
-        temp=temp->next;
+        if(list->head->query_id==list->query_id_to_print&&list->head->number_of_projections==list->head->number_of_projections_stored)
+        {
+            print_projection_node(list->head);
+            projection_node* temp=list->head;
+            list->head=temp->next;
+            //Delete the node
+            delete_projection_node(temp);
+            list->number_of_nodes--;
+            list->query_id_to_print++;
+        }
+        else
+        {
+            break;
+        }
+    }
+    if(list->head==NULL)
+    {
+        list->tail=NULL;
     }
 }
 int append_to_projection_list(projection_list* list, uint64_t query_id,
@@ -170,6 +195,7 @@ int append_to_projection_list(projection_list* list, uint64_t query_id,
         list->head=newnode;
         list->tail=newnode;
         list->number_of_nodes++;
+        print_projection_list(list);
         return 0;
     }
     else//Search the list to find the position
@@ -191,6 +217,7 @@ int append_to_projection_list(projection_list* list, uint64_t query_id,
                 list->tail->next=newnode;
                 list->tail=newnode;
                 list->number_of_nodes++;
+                print_projection_list(list);
                 return 0;
             }
             else if(list->tail->query_id==query_id)
@@ -198,6 +225,8 @@ int append_to_projection_list(projection_list* list, uint64_t query_id,
                 if(list->tail->number_of_projections>projection_index)
                 {
                     list->tail->projections[projection_index]=projection_sum;
+                    list->tail->number_of_projections_stored++;
+                    print_projection_list(list);
                     return 0;
                 }
                 else
@@ -218,6 +247,7 @@ int append_to_projection_list(projection_list* list, uint64_t query_id,
                 newnode->next=list->head;
                 list->head=newnode;
                 list->number_of_nodes++;
+                print_projection_list(list);
                 return 0;
             }
             else if(temp->query_id==query_id)
@@ -225,6 +255,8 @@ int append_to_projection_list(projection_list* list, uint64_t query_id,
                 if(temp->number_of_projections>projection_index)
                 {
                     temp->projections[projection_index]=projection_sum;
+                    temp->number_of_projections_stored++;
+                    print_projection_list(list);
                     return 0;
                 }
                 else
@@ -245,6 +277,7 @@ int append_to_projection_list(projection_list* list, uint64_t query_id,
                     newnode->next=temp->next;
                     temp->next=newnode;
                     list->number_of_nodes++;
+                    print_projection_list(list);
                     return 0;
                 }
                 else if(temp->next->query_id==query_id)
@@ -252,6 +285,8 @@ int append_to_projection_list(projection_list* list, uint64_t query_id,
                     if(temp->next->number_of_projections>projection_index)
                     {
                         temp->next->projections[projection_index]=projection_sum;
+                        temp->next->number_of_projections_stored++;
+                        print_projection_list(list);
                         return 0;
                     }
                     else

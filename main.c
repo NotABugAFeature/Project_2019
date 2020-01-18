@@ -24,7 +24,7 @@ string_list *read_batch(void)
     {
         if(fgets(line, STRING_SIZE, stdin)==NULL||feof(stdin))
         {
-            printf("End of input\n");
+//PR            printf("End of input\n");
             string_list_delete(list);
             return NULL;
         }
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
         printf("The number of threads given > limit\n");
         return 1;
     }
-    printf("The program will create %"PRIu32" threads\n", worker_th);
+//PR    printf("The program will create %"PRIu32" threads\n", worker_th);
 #if defined(MAX_QUERIES_LIMIT)&&!defined(ONE_QUERY_AT_A_TIME)
     uint32_t max_queries=atoi(argv[2]);
     if(max_queries==0)
@@ -107,7 +107,7 @@ int main(int argc, char** argv)
         printf("The number of threads given > limit\n");
         return 1;
     }
-    printf("The program will run %"PRIu32" queries simultaneously\n", max_queries);
+//PR    printf("The program will run %"PRIu32" queries simultaneously\n", max_queries);
     uint32_t q_max_counter=max_queries;
 #endif
     job_scheduler* scheduler=create_job_scheduler(worker_th);
@@ -139,14 +139,14 @@ int main(int argc, char** argv)
     string_list *list=read_tables();
     struct timespec begin, end;
     clock_gettime(CLOCK_MONOTONIC, &begin);
-    printf("List of names:\n");
-    string_list_print(list);
+//PR    printf("List of names:\n");
+//PR    string_list_print(list);
     table_index *ti=insert_tables_from_list(list);
-    printf("ti->num_tables: %" PRIu64 "\n", ti->num_tables);
-    for(uint32_t i=0; i<ti->num_tables; i++)
-    {
-        printf("ti->tables[%d].table_id: %" PRIu32 " - ti->tables[%d].columns: %" PRIu64 " - ti->tables[%d].rows: %" PRIu64 "\n", i, ti->tables[i].table_id, i, ti->tables[i].columns, i, ti->tables[i].rows);
-    }
+//PR    printf("ti->num_tables: %" PRIu64 "\n", ti->num_tables);
+//PR    for(uint32_t i=0; i<ti->num_tables; i++)
+//PR    {
+//PR        printf("ti->tables[%d].table_id: %" PRIu32 " - ti->tables[%d].columns: %" PRIu64 " - ti->tables[%d].rows: %" PRIu64 "\n", i, ti->tables[i].table_id, i, ti->tables[i].columns, i, ti->tables[i].rows);
+//PR    }
     uint32_t queries_count=0;
     clock_gettime(CLOCK_MONOTONIC, &end);
     printf("Time to load the tables = %f seconds\n", (end.tv_nsec-begin.tv_nsec)/1000000000.0+(end.tv_sec-begin.tv_sec));
@@ -209,9 +209,9 @@ int main(int argc, char** argv)
     }
 #endif
     clock_gettime(CLOCK_MONOTONIC, &end);
-    printf("Total queries: %"PRIu32"\n", queries_count);
+//PR    printf("Total queries: %"PRIu32"\n", queries_count);
     printf("Time to execute all queries = %f seconds\n", (end.tv_nsec-begin.tv_nsec)/1000000000.0+(end.tv_sec-begin.tv_sec));
-    printf("Total fast jobs: %"PRIu64"\n", scheduler->fast_job_count);
+//PR    printf("Total fast jobs: %"PRIu64"\n", scheduler->fast_job_count);
     destroy_job_scheduler(scheduler);
     delete_table_index(ti);
     for(int i=0; i<worker_th; i++)
@@ -220,7 +220,7 @@ int main(int argc, char** argv)
         {//ERROR
             fprintf(stderr, "Pthread_join error\n");
         }
-        printf("Thread %d Exited\n", i);
+//PR        printf("Thread %d Exited\n", i);
     }
     //TODO add fifo tests to test file
     return 0;

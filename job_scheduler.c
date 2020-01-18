@@ -1335,7 +1335,6 @@ int run_presort_job(void* parameters)
     else if(p->sort)
     {
 #if defined(SERIAL_SORTING)
-        printf("SERIAL SORTING\n");
         if(radix_sort((*p->r)))
         {
             fprintf(stderr, "execute_query: Error in radix_sort\n");

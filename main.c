@@ -12,6 +12,12 @@
 #include "job_scheduler.h"
 #define THREAD_LIMIT 128
 #define MAXQUERIES 1024
+#if defined(ONE_QUERY_AT_A_TIME)&&defined(MAX_QUERIES_LIMIT)
+#error "defined ONE_QUERY_AT_A_TIME && defined MAX_QUERIES_LIMIT"
+#endif
+#if defined(SERIAL_PRESORTING)&&(!defined(SERIAL_SORTING)||!defined(SERIAL_JOIN))
+#error "defined SERIAL_PRESORTING &&(!defined SERIAL_SORTING || !defined SERIAL_JOIN )"
+#endif
 /**
  * Reads queries from stdin and returns them in a list
  * @return string_list of the queries

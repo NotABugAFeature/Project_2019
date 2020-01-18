@@ -301,18 +301,14 @@ void delete_table(table*table_r)
         {
             free(table_r->array[i]);
             table_r->array[i]=NULL;
+	    free(table_r->distinct_vals[i]);
         }
         free(table_r->array);
         table_r->array=NULL;
         free(table_r->columns_stats);
         free(table_r->over_n);
         free(table_r->num_vals);
-
-        for(uint64_t i=0; i<table_r->columns; i++)
-        {
-          free(table_r->distinct_vals[i]);
-        }
-        free(table_r->distinct_vals);
+	free(table_r->distinct_vals);
 
         free(table_r);
         table_r=NULL;
@@ -341,10 +337,6 @@ void delete_table_contents(table*table_r)
         free(table_r->columns_stats);
         free(table_r->num_vals);
         free(table_r->over_n);
-        for(uint64_t i=0; i<table_r->columns; i++)
-        {
-          free(table_r->distinct_vals[i]);
-        }
         free(table_r->distinct_vals);
     }
 }

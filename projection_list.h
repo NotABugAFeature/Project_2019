@@ -9,6 +9,7 @@ typedef struct projection_list
     projection_node* head;      //The first node of the list
     projection_node* tail;      //The last node of the list
     uint32_t number_of_nodes;   //The number of nodes inside the list
+    uint32_t query_id_to_print; //Next query id to print
     pthread_mutex_t mutex;      //Mutex used for accessing the list
 }projection_list;
 /**

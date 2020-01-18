@@ -1925,7 +1925,8 @@ best_order join_enumeration(query *q, table_index *index, neighbor_list *nl)
     //  return 2;
     }
 
-    btree.relations[pos] = table->columns_stats[i].f_A;
+    //every column of the table has the same f_A so we can choose whoever we want
+    btree.relations[pos] = table->columns_stats[0].f_A;
     btree.order[pos].array[0] = i;
     pos = pos >> 1;
   }

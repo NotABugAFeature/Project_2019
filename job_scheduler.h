@@ -10,11 +10,11 @@
 #include "relation.h"
 #include "list_array.h"
 #include "projection_list.h"
-#define JOIN_TUPLES 16384
-#define FILTER_TUPLES 16384
-#define SELFJOIN_TUPLES 16384
-#define FILTER_MIDDLE_BUCKETS 10
-#define SELFJOIN_FILTER_MIDDLE_BUCKETS 10
+#define JOIN_TUPLES 262144
+#define FILTER_TUPLES 262144
+#define SELFJOIN_TUPLES 262144
+#define FILTER_MIDDLE_BUCKETS 16
+#define SELFJOIN_FILTER_MIDDLE_BUCKETS 16
 typedef struct job_scheduler
 {
     job_fifo* fast_fifo;                //fifo that holds the fast jobs

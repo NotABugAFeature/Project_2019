@@ -8,6 +8,7 @@ fi
 exe=$1
 size=$2
 threads=$3
+max_queries=$4
 
 if grep -q "Done$" "$size.init"; then
 	init_file="$size.init";
@@ -18,7 +19,11 @@ else
 fi
 
 start=$(date +%s.%N);
-cat "$init_file" "$size.work" | "$exe" "$threads" 2> colored_result;
+if [ -z "$max_queries" ]; then
+	cat "$init_file" "$size.work" | "$exe" "$threads" 2> colored_result;
+else
+	cat "$init_file" "$size.work" | "$exe" "$threads" "$max_queries" 2> colored_result;
+fi
 end=$(date +%s.%N);
 
 dur=$(echo $end - $start | bc);

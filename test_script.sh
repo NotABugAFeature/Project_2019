@@ -39,7 +39,7 @@ cat /tmp/temp_medium_dataset/medium.txt | ./queries 4  > ./results/one_query_sp_
 cat /tmp/temp_medium_dataset/medium.txt | ./queries 8  > ./results/one_query_sp_8_1
 cat /tmp/temp_medium_dataset/medium.txt | ./queries 8  > ./results/one_query_sp_8_2
 cat /tmp/temp_medium_dataset/medium.txt | ./queries 8  > ./results/one_query_sp_8_3
-make sorted_projections=true s_presorting=true s_sorting=true queries_fast;
+make sorted_projections=true s_sorting=true queries_fast;
 cat /tmp/temp_medium_dataset/medium.txt | ./queries 1  > ./results/s_sort_sp_1_1
 cat /tmp/temp_medium_dataset/medium.txt | ./queries 1  > ./results/s_sort_sp_1_2
 cat /tmp/temp_medium_dataset/medium.txt | ./queries 1  > ./results/s_sort_sp_1_3

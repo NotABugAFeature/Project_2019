@@ -209,11 +209,9 @@ int main(int argc, char** argv)
     }
 #endif
     clock_gettime(CLOCK_MONOTONIC, &end);
+    printf("Total queries: %"PRIu32"\n", queries_count);
     printf("Time to execute all queries = %f seconds\n", (end.tv_nsec-begin.tv_nsec)/1000000000.0+(end.tv_sec-begin.tv_sec));
     printf("Total fast jobs: %"PRIu64"\n", scheduler->fast_job_count);
-#if defined(SORTED_PROJECTIONS)
-    print_projection_list(scheduler->projection_list);
-#endif
     destroy_job_scheduler(scheduler);
     delete_table_index(ti);
     for(int i=0; i<worker_th; i++)

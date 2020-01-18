@@ -70,6 +70,7 @@ void testAppend_middle_list()
     {
         node = malloc(sizeof(middle_list_node));
         node->bucket.index_to_add_next = i;
+        node->next = NULL;
         *next = node;
         next = &(node->next);
     }
@@ -82,6 +83,7 @@ void testAppend_middle_list()
     {
         node = malloc(sizeof(middle_list_node));
         node->bucket.index_to_add_next = a_size + i;
+        node->next = NULL;
         *next = node;
         next = &(node->next);
     }
@@ -133,6 +135,7 @@ void testMerge_middle_lists()
         for(unsigned int j=0; j<buckets; j++)
         {
             node = malloc(sizeof(middle_list_node));
+            node->next = NULL;
             *next = node;
             next = &(node->next);
         }
@@ -145,6 +148,7 @@ void testMerge_middle_lists()
         for(unsigned int j=0; j<buckets; j++)
         {
             node = malloc(sizeof(middle_list_node));
+            node->next = NULL;
             *next = node;
             next = &(node->next);
         }
@@ -191,6 +195,7 @@ void testMerge_middle_list()
         for(unsigned int j=0; j<buckets; j++)
         {
             node = malloc(sizeof(middle_list_node));
+            node->next = NULL;
             *next = node;
             next = &(node->next);
         }

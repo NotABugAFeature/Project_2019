@@ -56,7 +56,7 @@ queries_fast: execute_query.c middle_list.c main.c query.c queue.c quicksort.c r
 	$(CC) -O3 $(FLAGS) -o queries execute_query.c middle_list.c main.c query.c queue.c quicksort.c radix_sort.c relation.c sort_merge_join.c string_list.c table.c job_fifo.c job_scheduler.c projection_list.c list_array.c -lpthread
 	
 tests: tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o job_fifo.o job_scheduler.o list_array.o projection_list.o
-	$(CC) -o tests tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o job_fifo.o job_scheduler.o list_array.o projection_list.o $(TESTFLAGS)
+	$(CC) -o tests tests.o radix_sort.o quicksort.o queue.o relation.o sort_merge_join.o table.o string_list.o execute_query.o middle_list.o query.o job_fifo.o job_scheduler.o list_array.o projection_list.o -lpthread $(TESTFLAGS)
 
 queries: execute_query.o job_fifo.o job_scheduler.o list_array.o middle_list.o projection_list.o main.o query.o queue.o quicksort.o radix_sort.o relation.o sort_merge_join.o string_list.o table.o
 	$(CC) $(FLAGS) -o queries execute_query.o job_fifo.o job_scheduler.o list_array.o middle_list.o projection_list.o main.o query.o queue.o quicksort.o radix_sort.o relation.o sort_merge_join.o string_list.o table.o -lpthread

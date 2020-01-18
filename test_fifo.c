@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <CUnit/Basic.h>
-#include "../job_fifo.h"
-#include "../job_scheduler.h"
+#include "./job_fifo.h"
+#include "./job_scheduler.h"
 /*
  * CUnit Test Suite
  */
@@ -54,6 +54,7 @@ void testAppend_to_job_fifo_bucket()
     {
         CU_ASSERT_EQUAL(n->bucket.jobs[i],&jobs[i]);
     }
+    free(n);
 }
 void testIs_job_fifo_bucket_full()
 {

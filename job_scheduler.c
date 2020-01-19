@@ -555,14 +555,12 @@ int run_prejoin_job(void* parameters)
         }
         free(p->s);
         p->s=NULL;
-        //TODO Add if for return !=0
         update_related_lists(p->pred_index, p->query, p->joined_tables, p->middle, delete_r, delete_s, result_R, result_S, NULL);
         p->pred_index++;
         p->this_job->run=run_execute_job;
         schedule_fast_job(p->this_job->scheduler, p->this_job);
         return 0;
 #else
-    //TODO Figure out size of parts
     uint64_t parts;
     if(p->r->num_tuples<JOIN_TUPLES)
     {
@@ -1098,7 +1096,6 @@ int run_join_job(void * parameters)
         }
         free(exe_params->s);
         exe_params->s=NULL;
-        //TODO Add if for return !=0
         update_related_lists(exe_params->pred_index, exe_params->query, exe_params->joined_tables, exe_params->middle, delete_r, delete_s, result_R, result_S, NULL);
         exe_params->pred_index++;
         exe_params->this_job->run=run_execute_job;
@@ -1409,7 +1406,6 @@ int run_presort_job(void* parameters)
             destroy_presort_job(parameters);
             return -1;
         }
-        //TODO Add if
         pthread_mutex_lock(p->mutex);
         *(p->unsorted_rows)=(*p->r)->num_tuples;
         pthread_mutex_unlock(p->mutex);
@@ -1557,7 +1553,6 @@ int run_sort_job(void* parameters)
                     destroy_sort_job(parameters);
                     return -1;
                 }
-                //TODO Add if
                 schedule_fast_job(p->this_job->scheduler, newjob);
             }
             if(hist[i]+p->win.start>p->win.end)
@@ -1574,7 +1569,6 @@ int run_sort_job(void* parameters)
 }
 int run_projection_job(void* parameters)
 {
-    //TODO ADD frees/destroy etc
     job_projection_parameters* p=(job_projection_parameters*) parameters;
     if(p==NULL||p->mutex==NULL||p->projections_left==NULL||p->this_job==NULL)
     {

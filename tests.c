@@ -627,8 +627,6 @@ void testRelation_from_file5()
 	free(rel);
 }
 
-//TODO: relation_to_file
-
 
 /*
  * queue.c
@@ -1100,8 +1098,6 @@ void testRelation_from_file5()
      delete_middle_list(list_s);
  }
 
- //TODO: final_join_parallel
-
 
 
 /* 
@@ -1181,7 +1177,7 @@ int append_to_middle_bucket(middle_list_bucket*, uint64_t);
      free(list);
  }
 
-//TODO: #if defined(SERIAL_EXECUTION)||(defined(SERIAL_JOIN)&&defined(SERIAL_FILTER)&&defined(SERIAL_SELFJOIN))
+
  void testConstruct_lookup_table()
  {
     lookup_table *lt;
@@ -1223,7 +1219,6 @@ int append_to_middle_bucket(middle_list_bucket*, uint64_t);
 
  }
 
- //TODO: else ?
 
  void testAppend_to_middle_list()
  {
@@ -1447,7 +1442,6 @@ void testTable_from_File6()
         delete_table(t);
 }
 
-//TODO: insert_tables_from_list
 
 /**
  * Test case 1: Table index is NULL
@@ -1509,7 +1503,6 @@ void testGet_table4()
         free(ti);
 }
 
-//TODO: insert_tables
 
 
 /*
@@ -1996,16 +1989,6 @@ void testConstruct_relation_from_middleman2()
 
 }
 
-//TODO: update_related_lists #ifdef
-//TODO: #ifdef update_middle_bucket
-//TODO: #else update_middle_bucket
-//TODO: self_join_middle_bucket
-//TODO: self_join_middle_bucket_parallel
-//TODO: filter_original_table_parallel
-//TODO: self_join_table_parallel
-//TODO: execute_query_parallel #ifdef
-//TODO: calculate_sum
-
 
 /*
  * query.c
@@ -2079,8 +2062,6 @@ bool compare_queries(query* q1, query*q2)
     return true;
 }
 
-//TODO: create_query
-//TODO: parse_predicate
 
 void testRemove_extra_chars(void)
 {
@@ -2449,9 +2430,6 @@ void testAnalyze_query5(void)
     delete_query(q3);
 }
 
-//TODO: compare_predicates
-//TODO: swap_predicates
-//TODO: create_sort_array
 
 void move_predicate(query* q, uint32_t index_start, uint32_t index_end);
 
@@ -3784,32 +3762,6 @@ void testAppend_Pop_job_fifo()
     delete_job_fifo(fifo);
 }
 
-/*
- * job_scheduler.c
- */
-
-//TODO: create_job_scheduler #ifdef
-//TODO: schedule_fast_job
-//TODO: store_projection_in_scheduler #ifdef
-//TODO: get_job
-//TODO: create_query_job
-//TODO: run_query_job
-//TODO: run_execute_job
-//TODO: run_prejoin_job #ifdef
-//TODO: create_join_job
-//TDOO: create_filter_table_job
-//TODO: run_filter_table_job
-//TODO: create_filter_middle_job
-//TODO: run_filter_middle_job
-//TODO: run_original_self_join_table_job
-//TODO: run_original_self_join_middle_job
-//TODO: run_join_job #ifdef
-//TODO: create_presort_job
-//TODO: create_sort_job
-//TODO: create_projection_job
-//TODO: run_presort_job #ifdef
-//TODO: run_sort_job
-//TODO: run_projection_job #ifdef
 
 /*
  * list_array.c

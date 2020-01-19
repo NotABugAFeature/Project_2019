@@ -201,21 +201,19 @@ job* pop_from_job_fifo(job_fifo* fifo)
     {
         if(fifo->head->bucket.index_to_remove_next==JOB_FIFO_BUCKET_SIZE)//Empty head
         {
-            //TODO Remove this part after debugging
-            for(uint32_t i=0; i<JOB_FIFO_BUCKET_SIZE; i++)
-            {
-                if(fifo->head->bucket.jobs[i]!=NULL)
-                {
-                    fprintf(stderr, "pop_from_job_fifo: not null job in head\n");
-                }
-            }
+//            for(uint32_t i=0; i<JOB_FIFO_BUCKET_SIZE; i++)
+//            {
+//                if(fifo->head->bucket.jobs[i]!=NULL)
+//                {
+//                    fprintf(stderr, "pop_from_job_fifo: not null job in head\n");
+//                }
+//            }
             if(fifo->tail->bucket.index_to_add_next!=0||fifo->number_of_nodes==2)
             {//Add head as new tail
-                //TODO Remove After Debugging
-                if(fifo->append_node!=fifo->tail)
-                {
-                    fprintf(stderr, "pop_from_job_fifo: fifo->append_node!=fifo->tail\n");
-                }
+//                if(fifo->append_node!=fifo->tail)
+//                {
+//                    fprintf(stderr, "pop_from_job_fifo: fifo->append_node!=fifo->tail\n");
+//                }
                 job_fifo_node* temp=fifo->head;
                 fifo->head=fifo->head->next;
                 fifo->tail->next=temp;

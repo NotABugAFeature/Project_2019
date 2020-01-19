@@ -45,7 +45,9 @@ ifeq ($(max_queries),true)
 FLAGS+= -DMAX_QUERIES_LIMIT
 endif
 
-
+ifeq ($(one_batch),true) 
+FLAGS+= -DONE_BATCH_AT_A_TIME
+endif
 
 all: queries tests
 	./tests

@@ -1,3 +1,6 @@
+#ifndef QUEUE_H
+#define QUEUE_H
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -23,3 +26,5 @@ queue *create_queue();
 bool is_empty(queue *);
 void push(queue *, window *);
 window *pop(queue *);
+
+#endif //QUEUE_H

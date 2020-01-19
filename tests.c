@@ -3025,6 +3025,10 @@ void testOptimize_query1(void)
     delete_query(q_c_5);
     delete_query(q_c_6);
     delete_query(q_c_7);
+    for(uint32_t i=0; i<ti.num_tables; i++)
+    {
+      delete_table_contents(&(ti.tables[i]));
+    }
     free(ti.tables);
 }
 
@@ -3217,6 +3221,11 @@ void testOptimize_query_memory1(void)
     delete_query(q_c_5);
     delete_query(q_c_6);
     delete_query(q_c_7);
+    
+    for(uint32_t i=0; i<ti.num_tables; i++)
+    {
+      delete_table_contents(&(ti.tables[i]));
+    }
     free(ti.tables);
     CU_ASSERT_EQUAL_FATAL(true, true);
 }

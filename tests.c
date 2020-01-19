@@ -3259,11 +3259,13 @@ void testOptimize_query1(void)
     CU_ASSERT_EQUAL_FATAL(validate_query(q38, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q39, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q40, &ti), 0);
+ * */
     CU_ASSERT_EQUAL_FATAL(optimize_query(q1, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query(q2, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query(q3, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query(q4, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query(q5, &ti), 0);
+    /*
     CU_ASSERT_EQUAL_FATAL(optimize_query(q6, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query(q7, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query(q8, &ti), 0);
@@ -3302,19 +3304,19 @@ void testOptimize_query1(void)
     CU_ASSERT_EQUAL_FATAL(optimize_query(q40, &ti), 0);*/
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_1, q_c_1), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q_c_1, &ti), 0);
-//    CU_ASSERT_EQUAL_FATAL(compare_queries(q1, q_c_1), true);
+    CU_ASSERT_EQUAL_FATAL(compare_queries(q1, q_c_1), true);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_2, q_c_2), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q_c_2, &ti), 0);
-//    CU_ASSERT_EQUAL_FATAL(compare_queries(q2, q_c_2), true);
+    CU_ASSERT_EQUAL_FATAL(compare_queries(q2, q_c_2), true);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_3, q_c_3), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q_c_3, &ti), 0);
-//    CU_ASSERT_EQUAL_FATAL(compare_queries(q3, q_c_3), true);
+    CU_ASSERT_EQUAL_FATAL(compare_queries(q3, q_c_3), true);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_4, q_c_4), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q_c_4, &ti), 0);
-//    CU_ASSERT_EQUAL_FATAL(compare_queries(q4, q_c_4), true);
+    CU_ASSERT_EQUAL_FATAL(compare_queries(q4, q_c_4), true);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_5, q_c_5), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q_c_5, &ti), 0);
-//    CU_ASSERT_EQUAL_FATAL(compare_queries(q5, q_c_5), true);
+    CU_ASSERT_EQUAL_FATAL(compare_queries(q5, q_c_5), true);
 /*    CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_6, q_c_6), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q_c_6, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(compare_queries(q6, q_c_6), true);
@@ -3430,7 +3432,7 @@ void testOptimize_query1(void)
     free(array);
     array=NULL;
     CU_ASSERT_EQUAL_FATAL(create_sort_array(q3, &array), 0);
-//    CU_ASSERT_EQUAL_FATAL(compare_bool_arrays(array, q_b_3, 4), true);
+    CU_ASSERT_EQUAL_FATAL(compare_bool_arrays(array, q_b_3, 4), true);
     free(array);
     array=NULL;
     CU_ASSERT_EQUAL_FATAL(create_sort_array(q4, &array), 0);
@@ -3438,7 +3440,7 @@ void testOptimize_query1(void)
     free(array);
     array=NULL;
     CU_ASSERT_EQUAL_FATAL(create_sort_array(q5, &array), 0);
-//    CU_ASSERT_EQUAL_FATAL(compare_bool_arrays(array, q_b_5, 4), true);
+    CU_ASSERT_EQUAL_FATAL(compare_bool_arrays(array, q_b_5, 4), true);
     free(array);
 /*    array=NULL;
     CU_ASSERT_EQUAL_FATAL(create_sort_array(q6, &array), 0);

@@ -2957,22 +2957,27 @@ void testOptimize_query1(void)
         perror("testOptimize_query1: malloc error");
         return;
     }
-    ti.tables[0].array=NULL;
-    ti.tables[0].table_id=0;
-    ti.tables[0].columns=5;
-    ti.tables[0].rows=467;
-    ti.tables[1].array=NULL;
-    ti.tables[1].table_id=1;
-    ti.tables[1].columns=7;
-    ti.tables[1].rows=7654;
-    ti.tables[2].array=NULL;
-    ti.tables[2].table_id=2;
-    ti.tables[2].columns=9;
-    ti.tables[2].rows=6876;
-    ti.tables[3].array=NULL;
-    ti.tables[3].table_id=3;
-    ti.tables[3].columns=6;
-    ti.tables[3].rows=124;
+
+   	if(table_from_file(&(ti.tables[0]), "test_files/r0") != 0)
+   	{
+   		fprintf(stderr, "testOptimize_query1: Error in table_from_file\n");
+   		return;
+   	}
+   	if(table_from_file(&(ti.tables[1]), "test_files/r1") != 0)
+   	{
+   		fprintf(stderr, "testOptimize_query1: Error in table_from_file\n");
+   		return;
+   	}
+   	if(table_from_file(&(ti.tables[2]), "test_files/r2") != 0)
+   	{
+   		fprintf(stderr, "testOptimize_query1: Error in table_from_file\n");
+   		return;
+   	}
+   	if(table_from_file(&(ti.tables[3]), "test_files/r3") != 0)
+   	{
+   		fprintf(stderr, "testOptimize_query1: Error in table_from_file\n");
+   		return;
+   	}
     char query_str1[80];
     char query_str_c_1[80];
     char query_str2[80];
@@ -3766,25 +3771,31 @@ void testOptimize_query_memory1(void)
     ti.tables=malloc(sizeof(table)*4);
     if(ti.tables==NULL)
     {
-        perror("testOptimize_query1: malloc error");
+        perror("testOptimize_query_memory1: malloc error");
         return;
     }
-    ti.tables[0].array=NULL;
-    ti.tables[0].table_id=0;
-    ti.tables[0].columns=5;
-    ti.tables[0].rows=467;
-    ti.tables[1].array=NULL;
-    ti.tables[1].table_id=1;
-    ti.tables[1].columns=7;
-    ti.tables[1].rows=7654;
-    ti.tables[2].array=NULL;
-    ti.tables[2].table_id=2;
-    ti.tables[2].columns=9;
-    ti.tables[2].rows=6876;
-    ti.tables[3].array=NULL;
-    ti.tables[3].table_id=3;
-    ti.tables[3].columns=6;
-    ti.tables[3].rows=124;
+
+   	if(table_from_file(&(ti.tables[0]), "test_files/r0") != 0)
+   	{
+   		fprintf(stderr, "testOptimize_query_memory1: Error in table_from_file\n");
+   		return;
+   	}
+   	if(table_from_file(&(ti.tables[1]), "test_files/r1") != 0)
+   	{
+   		fprintf(stderr, "testOptimize_query_memory1: Error in table_from_file\n");
+   		return;
+   	}
+   	if(table_from_file(&(ti.tables[2]), "test_files/r2") != 0)
+   	{
+   		fprintf(stderr, "testOptimize_query_memory1: Error in table_from_file\n");
+   		return;
+   	}
+   	if(table_from_file(&(ti.tables[3]), "test_files/r3") != 0)
+   	{
+   		fprintf(stderr, "testOptimize_query_memory1: Error in table_from_file\n");
+   		return;
+   	}
+
     char query_str1[80];
     char query_str_c_1[80];
     char query_str2[80];
@@ -5543,8 +5554,8 @@ int main(void)
         (NULL==CU_add_test(pSuite, "testValidate_query1", testValidate_query1))||
         (NULL==CU_add_test(pSuite, "testValidate_query2", testValidate_query2))||
         (NULL==CU_add_test(pSuite, "test_counter_list", test_counter_list))||
-//Seg        (NULL==CU_add_test(pSuite, "testOptimize_query1", testOptimize_query1))||
-//Seg        (NULL==CU_add_test(pSuite, "testOptimize_query_memory1", testOptimize_query_memory1))||
+        (NULL==CU_add_test(pSuite, "testOptimize_query1", testOptimize_query1))||
+        (NULL==CU_add_test(pSuite, "testOptimize_query_memory1", testOptimize_query_memory1))||
         (NULL==CU_add_test(pSuite, "testFilter_original_table", testFilter_original_table))||
         (NULL==CU_add_test(pSuite, "testFilter_middle_bucket", testFilter_middle_bucket))||
         (NULL==CU_add_test(pSuite, "testSelf_join_table", testSelf_join_table))||

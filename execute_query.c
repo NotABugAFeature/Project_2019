@@ -1068,7 +1068,11 @@ int execute_query_parallel(job_query_parameters* p)
                 if(result_R->number_of_nodes>0)
                 {
                     //Construct lookup table of the existing (old) list
-                    middle_list_bucket **lookup=construct_lookup_table(p->middle->tables[join->r.table_id].list);
+#if (defined(SERIAL_JOIN)&&defined(SERIAL_FILTER)&&defined(SERIAL_SELFJOIN))
+                middle_list_bucket **lookup=construct_lookup_table(p->middle->tables[join->r.table_id].list);
+#else
+                lookup_table *lookup=construct_lookup_table(p->middle->tables[join->r.table_id].list);
+#endif
                     //Traverse result list and for every rowId find it in the old list and put
                     //the result in the new_list
                     middle_list_node *list_temp=result_R->head;
@@ -1108,7 +1112,11 @@ int execute_query_parallel(job_query_parameters* p)
                         }
                         list_temp=list_temp->next;
                     }
-                    free(lookup);
+#if (defined(SERIAL_JOIN)&&defined(SERIAL_FILTER)&&defined(SERIAL_SELFJOIN))
+                free(lookup);
+#else
+                delete_lookup_table(lookup);
+#endif
                 }
                 delete_middle_list(p->middle->tables[join->s.table_id].list);
                 p->middle->tables[join->s.table_id].list=new_list;

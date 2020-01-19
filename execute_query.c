@@ -1085,7 +1085,11 @@ int execute_query_parallel(job_query_parameters* p)
                         }
                         list_temp=list_temp->next;
                     }
-                    free(lookup);
+#if (defined(SERIAL_JOIN)&&defined(SERIAL_FILTER)&&defined(SERIAL_SELFJOIN))
+                free(lookup);
+#else
+                delete_lookup_table(lookup);
+#endif
                 }
                 delete_middle_list(p->middle->tables[join->r.table_id].list);
                 p->middle->tables[join->r.table_id].list=new_list;
@@ -1101,7 +1105,11 @@ int execute_query_parallel(job_query_parameters* p)
                 middle_list *new_list=create_middle_list();
                 if(result_S->number_of_nodes>0)
                 {
-                    middle_list_bucket **lookup=construct_lookup_table(p->middle->tables[join->s.table_id].list);
+#if (defined(SERIAL_JOIN)&&defined(SERIAL_FILTER)&&defined(SERIAL_SELFJOIN))
+                middle_list_bucket **lookup=construct_lookup_table(p->middle->tables[join->s.table_id].list);
+#else
+                lookup_table *lookup=construct_lookup_table(p->middle->tables[join->s.table_id].list);
+#endif
                     middle_list_node *list_temp=result_S->head;
                     while(list_temp!=NULL)
                     {

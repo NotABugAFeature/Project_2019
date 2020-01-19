@@ -15,6 +15,12 @@
 #if defined(ONE_QUERY_AT_A_TIME)&&defined(MAX_QUERIES_LIMIT)
 #error "defined ONE_QUERY_AT_A_TIME && defined MAX_QUERIES_LIMIT"
 #endif
+#if defined(ONE_QUERY_AT_A_TIME)&&defined(ONE_BATCH_AT_A_TIME)
+#error "defined ONE_QUERY_AT_A_TIME && defined ONE_BATCH_AT_A_TIME"
+#endif
+#if defined(ONE_BATCH_AT_A_TIME)&&defined(MAX_QUERIES_LIMIT)
+#error "defined ONE_BATCH_AT_A_TIME && defined MAX_QUERIES_LIMIT"
+#endif
 #if defined(SERIAL_PRESORTING)&&(!defined(SERIAL_SORTING)||!defined(SERIAL_JOIN))
 #error "defined SERIAL_PRESORTING &&(!defined SERIAL_SORTING || !defined SERIAL_JOIN )"
 #endif
@@ -78,7 +84,7 @@ typedef struct
 } thread_parameters;
 int main(int argc, char** argv)
 {
-#if defined(MAX_QUERIES_LIMIT)&&!defined(ONE_QUERY_AT_A_TIME)
+#if defined(MAX_QUERIES_LIMIT)
     if(argc!=3)
     {
         printf("Please give the number of threads to create and the max queries to execute at the same time\n");
@@ -101,7 +107,7 @@ int main(int argc, char** argv)
         return 1;
     }
     printf("The program will create %"PRIu32" threads\n", worker_th);
-#if defined(MAX_QUERIES_LIMIT)&&!defined(ONE_QUERY_AT_A_TIME)
+#if defined(MAX_QUERIES_LIMIT)
     uint32_t max_queries=atoi(argv[2]);
     if(max_queries==0)
     {
@@ -166,6 +172,9 @@ int main(int argc, char** argv)
         }
         //Call query analysis, execute queries
         char *query_str;
+#if defined(ONE_BATCH_AT_A_TIME)
+        uint32_t batch_queries_count=0;
+#endif
         while(list->num_nodes>1)
         {
             query_str=string_list_remove(list);
@@ -176,7 +185,10 @@ int main(int argc, char** argv)
             }
             schedule_fast_job(scheduler, newjob);
             queries_count++;
-#if defined(MAX_QUERIES_LIMIT)&&!defined(ONE_QUERY_AT_A_TIME)
+#if defined(ONE_BATCH_AT_A_TIME)
+            batch_queries_count++;
+#endif
+#if defined(MAX_QUERIES_LIMIT)
             if(q_max_counter>0)
             {
                 q_max_counter--;
@@ -189,6 +201,12 @@ int main(int argc, char** argv)
             sem_wait(&scheduler->fifo_query_executing_sem);
 #endif
         }
+#if defined(ONE_BATCH_AT_A_TIME)
+        for(uint32_t i=0; i<batch_queries_count; i++)
+        {
+            sem_wait(&scheduler->fifo_query_executing_sem);
+        }
+#endif
         query_str=string_list_remove(list);
         if(strcmp(query_str, "Done")==0||strcmp(query_str, "done")==0)
         {
@@ -199,7 +217,7 @@ int main(int argc, char** argv)
         free(query_str);
         string_list_delete(list);
     }
-#if !defined(ONE_QUERY_AT_A_TIME)
+#if !defined(ONE_QUERY_AT_A_TIME)&&!defined(ONE_BATCH_AT_A_TIME)
 #if defined(MAX_QUERIES_LIMIT)
     if(q_max_counter>0)
     {
@@ -216,7 +234,7 @@ int main(int argc, char** argv)
     clock_gettime(CLOCK_MONOTONIC, &end);
     printf("Total queries: %"PRIu32"\n", queries_count);
     printf("Time to execute all queries = %f seconds\n", (end.tv_nsec-begin.tv_nsec)/1000000000.0+(end.tv_sec-begin.tv_sec));
-    printf("Total fast jobs: %"PRIu64"\n", scheduler->fast_job_count);
+    printf("Total jobs: %"PRIu64"\n", scheduler->fast_job_count);
     destroy_job_scheduler(scheduler);
     delete_table_index(ti);
     for(int i=0; i<worker_th; i++)

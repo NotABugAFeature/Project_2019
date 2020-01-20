@@ -78,4 +78,6 @@ int radix_sort_recursive(unsigned short byte, relation *array, relation *auxilia
  */
 int radix_sort_recursive_setup(relation *array);
 
+void copy_relation(relation* source, relation* target, uint64_t start_index, uint64_t end_index);
+
 #endif // RADIX_SORT_H

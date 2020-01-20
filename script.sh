@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
-	echo "Usage: $0 <path/to/executable> <data_size (small/medium)> <threads>";
+	echo "Usage: $0 <path/to/executable> <data_size (small/medium)> <threads> (<max_queries>)";
 	exit 1;
 fi
 

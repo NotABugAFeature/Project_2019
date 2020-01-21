@@ -2839,12 +2839,10 @@ void testOptimize_query1(void)
     query* q_c_5=create_query();
     query* q6=create_query();
     query* q_c_6=create_query();
-    query* q7=create_query();
-    query* q_c_7=create_query();
 
-    if(q1==NULL||q2==NULL||q3==NULL||q4==NULL||q5==NULL||q6==NULL||q7==NULL||
-            q_c_1==NULL||q_c_2==NULL||q_c_3==NULL||q_c_4==NULL||q_c_5==NULL||
-            q_c_6==NULL||q_c_7==NULL
+    if(q1==NULL||q2==NULL||q3==NULL||q4==NULL||q5==NULL||q6==NULL||
+            q_c_1==NULL||q_c_2==NULL||q_c_3==NULL||q_c_4==NULL||
+            q_c_5==NULL||q_c_6==NULL
             )
     {
         return;
@@ -2890,8 +2888,6 @@ void testOptimize_query1(void)
     char query_str_c_5[80];
     char query_str6[80];
     char query_str_c_6[80];
-    char query_str7[80];
-    char query_str_c_7[80];
 
     strncpy(query_str1, "3 0 1|0.2=1.0&0.1=2.0&0.2>3499|1.2 0.1", 79);
     strncpy(query_str_c_1, "3 0 1|0.2>3499&0.1=2.0&0.2=1.0|1.2 0.1", 79);
@@ -2911,9 +2907,6 @@ void testOptimize_query1(void)
     strncpy(query_str6, "2 1 3|0.2=1.0&1.0=2.1&2.1=1.0&0.0>8107151&2.0<15412794|0.1 1.1", 79);
     strncpy(query_str_c_6, "2 1 3|2.0<15412794&0.0>8107151&1.0=2.1&0.2=1.0|0.1 1.1", 79);
     bool q_b_6[]={true, true, true, false};
-    strncpy(query_str7, "2 0 1 3|0.1=1.0&1.0=2.1&1.0=3.1&0.1=141152&2.2=10242743|0.1 2.2 2.1", 79);
-    strncpy(query_str_c_7, "2 0 1 3|0.1=1.0&1.0=2.1&1.0=3.1&0.1=141152&2.2=10242743|0.1 2.2 2.1", 79);
-    bool q_b_7[]={true, true, false, true, false, true};
 
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str1, q1), 0);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str2, q2), 0);
@@ -2921,7 +2914,6 @@ void testOptimize_query1(void)
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str4, q4), 0);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str5, q5), 0);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str6, q6), 0);
-    CU_ASSERT_EQUAL_FATAL(analyze_query(query_str7, q7), 0);
 
     CU_ASSERT_EQUAL_FATAL(validate_query(q1, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q2, &ti), 0);
@@ -2929,7 +2921,6 @@ void testOptimize_query1(void)
     CU_ASSERT_EQUAL_FATAL(validate_query(q4, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q5, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q6, &ti), 0);
-    CU_ASSERT_EQUAL_FATAL(validate_query(q7, &ti), 0);
 
     CU_ASSERT_EQUAL_FATAL(optimize_query(q1, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query(q2, &ti), 0);
@@ -2956,9 +2947,6 @@ void testOptimize_query1(void)
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_6, q_c_6), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q_c_6, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(compare_queries(q6, q_c_6), true);
-    CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_7, q_c_7), 0);
-    CU_ASSERT_EQUAL_FATAL(validate_query(q_c_7, &ti), 0);
-    CU_ASSERT_EQUAL_FATAL(compare_queries(q7, q_c_7), true);
 
     bool* array=NULL;
     CU_ASSERT_EQUAL_FATAL(create_sort_array(q1, &array), 0);
@@ -2984,10 +2972,6 @@ void testOptimize_query1(void)
     CU_ASSERT_EQUAL_FATAL(create_sort_array(q6, &array), 0);
     CU_ASSERT_EQUAL_FATAL(compare_bool_arrays(array, q_b_6, 4), true);
     free(array);
-    array=NULL;
-    CU_ASSERT_EQUAL_FATAL(create_sort_array(q7, &array), 0);
-    CU_ASSERT_EQUAL_FATAL(compare_bool_arrays(array, q_b_7, 6), true);
-    free(array);
 
     delete_query(q1);
     delete_query(q2);
@@ -2995,14 +2979,12 @@ void testOptimize_query1(void)
     delete_query(q4);
     delete_query(q5);
     delete_query(q6);
-    delete_query(q7);
     delete_query(q_c_1);
     delete_query(q_c_2);
     delete_query(q_c_3);
     delete_query(q_c_4);
     delete_query(q_c_5);
     delete_query(q_c_6);
-    delete_query(q_c_7);
     for(uint32_t i=0; i<ti.num_tables; i++)
     {
       delete_table_contents(&(ti.tables[i]));
@@ -3024,12 +3006,10 @@ void testOptimize_query_memory1(void)
     query* q_c_5=create_query();
     query* q6=create_query();
     query* q_c_6=create_query();
-    query* q7=create_query();
-    query* q_c_7=create_query();
 
-    if(q1==NULL||q2==NULL||q3==NULL||q4==NULL||q5==NULL||q6==NULL||q7==NULL||
-            q_c_1==NULL||q_c_2==NULL||q_c_3==NULL||q_c_4==NULL||q_c_5==NULL||
-            q_c_6==NULL||q_c_7==NULL
+    if(q1==NULL||q2==NULL||q3==NULL||q4==NULL||q5==NULL||q6==NULL||
+            q_c_1==NULL||q_c_2==NULL||q_c_3==NULL||q_c_4==NULL||
+            q_c_5==NULL||q_c_6==NULL
             )
     {
         return;
@@ -3076,8 +3056,6 @@ void testOptimize_query_memory1(void)
     char query_str_c_5[80];
     char query_str6[80];
     char query_str_c_6[80];
-    char query_str7[80];
-    char query_str_c_7[80];
 
     strncpy(query_str1, "3 0 1|0.2=1.0&0.1=2.0&0.2>3499|1.2 0.1", 79);
     strncpy(query_str_c_1, "3 0 1|0.2>3499&0.1=2.0&0.2=1.0|1.2 0.1", 79);
@@ -3097,9 +3075,6 @@ void testOptimize_query_memory1(void)
     strncpy(query_str6, "2 1 3|0.2=1.0&1.0=2.1&2.1=1.0&0.0>8107151&2.0<15412794|0.1 1.1", 79);
     strncpy(query_str_c_6, "2 1 3|2.0<15412794&1.0=2.1&0.0>8107151&0.2=1.0|0.1 1.1", 79);
     bool q_b_6[]={true, true, true, false};
-    strncpy(query_str7, "2 0 1 3|0.1=1.0&1.0=2.1&1.0=3.1&0.1=141152&2.2=10242743|0.1 2.2 2.1", 79);
-    strncpy(query_str_c_7, "2 0 1 3|1.0=3.1&2.2=10242743&1.0=2.1&0.1=141152&0.1=1.0|0.1 2.2 2.1", 79);
-    bool q_b_7[]={true, true, false, true, true, false};
 
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str1, q1), 0);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str2, q2), 0);
@@ -3107,7 +3082,6 @@ void testOptimize_query_memory1(void)
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str4, q4), 0);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str5, q5), 0);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str6, q6), 0);
-    CU_ASSERT_EQUAL_FATAL(analyze_query(query_str7, q7), 0);
 
     CU_ASSERT_EQUAL_FATAL(validate_query(q1, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q2, &ti), 0);
@@ -3115,7 +3089,6 @@ void testOptimize_query_memory1(void)
     CU_ASSERT_EQUAL_FATAL(validate_query(q4, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q5, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q6, &ti), 0);
-    CU_ASSERT_EQUAL_FATAL(validate_query(q7, &ti), 0);
 
     CU_ASSERT_EQUAL_FATAL(optimize_query(q1, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query(q2, &ti), 0);
@@ -3123,7 +3096,6 @@ void testOptimize_query_memory1(void)
     CU_ASSERT_EQUAL_FATAL(optimize_query(q4, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query(q5, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query(q6, &ti), 0);
-    CU_ASSERT_EQUAL_FATAL(optimize_query(q7, &ti), 0);
 
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_1, q_c_1), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q_c_1, &ti), 0);
@@ -3137,8 +3109,6 @@ void testOptimize_query_memory1(void)
     CU_ASSERT_EQUAL_FATAL(validate_query(q_c_5, &ti), 0);
     CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_6, q_c_6), 0);
     CU_ASSERT_EQUAL_FATAL(validate_query(q_c_6, &ti), 0);
-    CU_ASSERT_EQUAL_FATAL(analyze_query(query_str_c_7, q_c_7), 0);
-    CU_ASSERT_EQUAL_FATAL(validate_query(q_c_7, &ti), 0);
 
     bool* array=NULL;
     CU_ASSERT_EQUAL_FATAL(create_sort_array(q1, &array), 0);
@@ -3164,10 +3134,6 @@ void testOptimize_query_memory1(void)
     CU_ASSERT_EQUAL_FATAL(create_sort_array(q6, &array), 0);
     CU_ASSERT_EQUAL_FATAL(compare_bool_arrays(array, q_b_6, 4), true);
     free(array);
-    array=NULL;
-    CU_ASSERT_EQUAL_FATAL(create_sort_array(q7, &array), 0);
-    CU_ASSERT_EQUAL_FATAL(compare_bool_arrays(array, q_b_7, 6), true);
-    free(array);
 
     CU_ASSERT_EQUAL_FATAL(optimize_query_memory(q1), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query_memory(q2), 0);
@@ -3175,7 +3141,6 @@ void testOptimize_query_memory1(void)
     CU_ASSERT_EQUAL_FATAL(optimize_query_memory(q4), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query_memory(q5), 0);
     CU_ASSERT_EQUAL_FATAL(optimize_query_memory(q6), 0);
-    CU_ASSERT_EQUAL_FATAL(optimize_query_memory(q7), 0);
 
     CU_ASSERT_EQUAL_FATAL(compare_queries(q1, q_c_1), true);
     CU_ASSERT_EQUAL_FATAL(compare_queries(q2, q_c_2), true);
@@ -3183,7 +3148,6 @@ void testOptimize_query_memory1(void)
     CU_ASSERT_EQUAL_FATAL(compare_queries(q4, q_c_4), true);
     CU_ASSERT_EQUAL_FATAL(compare_queries(q5, q_c_5), true);
     CU_ASSERT_EQUAL_FATAL(compare_queries(q6, q_c_6), true);
-    CU_ASSERT_EQUAL_FATAL(compare_queries(q7, q_c_7), true);
 
     delete_query(q1);
     delete_query(q2);
@@ -3191,14 +3155,12 @@ void testOptimize_query_memory1(void)
     delete_query(q4);
     delete_query(q5);
     delete_query(q6);
-    delete_query(q7);
     delete_query(q_c_1);
     delete_query(q_c_2);
     delete_query(q_c_3);
     delete_query(q_c_4);
     delete_query(q_c_5);
     delete_query(q_c_6);
-    delete_query(q_c_7);
     
     for(uint32_t i=0; i<ti.num_tables; i++)
     {

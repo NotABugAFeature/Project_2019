@@ -1,11 +1,12 @@
-# Solution of SIGMOD 2018 programming contest
-Project for the Software Development for Information Systems class
+# Solution for SIGMOD 2018 programming contest
+Constuction of a database subset that manipulates data stored exclusively in RAM
 
-### Team
-Georgakopoulos Panagiotis\
-Karamina Maria\
-Koursiounis Georgios
-- - - -
+Assignment for the 'Software Development for Information Systems' course
+
+## Team
+- Georgakopoulos Panagiotis
+- Karamina Maria
+- Koursiounis Georgios
 
 ## Compilation and Execution
 
@@ -14,7 +15,7 @@ Koursiounis Georgios
 - Only tests: `make tests`
 - Deletion of executable and objective files: `make clean`
 
--O3 optimization is used by default
+- -O3 optimization is used by default
 
 ### Flags
 
@@ -40,11 +41,30 @@ If the max_queries flag is used:
 `cat <init file> <work file> | queries <thread num> <max queries>`
 
 
-## Results
-Best execution results on a Ryzen 5 3600 computer
+## Results for dataset 'MEDIUM'
+(For complete specs list see: report.pdf)
+
+Best execution results on **Intel(R) Core(TM) i7-6500U CPU @ 2.50GHz**
+| Execution Type | Number of Threads | Execution Time (sec) |
+| --- | --- | --- |
+| Basic execution with full parallelism & sorted projections (sorted_projections=true) | 4 | 21.290931 |
+| One query per thread (s_execution=true) & sorted projections (sorted_projections=true) | 4 | 17.406146 |
+
+
+Best execution results on **AMD Ryzen 5 3600 6-Core Processor**
 | Execution Type | Number of Threads | Execution Time (sec) |
 | --- | --- | --- |
 | Basic execution with full parallelism & sorted projections (sorted_projections=true) | 12 | 11.396190 |
 | One query per thread (s_execution=true) & sorted projections (sorted_projections=true) | 12 | 8.987036 |
 
+The results show that the fastest implementation is the one that each thread
+executes a query from the beginning (analysis, optimization) to the calculation of
+of its projections. This happens because:
+1) All executed queries were known from the beginning
+2) The number of threads of the processors we tested is less than
+number of questions.
 
+If we have a machine with a larger number of threads than queries, the
+specific implementation will waste time since many threads will have no query to execute.
+
+Complete parallelism is quite efficient despite the RAM consumption which can be solved by limiting the number of concurrent queries to be executed as mentioned above.

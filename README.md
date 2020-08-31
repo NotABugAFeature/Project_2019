@@ -41,7 +41,7 @@ If the max_queries flag is used:
 
 
 ## Results
-Best execution results on B450 AORUS M computer
+Best execution results on a Ryzen 5 3600 computer
 | Execution Type | Number of Threads | Execution Time (sec) |
 | --- | --- | --- |
 | Basic execution with full parallelism & sorted projections (sorted_projections=true) | 12 | 11.396190 |
